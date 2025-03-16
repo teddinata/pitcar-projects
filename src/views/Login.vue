@@ -6,7 +6,7 @@
         <div class="text-center mb-8">
           <img src="/pitcar-logo.png" alt="Content Management" class="h-12 mx-auto mb-6" />
           <h2 class="text-2xl font-bold text-gray-900">Welcome to Project Management by PITCAR</h2>
-          <p class="text-gray-600 mt-2">Sign in to access your project dashboard</p>
+          <p class="text-gray-600 mt-2">Masuk untuk mengakses dasbor proyek Anda</p>
         </div>
 
         <form @submit.prevent="handleLogin" class="space-y-5">
@@ -110,7 +110,11 @@
         </form>
         
         <div class="mt-8 text-center text-sm text-gray-500">
-          <p>Need help? Contact <a href="mailto:support@example.com" class="text-red-600 hover:text-red-500">support@example.com</a></p>
+          <p>Butuh bantuan? Hubungi <a href="https://wa.me/6285155095022?text=Halo%20Tim%20IT%2C%20saya%20butuh%20bantuan%20untuk%20akses%20Project%20Management" target="_blank" class="text-red-600 hover:text-red-500">Tim IT</a></p>
+        </div>
+
+        <div class="mt-8 text-center text-xs text-gray-400">
+          <p>v{{ version }}</p>
         </div>
       </div>
     </div>
@@ -122,11 +126,11 @@
         <div class="relative w-full max-w-md">
           <!-- Heading -->
           <h1 class="text-3xl font-bold text-gray-900 mb-4">
-            Content Management <span class="text-red-600">Dashboard</span>
+            Project Management <span class="text-red-600">Dashboard</span>
           </h1>
           
           <p class="text-gray-600 mb-8 leading-relaxed">
-            Streamline your content workflow with our comprehensive project management suite. Monitor progress, manage tasks, and boost team productivity.
+            Kelola alur kerja konten dengan sistem manajemen proyek komprehensif kami. Pantau kemajuan, kelola tugas, dan tingkatkan produktivitas tim.
           </p>
 
           <!-- Feature Cards -->
@@ -138,8 +142,8 @@
                   <FolderIcon class="h-6 w-6 text-red-600" />
                 </div>
                 <div class="ml-4">
-                  <h3 class="font-medium text-gray-900">Project Management</h3>
-                  <p class="text-gray-600 text-sm mt-1">Track project status, deadlines, and team assignments from a single dashboard</p>
+                  <h3 class="font-medium text-gray-900">Manajemen Proyek</h3>
+                  <p class="text-gray-600 text-sm mt-1">Lacak status proyek, tenggat waktu, dan penugasan tim dari satu dasbor terpadu</p>
                 </div>
               </div>
             </div>
@@ -151,8 +155,8 @@
                   <ClipboardDocumentCheckIcon class="h-6 w-6 text-blue-600" />
                 </div>
                 <div class="ml-4">
-                  <h3 class="font-medium text-gray-900">Task Tracking</h3>
-                  <p class="text-gray-600 text-sm mt-1">Manage tasks, track completion, and ensure on-time delivery with clear visual indicators</p>
+                  <h3 class="font-medium text-gray-900">Pelacakan Tugas</h3>
+                  <p class="text-gray-600 text-sm mt-1">Kelola tugas, pantau penyelesaian, dan pastikan pengiriman tepat waktu dengan indikator visual yang jelas</p>
                 </div>
               </div>
             </div>
@@ -164,15 +168,15 @@
                   <ChartBarIcon class="h-6 w-6 text-green-600" />
                 </div>
                 <div class="ml-4">
-                  <h3 class="font-medium text-gray-900">Analytics & Insights</h3>
-                  <p class="text-gray-600 text-sm mt-1">Gain valuable insights with performance metrics, team productivity, and content analytics</p>
+                  <h3 class="font-medium text-gray-900">Analitik & Wawasan</h3>
+                  <p class="text-gray-600 text-sm mt-1">Dapatkan wawasan berharga dengan metrik kinerja, produktivitas tim, dan analitik konten</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Decorative Elements -->
+        <!-- Decorative Elements remain unchanged -->
         <div class="absolute inset-0 pointer-events-none">
           <!-- Top Right -->
           <div class="absolute top-16 right-20 w-16 h-16 bg-red-50 rounded-xl -rotate-12 animate-float-slow">
@@ -201,6 +205,10 @@
         </div>
       </div>
     </div>
+    <!-- Right before the closing </div> of the main container -->
+    <div class="absolute bottom-4 w-full text-center text-xs text-gray-400">
+      <p>PITCAR Project Management v{{ version }}</p>
+    </div>
   </div>
 </template>
 
@@ -208,6 +216,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import packageJson from '../../package.json' 
 import {
   EnvelopeIcon,
   LockClosedIcon,
@@ -224,6 +233,7 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
+const version = packageJson.version
 
 const showPassword = ref(false)
 const loading = ref(false)

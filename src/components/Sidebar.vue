@@ -658,6 +658,12 @@
       </div>
     </nav>
 
+    <!-- Version Info -->
+    <div class="px-4 text-xs text-gray-400 mb-2"
+      :class="isExpanded ? 'text-center' : 'text-center w-full'">
+      <p>v{{ version }}</p>
+    </div>
+
     <!-- User Profile Section -->
     <div class="p-4 mt-auto border-t border-gray-50">
       <div class="relative">
