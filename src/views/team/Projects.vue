@@ -262,33 +262,68 @@ const handleDateRangeUpdate = (dateRange) => {
 // Methods
 const fetchProjects = async () => {
   try {
-    loading.value = true
+    loading.value = true;
+    
+    // Siapkan parameter yang akan dikirim
+    const params = {};
+    
+    // Hanya menambahkan parameter yang memiliki nilai (tidak kosong)
+    if (filters.value.department_id) {
+      params.department_id = parseInt(filters.value.department_id);
+    }
+    
+    if (filters.value.state) {
+      params.state = filters.value.state;
+    }
+    
+    if (filters.value.date_start) {
+      params.date_start = filters.value.date_start;
+    }
+    
+    if (filters.value.date_end) {
+      params.date_end = filters.value.date_end;
+    }
+    
+    // Kirim request dengan parameter yang benar
     const response = await apiClient.post('/web/v2/team/projects/list', {
       jsonrpc: '2.0',
-      id: new Date().getTime(),
-      params: {
-        ...filters.value
-      }
-    })
+      method: 'call',
+      params: params
+    });
 
+    // Periksa respons
     if (response.data.result?.status === 'success') {
-      projects.value = response.data.result.data
+      projects.value = response.data.result.data;
+      
+      // Hanya tampilkan toast jika berhasil mengambil data
+      if (projects.value.length > 0) {
+        showToast({
+          message: `${projects.value.length} projects loaded successfully`,
+          type: 'success'
+        });
+      } else {
+        showToast({
+          message: 'No projects found with the current filters',
+          type: 'info'
+        });
+      }
+    } else {
       showToast({
-        message: 'Projects loaded successfully',
-        type: 'success'
-      })
+        message: response.data.result?.message || 'Failed to load projects',
+        type: 'error'
+      });
     }
   } catch (error) {
-    console.error('Error fetching projects:', error)
+    console.error('Error fetching projects:', error);
     showToast({
       message: error.message || 'Failed to load projects',
       type: 'error',
       duration: 5000
-    })
+    });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const fetchDepartments = async () => {
   try {
@@ -352,6 +387,7 @@ const resetFilters = () => {
     project_manager_id: ''
   };
   
+  // Panggil fetchProjects setelah filter direset
   fetchProjects();
 };
 
@@ -458,8 +494,11 @@ onMounted(() => {
     filters.value.date_end = format(addMonths(today, 2), 'yyyy-MM-dd');
   }
   
+  // Ambil data departemen terlebih dahulu
   fetchDepartments();
+  
+  // Kemudian ambil data proyek
   fetchProjects();
-})
+});
 
 </script>

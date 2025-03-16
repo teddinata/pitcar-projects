@@ -239,14 +239,86 @@ const fetchMembers = async (query = '') => {
 
 // Initialize selection based on modelValue
 const initializeSelection = () => {
+  // Simpan selected members yang sudah ada
+  const currentSelectedIds = selectedMembers.value.map(m => m.id)
+  
   if (props.multiple) {
     const modelArray = Array.isArray(props.modelValue) ? props.modelValue : []
-    selectedMembers.value = members.value.filter(m => modelArray.includes(m.id))
+    
+    // Gabungkan member yang sudah ada dengan yang baru ditemukan
+    const newSelectedMembers = []
+    
+    // Pertahankan member yang sudah dipilih sebelumnya
+    for (const existingMember of selectedMembers.value) {
+      if (modelArray.includes(existingMember.id)) {
+        newSelectedMembers.push(existingMember)
+      }
+    }
+    
+    // Tambahkan member baru yang ada di members.value
+    for (const id of modelArray) {
+      if (!currentSelectedIds.includes(id)) {
+        const member = members.value.find(m => m.id === id)
+        if (member) {
+          newSelectedMembers.push({...member})
+        }
+      }
+    }
+    
+    selectedMembers.value = newSelectedMembers
   } else {
-    const member = members.value.find(m => m.id === props.modelValue)
-    selectedMembers.value = member ? [member] : []
+    // Untuk mode single select
+    const currentId = props.modelValue
+    
+    // Cek apakah sudah ada di selected
+    if (selectedMembers.value.length > 0 && selectedMembers.value[0].id === currentId) {
+      // Pertahankan yang sudah ada
+      return
+    }
+    
+    // Cari dari members baru
+    const member = members.value.find(m => m.id === currentId)
+    selectedMembers.value = member ? [{...member}] : []
   }
 }
+
+// Tambahkan fungsi untuk mendapatkan detail member yang tidak ada dalam daftar
+const fetchMissingMembers = async (ids) => {
+  if (!ids || ids.length === 0) return
+  
+  // Filter IDs yang tidak ada dalam members.value
+  const missingIds = Array.isArray(ids) 
+    ? ids.filter(id => !members.value.some(m => m.id === id))
+    : [ids].filter(id => !members.value.some(m => m.id === id))
+  
+  if (missingIds.length === 0) return
+  
+  try {
+    loading.value = true
+    const response = await apiClient.post('/web/employees', {
+      jsonrpc: '2.0',
+      method: 'call',
+      params: {
+        ids: missingIds, // Tambahkan parameter ini di server untuk filter berdasarkan IDs
+        include_details: true,
+        limit: 50
+      }
+    })
+    
+    if (response.data.result?.status === 'success') {
+      const missingMembers = response.data.result.data.rows
+      // Tambahkan missing members ke daftar
+      members.value = [...members.value, ...missingMembers]
+      // Reinitialize selection dengan data lengkap
+      initializeSelection()
+    }
+  } catch (error) {
+    console.error('Error fetching missing members:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 
 // Check if member is selected
 const isSelected = (member) => {
@@ -261,16 +333,24 @@ const toggleMember = (member) => {
     if (isSelected(member)) {
       selectedMembers.value = selectedMembers.value.filter(m => m.id !== member.id)
     } else {
-      selectedMembers.value.push(member)
+      // Simpan salinan lengkap dari member yang dipilih
+      const memberCopy = {...member}
+      selectedMembers.value.push(memberCopy)
     }
     emit('update:modelValue', selectedMembers.value.map(m => m.id))
   } else {
-    selectedMembers.value = [member]
+    // Simpan salinan lengkap dari member
+    selectedMembers.value = [{...member}]
     emit('update:modelValue', member.id)
     isOpen.value = false
   }
-  searchQuery.value = ''
+  
+  // Tunda reset searchQuery sampai setelah selection disimpan
+  setTimeout(() => {
+    searchQuery.value = ''
+  }, 10)
 }
+
 
 // Remove member
 const removeMember = (member) => {
@@ -319,7 +399,14 @@ watch(() => props.departmentId, () => {
 // Initialize
 onMounted(() => {
   fetchMembers()
+  fetchMissingMembers(props.modelValue
+  )
 })
+
+watch(() => props.modelValue, () => {
+  fetchMissingMembers(props.modelValue)
+}, { immediate: false })
+
 </script>
 
 <style scoped>

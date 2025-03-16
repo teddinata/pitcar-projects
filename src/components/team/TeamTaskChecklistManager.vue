@@ -4,7 +4,7 @@
     <div class="flex justify-between items-center">
       <h3 class="px-6 py-2 text-lg font-medium text-gray-900">Checklist</h3>
       <button
-        @click="addNewChecklistItem"
+        @click.stop="addNewChecklistItem"
         class="px-6 py-2 inline-flex items-center mr-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
       >
         <PlusIcon class="h-4 w-4 mr-1.5" />
@@ -297,6 +297,9 @@ import {
   CalendarIcon
 } from '@heroicons/vue/24/outline';
 import SearchableSelect from '@/components/SearchableSelect.vue';
+import apiClient from '@/config/api';
+import { useToast } from '@/composables/useToast';
+const { toast, showToast } = useToast();
 
 const props = defineProps({
   taskId: {
@@ -311,12 +314,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:progress']);
 
-// Toast notification system - implement according to your app's setup
-const showToast = (message, type = 'success') => {
-  // This is a stub - replace with your actual toast implementation
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // Example: toast.add({ message, type });
-};
 
 // State
 const loading = ref(true);
@@ -333,24 +330,6 @@ const currentChecklistItem = ref({
 
 const showDeleteConfirm = ref(false);
 const itemToDelete = ref(null);
-
-// API client - implement according to your app's setup
-const apiClient = {
-  post: async (url, data) => {
-    // This is a stub - replace with your actual API client
-    console.log(`API call to ${url} with data:`, data);
-    
-    // Simulated API response
-    return { 
-      data: { 
-        result: { 
-          status: 'success',
-          data: {} 
-        } 
-      } 
-    };
-  }
-};
 
 const employeeOptions = computed(() => {
   return props.employees.map(employee => ({
@@ -433,6 +412,7 @@ watch(() => showDeleteConfirm.value, (value) => {
 
 // Initialize form for a new checklist item
 const addNewChecklistItem = () => {
+  console.log('Adding new checklist item');
   isEditing.value = false;
   currentChecklistItem.value = {
     name: '',
@@ -441,7 +421,9 @@ const addNewChecklistItem = () => {
     notes: '',
     is_done: false
   };
+  console.log('Setting modal to show');
   showChecklistModal.value = true;
+  console.log('Modal state:', showChecklistModal.value);
 };
 
 // Initialize form for editing an existing checklist item

@@ -291,6 +291,9 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline';
 import SearchableSelect from '@/components/SearchableSelect.vue';
+import apiClient from '@/config/api';
+import { useToast } from '@/composables/useToast';
+const { toast, showToast } = useToast();
 
 const props = defineProps({
   taskId: {
@@ -303,30 +306,6 @@ const props = defineProps({
   }
 });
 
-// Toast notification system - implement according to your app's setup
-const showToast = (message, type = 'success') => {
-  // This is a stub - replace with your actual toast implementation
-  console.log(`${type.toUpperCase()}: ${message}`);
-  // Example: toast.add({ message, type });
-};
-
-// API client - implement according to your app's setup
-const apiClient = {
-  post: async (url, data) => {
-    // This is a stub - replace with your actual API client
-    console.log(`API call to ${url} with data:`, data);
-    
-    // Simulated API response
-    return { 
-      data: { 
-        result: { 
-          status: 'success',
-          data: {} 
-        } 
-      } 
-    };
-  }
-};
 
 const loading = ref(true);
 const timesheets = ref([]);
