@@ -98,7 +98,7 @@
             <!-- Action Buttons -->
             <div class="flex space-x-2">
               <button
-                @click="fetchProjects"
+                @click="fetchProjects(false)"
                 class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <FunnelIcon class="h-4 w-4 mr-1.5" />
@@ -260,28 +260,32 @@ const handleDateRangeUpdate = (dateRange) => {
 
 
 // Methods
-const fetchProjects = async () => {
+// Modifikasi fungsi fetchProjects untuk menerima parameter isInitialLoad
+const fetchProjects = async (isInitialLoad = false) => {
   try {
     loading.value = true;
     
     // Siapkan parameter yang akan dikirim
     const params = {};
     
-    // Hanya menambahkan parameter yang memiliki nilai (tidak kosong)
-    if (filters.value.department_id) {
-      params.department_id = parseInt(filters.value.department_id);
-    }
-    
-    if (filters.value.state) {
-      params.state = filters.value.state;
-    }
-    
-    if (filters.value.date_start) {
-      params.date_start = filters.value.date_start;
-    }
-    
-    if (filters.value.date_end) {
-      params.date_end = filters.value.date_end;
+    // Jika ini adalah load awal, jangan terapkan filter apapun
+    if (!isInitialLoad) {
+      // Hanya menambahkan parameter yang memiliki nilai (tidak kosong)
+      if (filters.value.department_id) {
+        params.department_id = parseInt(filters.value.department_id);
+      }
+      
+      if (filters.value.state) {
+        params.state = filters.value.state;
+      }
+      
+      if (filters.value.date_start) {
+        params.date_start = filters.value.date_start;
+      }
+      
+      if (filters.value.date_end) {
+        params.date_end = filters.value.date_end;
+      }
     }
     
     // Kirim request dengan parameter yang benar
@@ -295,17 +299,19 @@ const fetchProjects = async () => {
     if (response.data.result?.status === 'success') {
       projects.value = response.data.result.data;
       
-      // Hanya tampilkan toast jika berhasil mengambil data
-      if (projects.value.length > 0) {
-        showToast({
-          message: `${projects.value.length} projects loaded successfully`,
-          type: 'success'
-        });
-      } else {
-        showToast({
-          message: 'No projects found with the current filters',
-          type: 'info'
-        });
+      // Hanya tampilkan toast jika ini bukan load awal
+      if (!isInitialLoad) {
+        if (projects.value.length > 0) {
+          showToast({
+            message: `${projects.value.length} projects loaded successfully`,
+            type: 'success'
+          });
+        } else {
+          showToast({
+            message: 'No projects found with the current filters',
+            type: 'info'
+          });
+        }
       }
     } else {
       showToast({
@@ -387,8 +393,8 @@ const resetFilters = () => {
     project_manager_id: ''
   };
   
-  // Panggil fetchProjects setelah filter direset
-  fetchProjects();
+  // Fetch projects tanpa filter (isInitialLoad = true)
+  fetchProjects(true);
 };
 
 
@@ -497,8 +503,8 @@ onMounted(() => {
   // Ambil data departemen terlebih dahulu
   fetchDepartments();
   
-  // Kemudian ambil data proyek
-  fetchProjects();
+  // Kemudian ambil data proyek tanpa filter (isInitialLoad = true)
+  fetchProjects(true);
 });
 
 </script>
