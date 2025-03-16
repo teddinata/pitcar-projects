@@ -174,6 +174,7 @@ const loading = ref(false)
 const searchQuery = ref('')
 const members = ref([])
 const selectedMembers = ref([])
+let searchTimeout = null
 
 // Computed
 const inputPlaceholder = computed(() => {
@@ -196,17 +197,29 @@ const filteredMembers = computed(() => {
   })
 })
 
-// Fetch team members
-const fetchMembers = async () => {
+// Modifikasi pada watch searchQuery
+watch(() => searchQuery.value, (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    // Tambahkan debounce (jeda) untuk menghindari terlalu banyak request
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      fetchMembers(newValue)
+    }, 300) // tunggu 300ms setelah pengguna berhenti mengetik
+  }
+}, { immediate: false })
+
+// Modifikasi fetchMembers untuk menerima query
+const fetchMembers = async (query = '') => {
   try {
     loading.value = true
     const response = await apiClient.post('/web/employees', {
       jsonrpc: '2.0',
       method: 'call',
       params: {
-        department_id: props.departmentId || null, // Use department ID if provided, otherwise null to get all employees
-        limit: 100,
-        include_details: true, // Request additional details if needed
+        department_id: props.departmentId || null,
+        limit: 50, // Gunakan limit maksimum yang diizinkan
+        search: query, // Kirim query pencarian ke server
+        include_details: true,
         sort_by: 'name',
         sort_order: 'asc'
       }
@@ -214,6 +227,7 @@ const fetchMembers = async () => {
     
     if (response.data.result?.status === 'success') {
       members.value = response.data.result.data.rows
+      // Pastikan selected members masih ada dalam hasil
       initializeSelection()
     }
   } catch (error) {

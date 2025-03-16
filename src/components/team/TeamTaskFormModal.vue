@@ -177,7 +177,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { Loader2 } from 'lucide-vue-next'
 import Modal from '@/components/projects/ProjectModal.vue'
-import TeamSelect from '@/components/TeamSelect.vue'
+import TeamSelect from '@/components/GeneralTeamSelect.vue'
 import apiClient from '@/config/api'
 
 const props = defineProps({
