@@ -217,7 +217,7 @@ const fetchMembers = async (query = '') => {
       method: 'call',
       params: {
         department_id: props.departmentId || null,
-        limit: 50, // Gunakan limit maksimum yang diizinkan
+        limit: 10, // Gunakan limit maksimum yang diizinkan
         search: query, // Kirim query pencarian ke server
         include_details: true,
         sort_by: 'name',
