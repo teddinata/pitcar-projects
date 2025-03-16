@@ -22,6 +22,12 @@ const routes = [
     component: () => import('../views/Login.vue')
   },
   {
+    path: '/marketing/dashboard',
+    name: 'DashboardMarketing',
+    component: () => import('../views/ContentDashboard.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '',
     redirect: '/marketing/projects',
     meta: { requiresAuth: true }

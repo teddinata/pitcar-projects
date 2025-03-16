@@ -487,7 +487,7 @@ const fetchActivities = async () => {
     
     // Prepare filter params
     const params = {
-      operation: 'list',
+      operation: 'get',
     };
     
     // Add date filters if exists

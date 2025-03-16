@@ -1,154 +1,51 @@
 <template>
   <div class="min-h-screen flex">
-   <!-- Left Side - Statistics & Graphics -->
-    <div class="hidden lg:flex lg:w-1/2 bg-[#f4f5f5] relative overflow-hidden">
-      <!-- Logo -->
-      <div class="absolute top-32 left-20 z-20">
-        <img src="/pitcar-logo.png" alt="Pitcar" class="h-10" />
-      </div>
-
-      <!-- Main Content Area -->
-      <div class="relative w-full h-full flex items-center justify-center">
-        <!-- Card Group with Staggered Layout -->
-        <div class="relative w-[500px] h-[450px]">
-          <!-- Current Balance Card - Base Position -->
-           <!-- Current Balance Stats -->
-          <div class="absolute top-1 left-0 bg-white rounded-xl shadow-lg p-6 w-72 h-56">
-            <div class="flex items-center space-x-2 text-gray-600 mb-2">
-              <BanknotesIcon class="h-5 w-5" />
-              <span class="text-sm">CURRENT BALANCE</span>
-            </div>
-            <div class="text-2xl font-bold">$24,359</div>
-            <div class="mt-4">
-              <!-- Pie Chart -->
-              <div class="flex justify-between items-center">
-                <div class="relative h-24 w-24">
-                  <!-- You can replace this with an actual chart component -->
-                  <div class="h-full w-full rounded-full border-4 border-blue-500 border-t-transparent animate-spin-slow"></div>
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-sm font-medium">34%</span>
-                  </div>
-                </div>
-                <div class="text-sm text-gray-600">
-                  <div>Food</div>
-                  <div class="mt-1">$2,503</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- New Transaction Card - Slightly Offset -->
-          <div class="absolute top-52 left-24 bg-white rounded-xl shadow-sm p-5 w-[300px] z-20 hover:shadow-md transition-shadow">
-            <button class="flex items-center space-x-2 text-[#1A73E8] font-medium">
-              <PlusIcon class="h-5 w-5" />
-              <span>New transaction</span>
-            </button>
-            <div class="text-sm text-gray-500 mt-2">or upload .xls file</div>
-          </div>
-
-          <!-- Activity Preview - Most Offset -->
-          <div class="absolute top-72 left-12 bg-white rounded-xl shadow-sm p-5 w-[280px] z-30 hover:shadow-md transition-shadow">
-            <div class="flex items-center space-x-2 mb-3">
-              <ChartPieIcon class="h-5 w-5 text-blue-500" />
-              <span class="text-sm font-medium">Recent Activity</span>
-            </div>
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
-                    <ArrowUpIcon class="h-4 w-4 text-green-600" />
-                  </div>
-                  <span class="text-sm font-medium">$156.00</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-        <!-- Welcome Text Section -->
-        <div class="absolute -bottom-24 left-0 z-40 mt-4">
-          <h1 class="text-3xl font-bold leading-tight">
-            <span class="text-[#B70000] block">Smart Dashboard PITCAR</span>
-          </h1>
-          <div class="space-y-3 mt-4">
-            <p class="text-gray-600 leading-relaxed">
-              Experience seamless service management with real-time monitoring, intelligent analytics, and comprehensive reporting - all in one powerful dashboard.
-            </p>
-          </div>
-        </div>
-        </div>
-
-        <!-- Decorative Elements -->
-        <div class="absolute inset-0 pointer-events-none">
-          <!-- Top Right -->
-          <div class="absolute top-20 right-20 w-16 h-16 bg-blue-50 rounded-xl rotate-12 animate-float-slow">
-            <ChartBarIcon class="h-8 w-8 m-4 text-[#1A73E8]" />
-          </div>
-
-          <!-- Bottom Left -->
-          <div class="absolute bottom-32 left-20 w-12 h-12 bg-yellow-50 rounded-full animate-float-fast">
-            <CurrencyDollarIcon class="h-6 w-6 m-3 text-[#FBBC05]" />
-          </div>
-
-          <!-- Center Right -->
-          <div class="absolute top-1/2 right-32 w-20 h-20 bg-green-50 rounded-xl -rotate-12 animate-float-medium">
-            <ArrowTrendingUpIcon class="h-10 w-10 m-5 text-[#34A853]" />
-          </div>
-
-          <!-- New Additional Icons -->
-          <!-- Bottom Right Spinner -->
-          <div class="absolute bottom-24 right-24 w-14 h-14 animate-spin-slow">
-            <div class="h-full w-full rounded-full border-4 border-[#B70000]/20 border-t-[#B70000]/60"></div>
-          </div>
-
-          <!-- Top Left Floater -->
-          <div class="absolute top-32 left-32 w-10 h-10 bg-red-50 rounded-lg animate-bounce">
-            <ClockIcon class="h-6 w-6 m-2 text-[#B70000]" />
-          </div>
-        </div>
-      </div>
-
-      <defs>
-        <linearGradient id="gradient" gradientTransform="rotate(90)">
-          <stop offset="0%" stop-color="#1A73E8" />
-          <stop offset="33%" stop-color="#34A853" />
-          <stop offset="66%" stop-color="#FBBC05" />
-          <stop offset="100%" stop-color="#EA4335" />
-        </linearGradient>
-      </defs>
-    </div>
-
-    <!-- Right Side - Login Form -->
+    <!-- Left Side - Login Form -->
     <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
-      <div class="w-full max-w-[400px]">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome back!</h2>
-        <p class="text-gray-600 mb-8">Access your comprehensive service management suite and make data-driven decisions in real-time</p>
+      <div class="w-full max-w-[420px]">
+        <div class="text-center mb-8">
+          <img src="/pitcar-logo.png" alt="Content Management" class="h-12 mx-auto mb-6" />
+          <h2 class="text-2xl font-bold text-gray-900">Welcome to Project Management by PITCAR</h2>
+          <p class="text-gray-600 mt-2">Sign in to access your project dashboard</p>
+        </div>
 
         <form @submit.prevent="handleLogin" class="space-y-5">
           <!-- Database Selection -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-            <select
-              v-model="formData.db"
-              class="w-full px-3 py-2 bg-[#f8f9fa] border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            >
-              <option value="" disabled>Select Branch</option>
-              <option value="Pitcar1">Pitcar Service</option>
-              <option value="pitcar.bodyrepair">Pitcar Body Repair</option>
-              <option value="db_test">Pitcar DB Test</option>
-            </select>
+            <div class="relative">
+              <select
+                v-model="formData.db"
+                class="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                required
+              >
+                <option value="" disabled>Select Branch</option>
+                <option value="Pitcar1">Pitcar Service</option>
+                <option value="pitcar.bodyrepair">Pitcar Body Repair</option>
+                <option value="db_test">Pitcar DB Test</option>
+              </select>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <BuildingOfficeIcon class="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
           </div>
+          
 
           <!-- Email -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              v-model="formData.login"
-              required
-              class="w-full px-3 py-2 bg-[#f8f9fa] border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="you@example.com"
-            />
+            <div class="relative">
+              <input
+                type="email"
+                v-model="formData.login"
+                required
+                class="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                placeholder="you@example.com"
+              />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <EnvelopeIcon class="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
           </div>
 
           <!-- Password -->
@@ -159,39 +56,149 @@
                 :type="showPassword ? 'text' : 'password'"
                 v-model="formData.password"
                 required
-                class="w-full px-3 py-2 bg-[#f8f9fa] border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                 placeholder="Enter your password"
               />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <LockClosedIcon class="h-5 w-5 text-gray-400" />
+              </div>
               <button
                 type="button"
                 @click="togglePassword"
-                class="absolute inset-y-0 right-3 flex items-center"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
-                <EyeIcon v-if="showPassword" class="h-5 w-5 text-gray-400" />
-                <EyeSlashIcon v-else class="h-5 w-5 text-gray-400" />
+                <EyeIcon v-if="showPassword" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <EyeSlashIcon v-else class="h-5 w-5 text-gray-400 hover:text-gray-600" />
               </button>
             </div>
           </div>
 
-          <div class="flex justify-end">
-            <a href="#" class="text-sm text-[#1A73E8] hover:text-blue-600">Forgot password?</a>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                v-model="formData.rememberMe"
+                class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+              />
+              <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                Remember me
+              </label>
+            </div>
+            <a href="#" class="text-sm text-red-600 hover:text-red-500 font-medium">Forgot password?</a>
           </div>
 
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-2.5 bg-[#B70000] text-white rounded-lg hover:bg-red-600 focus:ring-4 focus:ring-blue-200 transition-colors disabled:opacity-50"
+            class="w-full py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-colors disabled:opacity-70 flex justify-center items-center"
           >
-            <span v-if="loading" class="flex items-center justify-center">
-              <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+            <div v-if="loading" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              Loading...
-            </span>
-            <span v-else>Login</span>
+              Signing in...
+            </div>
+            <span v-else>Sign in</span>
           </button>
+          
+          <div v-if="error" class="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+            {{ error }}
+          </div>
         </form>
+        
+        <div class="mt-8 text-center text-sm text-gray-500">
+          <p>Need help? Contact <a href="mailto:support@example.com" class="text-red-600 hover:text-red-500">support@example.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side - Illustration & Features -->
+    <div class="hidden lg:block lg:w-1/2 bg-gradient-to-br from-red-50 via-white to-gray-50 relative overflow-hidden">
+      <!-- Main Content Area -->
+      <div class="relative w-full h-full flex items-center justify-center p-16">
+        <div class="relative w-full max-w-md">
+          <!-- Heading -->
+          <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            Content Management <span class="text-red-600">Dashboard</span>
+          </h1>
+          
+          <p class="text-gray-600 mb-8 leading-relaxed">
+            Streamline your content workflow with our comprehensive project management suite. Monitor progress, manage tasks, and boost team productivity.
+          </p>
+
+          <!-- Feature Cards -->
+          <div class="space-y-4">
+            <!-- Project Management -->
+            <div class="bg-white shadow-md rounded-xl p-5 transform transition-all hover:scale-[1.02] relative z-10">
+              <div class="flex items-start">
+                <div class="bg-red-100 rounded-full p-3 flex-shrink-0">
+                  <FolderIcon class="h-6 w-6 text-red-600" />
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium text-gray-900">Project Management</h3>
+                  <p class="text-gray-600 text-sm mt-1">Track project status, deadlines, and team assignments from a single dashboard</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Task Tracking -->
+            <div class="bg-white shadow-md rounded-xl p-5 transform transition-all hover:scale-[1.02] relative z-20">
+              <div class="flex items-start">
+                <div class="bg-blue-100 rounded-full p-3 flex-shrink-0">
+                  <ClipboardDocumentCheckIcon class="h-6 w-6 text-blue-600" />
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium text-gray-900">Task Tracking</h3>
+                  <p class="text-gray-600 text-sm mt-1">Manage tasks, track completion, and ensure on-time delivery with clear visual indicators</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Analytics -->
+            <div class="bg-white shadow-md rounded-xl p-5 transform transition-all hover:scale-[1.02] relative z-30">
+              <div class="flex items-start">
+                <div class="bg-green-100 rounded-full p-3 flex-shrink-0">
+                  <ChartBarIcon class="h-6 w-6 text-green-600" />
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium text-gray-900">Analytics & Insights</h3>
+                  <p class="text-gray-600 text-sm mt-1">Gain valuable insights with performance metrics, team productivity, and content analytics</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decorative Elements -->
+        <div class="absolute inset-0 pointer-events-none">
+          <!-- Top Right -->
+          <div class="absolute top-16 right-20 w-16 h-16 bg-red-50 rounded-xl -rotate-12 animate-float-slow">
+            <DocumentTextIcon class="h-8 w-8 m-4 text-red-600" />
+          </div>
+
+          <!-- Bottom Right -->
+          <div class="absolute bottom-20 right-32 w-20 h-20 bg-blue-50 rounded-full animate-float-medium">
+            <UserGroupIcon class="h-10 w-10 m-5 text-blue-600" />
+          </div>
+
+          <!-- Top Left -->
+          <div class="absolute top-40 left-16 w-14 h-14 bg-orange-50 rounded-lg rotate-12 animate-float-fast">
+            <ClockIcon class="h-8 w-8 m-3 text-orange-500" />
+          </div>
+
+          <!-- Center Left -->
+          <div class="absolute top-1/2 left-24 w-10 h-10 animate-spin-slow opacity-30">
+            <div class="h-full w-full rounded-full border-4 border-red-600 border-t-transparent"></div>
+          </div>
+
+          <!-- Bottom Left Grid Pattern -->
+          <div class="absolute bottom-12 left-12 grid grid-cols-3 gap-1 opacity-20">
+            <div v-for="n in 9" :key="n" class="w-3 h-3 bg-gray-400 rounded-sm"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -202,13 +209,17 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import {
+  EnvelopeIcon,
+  LockClosedIcon,
+  BuildingOfficeIcon,
   EyeIcon,
   EyeSlashIcon,
-  BanknotesIcon,
-  PlusIcon,
+  FolderIcon,
+  ClipboardDocumentCheckIcon,
   ChartBarIcon,
-  ArrowTrendingUpIcon,
-  CurrencyDollarIcon
+  DocumentTextIcon,
+  UserGroupIcon,
+  ClockIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -221,7 +232,8 @@ const error = ref('')
 const formData = ref({
   db: '',
   login: '',
-  password: ''
+  password: '',
+  rememberMe: false
 })
 
 const togglePassword = () => {
@@ -239,7 +251,7 @@ const handleLogin = async () => {
       formData.value.password
     )
     
-    router.push('/dashboard/overview')
+    router.push('/marketing/dashboard')
   } catch (err) {
     error.value = err.message || 'Login failed. Please check your credentials.'
   } finally {
@@ -250,13 +262,18 @@ const handleLogin = async () => {
 
 <style scoped>
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { transform: translateY(0) rotate(-12deg); }
+  50% { transform: translateY(-15px) rotate(-12deg); }
 }
 
 @keyframes float-medium {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes float-fast {
   0%, 100% { transform: translateY(0) rotate(12deg); }
-  50% { transform: translateY(-15px) rotate(12deg); }
+  50% { transform: translateY(-8px) rotate(12deg); }
 }
 
 @keyframes spin-slow {
@@ -269,7 +286,11 @@ const handleLogin = async () => {
 }
 
 .animate-float-medium {
-  animation: float-medium 4s ease-in-out infinite;
+  animation: float-medium 5s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
 }
 
 .animate-spin-slow {
