@@ -245,7 +245,7 @@ const filters = ref({
   date_start: '',
   date_end: '',
   project_manager_id: ''
-})
+}); 
 
 const handleDateRangeUpdate = (dateRange) => {
   if (dateRange && dateRange.start && dateRange.end) {
@@ -265,12 +265,21 @@ const fetchProjects = async (isInitialLoad = false) => {
   try {
     loading.value = true;
     
-    // Siapkan parameter yang akan dikirim
-    const params = {};
+    // Inisialisasi parameter dengan rentang tanggal default
+    const today = new Date();
+    const defaultParams = {
+      date_start: format(subDays(today, 7), 'yyyy-MM-dd'),
+      date_end: format(addDays(today, 14), 'yyyy-MM-dd'),
+    };
     
-    // Jika ini adalah load awal, jangan terapkan filter apapun
-    if (!isInitialLoad) {
-      // Hanya menambahkan parameter yang memiliki nilai (tidak kosong)
+    // Siapkan parameter yang akan dikirim
+    let params = {};
+    
+    // Jika ini adalah load awal, gunakan hanya filter tanggal default
+    if (isInitialLoad) {
+      params = { ...defaultParams };
+    } else {
+      // Jika bukan load awal, gunakan filter yang dipilih pengguna
       if (filters.value.department_id) {
         params.department_id = parseInt(filters.value.department_id);
       }
@@ -279,14 +288,17 @@ const fetchProjects = async (isInitialLoad = false) => {
         params.state = filters.value.state;
       }
       
-      if (filters.value.date_start) {
-        params.date_start = filters.value.date_start;
-      }
+      // Selalu gunakan filter tanggal, baik dari filter pengguna atau default
+      params.date_start = filters.value.date_start || defaultParams.date_start;
+      params.date_end = filters.value.date_end || defaultParams.date_end;
       
-      if (filters.value.date_end) {
-        params.date_end = filters.value.date_end;
+      if (filters.value.project_manager_id) {
+        params.project_manager_id = parseInt(filters.value.project_manager_id);
       }
     }
+    
+    // Log untuk debugging
+    console.log('Fetching projects with params:', params);
     
     // Kirim request dengan parameter yang benar
     const response = await apiClient.post('/web/v2/team/projects/list', {
@@ -385,11 +397,16 @@ const updateProjectStatus = async (projectId, newStatus) => {
 const resetFilters = () => {
   const today = new Date();
   
+  // Hitung 7 hari yang lalu
+  const sevenDaysAgo = subDays(today, 7);
+  // Hitung 14 hari ke depan
+  const fourteenDaysAhead = addDays(today, 14);
+  
   filters.value = {
     department_id: '',
     state: '',
-    date_start: format(subMonths(today, 1), 'yyyy-MM-dd'),
-    date_end: format(addMonths(today, 2), 'yyyy-MM-dd'),
+    date_start: format(sevenDaysAgo, 'yyyy-MM-dd'),
+    date_end: format(fourteenDaysAhead, 'yyyy-MM-dd'),
     project_manager_id: ''
   };
   
@@ -434,29 +451,28 @@ const effectiveDateFilter = computed(() => {
   }
   
   // Jika hanya salah satu, tentukan yang lain
+  const today = new Date();
+  
   if (filters.value.date_start && !filters.value.date_end) {
-    // Jika hanya start date, gunakan +3 bulan sebagai end date
-    const startDate = parseISO(filters.value.date_start);
+    // Jika hanya start date, gunakan +14 hari sebagai end date
     return {
       start: filters.value.date_start,
-      end: format(addMonths(startDate, 3), 'yyyy-MM-dd')
+      end: format(addDays(today, 14), 'yyyy-MM-dd')
     };
   }
   
   if (!filters.value.date_start && filters.value.date_end) {
-    // Jika hanya end date, gunakan -3 bulan sebagai start date
-    const endDate = parseISO(filters.value.date_end);
+    // Jika hanya end date, gunakan -7 hari sebagai start date
     return {
-      start: format(subMonths(endDate, 3), 'yyyy-MM-dd'),
+      start: format(subDays(today, 7), 'yyyy-MM-dd'),
       end: filters.value.date_end
     };
   }
   
-  // Default: sebulan ke belakang sampai 2 bulan ke depan
-  const today = new Date();
+  // Default: 7 hari ke belakang sampai 14 hari ke depan
   return {
-    start: format(subMonths(today, 1), 'yyyy-MM-dd'),
-    end: format(addMonths(today, 2), 'yyyy-MM-dd')
+    start: format(subDays(today, 7), 'yyyy-MM-dd'),
+    end: format(addDays(today, 14), 'yyyy-MM-dd')
   };
 });
 
@@ -493,18 +509,18 @@ const handleProjectSubmit = async (projectData) => {
 }
 
 onMounted(() => {
-  // Initialize date filters if empty
-  if (!filters.value.date_start || !filters.value.date_end) {
-    const today = new Date();
-    filters.value.date_start = format(subMonths(today, 1), 'yyyy-MM-dd');
-    filters.value.date_end = format(addMonths(today, 2), 'yyyy-MM-dd');
-  }
+  const today = new Date();
+  
+  // Set filter default menggunakan h-7 hingga h+14
+  filters.value.date_start = format(subDays(today, 7), 'yyyy-MM-dd');
+  filters.value.date_end = format(addDays(today, 14), 'yyyy-MM-dd');
   
   // Ambil data departemen terlebih dahulu
   fetchDepartments();
   
-  // Kemudian ambil data proyek tanpa filter (isInitialLoad = true)
+  // Kemudian ambil data proyek
   fetchProjects(true);
 });
+
 
 </script>

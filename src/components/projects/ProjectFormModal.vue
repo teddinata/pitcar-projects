@@ -84,6 +84,18 @@
           <!-- Team Selection -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
+              Project Manager
+            </label>
+            <TeamSelect
+              v-model="formData.project_manager_id"
+              :disabled="loading"
+              :multiple="false"
+            />
+          </div>
+
+          <!-- Team Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
               Team Members
             </label>
             <TeamSelect
@@ -160,7 +172,7 @@ const formData = ref({
   planned_design_count: 0,
   description: '',
   team_ids: [],
-  project_manager_id: authStore.user?.uid
+  project_manager_id: ''
 })
 
 const handleSubmit = () => {

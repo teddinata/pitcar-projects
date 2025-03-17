@@ -1414,6 +1414,7 @@ import {
   parseISO,
   differenceInDays,
   addDays,
+  subDays,
   isWithinInterval
 } from 'date-fns';
 import GanttZoomControls from '@/components/GanttZoomControl.vue';
@@ -1466,8 +1467,8 @@ const viewMode = ref('table'); // 'table', 'kanban', 'calendar', 'gantt'
 const currentDate = ref(new Date());
 const calendarView = ref('month'); // 'month', 'week'
 const dateRange = ref({
-  start: format(subMonths(new Date(), 1), 'yyyy-MM-dd'),
-  end: format(addMonths(new Date(), 1), 'yyyy-MM-dd')
+  start: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
+  end: format(addDays(new Date(), 14), 'yyyy-MM-dd')
 });
 
 // Gantt view state
@@ -2153,6 +2154,13 @@ onMounted(async () => {
     fetchProjects()
   ]);
   
+  // Set default date range (h-7 hingga h+14)
+  const today = new Date();
+  dateRange.value = {
+    start: format(subDays(today, 7), 'yyyy-MM-dd'),
+    end: format(addDays(today, 14), 'yyyy-MM-dd')
+  };
+  
   // Set the project default in the task form
   if (props.projectId && projects.value.length > 0) {
     resetTaskForm();
@@ -2592,8 +2600,9 @@ function applyDateFilter() {
 
 // Fungsi untuk membersihkan filter tanggal
 function clearDateFilter() {
-  dateRange.value.start = '';
-  dateRange.value.end = '';
+  const today = new Date();
+  dateRange.value.start = format(subDays(today, 7), 'yyyy-MM-dd');
+  dateRange.value.end = format(addDays(today, 14), 'yyyy-MM-dd');
   
   // Reset Gantt view ke default jika sedang dalam mode custom
   if (ganttView.value === 'custom') {
@@ -2620,10 +2629,10 @@ watch(viewMode, (newMode) => {
 
 function resetGanttToToday() {
   if (ganttView.value === 'custom') {
-    // Set range ke periode default
+    // Set range ke periode default (h-7 hingga h+14)
     const today = new Date();
-    dateRange.value.start = format(today, 'yyyy-MM-dd');
-    dateRange.value.end = format(addMonths(today, 1), 'yyyy-MM-dd');
+    dateRange.value.start = format(subDays(today, 7), 'yyyy-MM-dd');
+    dateRange.value.end = format(addDays(today, 14), 'yyyy-MM-dd');
     applyDateFilter();
   } else {
     // Reset ke tampilan default dengan tanggal hari ini

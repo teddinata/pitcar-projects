@@ -260,6 +260,7 @@
         v-if="showCreateTaskModal"
         :show="showCreateTaskModal"
         :project-id="projectId"
+        :projects="projects"
         @close="showCreateTaskModal = false"
         @submit="handleTaskCreate"
       />
@@ -349,6 +350,7 @@ const showEditModal = ref(false)
 const showCreateTaskModal = ref(false)
 const showDeleteConfirm = ref(false)
 const showForceDeleteConfirm = ref(false)
+const projects = ref([])
 
 // Computed
 const completedVideos = computed(() => {
@@ -358,6 +360,22 @@ const completedVideos = computed(() => {
 const completedDesigns = computed(() => {
   return project.value?.tasks?.filter(t => t.type === 'design' && t.state === 'done').length || 0
 })
+
+const fetchProjects = async () => {
+  try {
+    const response = await apiClient.post('/web/v2/content/projects/list', {
+      jsonrpc: '2.0',
+      method: 'call',
+      id: new Date().getTime()
+    })
+
+    if (response.data.result?.status === 'success') {
+      projects.value = response.data.result.data
+    }
+  } catch (error) {
+    console.error('Error fetching projects:', error)
+  }
+}
 
 // Methods
 const fetchProjectDetail = async () => {
@@ -520,6 +538,7 @@ const getInitials = (name) => {
 // Lifecycle
 onMounted(() => {
   fetchProjectDetail()
+  fetchProjects()
 })
 </script>
 

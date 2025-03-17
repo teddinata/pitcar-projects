@@ -23,18 +23,18 @@
       <button 
         v-if="isExpanded"
         @click="togglePin"
-        class="ml-8 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+        class="ml-auto text-gray-400 hover:text-gray-600 transition-colors duration-200"
         :title="isPinned ? 'Unlock Sidebar' : 'Lock Sidebar'"
       >
-        <PinIcon v-if="isPinned" class="w-8 h-8" />
-        <PinOffIcon v-else class="w-8 h-8" />
+        <PinIcon v-if="isPinned" class="w-5 h-5" />
+        <PinOffIcon v-else class="w-5 h-5" />
       </button>
     </div>
 
     <!-- Menu Items -->
-    <nav class="flex-1 mt-6 px-4 overflow-y-auto">
+    <nav class="flex-1 mt-4 px-4 overflow-y-auto">
       <!-- Marketing Section -->
-      <div class="mb-3">
+      <div class="mb-4">
         <!-- Marketing Main Menu Toggle -->
         <div
           @click="toggleMarketingMenu"
@@ -51,7 +51,7 @@
               :class="isMarketingActive ? 'text-white' : 'text-gray-600'"
             />
             <span
-              class="ml-3 font-medium overflow-hidden"
+              class="ml-3 font-medium overflow-hidden whitespace-nowrap"
               :class="[
                 isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0',
                 isMarketingActive ? 'text-white' : 'text-gray-600'
@@ -123,7 +123,7 @@
       
           <!-- Marketing Tasks -->
           <router-link
-            :to="'/marketing/project/tasks'"
+            :to="'/marketing/tasks'"
             custom
             v-slot="{ isActive, navigate }"
           >
@@ -268,34 +268,11 @@
               </router-link>
             </div>
           </div>
-
-          <!-- Marketing Analytics -->
-          <!-- <router-link
-            :to="'/marketing/analytics'"
-            custom
-            v-slot="{ isActive, navigate }"
-          >
-            <div
-              :class="[
-                'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                isActive
-                  ? 'bg-red-50 text-red-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              ]"
-              @click="navigate"
-            >
-              <BarChart3
-                class="w-4 h-4 shrink-0"
-                :class="isActive ? 'text-red-600' : 'text-gray-600'"
-              />
-              <span class="ml-2 font-medium text-sm">Analytics</span>
-            </div>
-          </router-link> -->
         </div>
       </div>
 
       <!-- Team Management Section -->
-      <div class="mb-3">
+      <div class="mb-4">
         <!-- Team Management Main Menu Toggle -->
         <div
           @click="toggleTeamMenu"
@@ -312,7 +289,7 @@
               :class="isTeamActive ? 'text-white' : 'text-gray-600'"
             />
             <span
-              class="ml-3 font-medium overflow-hidden"
+              class="ml-3 font-medium overflow-hidden whitespace-nowrap"
               :class="[
                 isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0',
                 isTeamActive ? 'text-white' : 'text-gray-600'
@@ -382,107 +359,74 @@
             </div>
           </router-link>
       
-          <!-- Team Task Management with Submenu -->
-          <div>
-            <!-- Task Management Toggle -->
+          <!-- Tasks (not as a submenu) -->
+          <router-link
+            :to="'/team/tasks'"
+            custom
+            v-slot="{ isActive, navigate }"
+          >
             <div
-              @click="toggleTaskMenu"
               :class="[
                 'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                isTaskActive
+                isActive
                   ? 'bg-red-50 text-red-600'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               ]"
+              @click="navigate"
             >
               <CheckSquare
                 class="w-4 h-4 shrink-0"
-                :class="isTaskActive ? 'text-red-600' : 'text-gray-600'"
+                :class="isActive ? 'text-red-600' : 'text-gray-600'"
               />
-              <span class="ml-2 font-medium text-sm">Task Management</span>
-              <ChevronDown
-                class="w-3 h-3 ml-auto transition-transform"
-                :class="[
-                  showTaskSubMenu ? 'rotate-180' : '',
-                  isTaskActive ? 'text-red-600' : 'text-gray-600'
-                ]"
-              />
+              <span class="ml-2 font-medium text-sm">Tasks</span>
             </div>
-          
-            <!-- Task Management Sub Menu -->
+          </router-link>
+
+          <!-- Timesheets (not as a submenu) -->
+          <router-link
+            :to="'/team/timesheets'"
+            custom
+            v-slot="{ isActive, navigate }"
+          >
             <div
-              v-if="showTaskSubMenu"
-              class="pl-3 mt-1 space-y-1"
+              :class="[
+                'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
+                isActive
+                  ? 'bg-red-50 text-red-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              ]"
+              @click="navigate"
             >
-              <!-- All Tasks -->
-              <router-link
-                :to="'/tasks'"
-                custom
-                v-slot="{ isActive, navigate }"
-              >
-                <div
-                  :class="[
-                    'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                    isActive
-                      ? 'bg-red-50 text-red-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  ]"
-                  @click="navigate"
-                >
-                  <ListTodo
-                    class="w-3 h-3 shrink-0"
-                    :class="isActive ? 'text-red-600' : 'text-gray-600'"
-                  />
-                  <span class="ml-2 font-medium text-xs">Task</span>
-                </div>
-              </router-link>
-          
-              <!-- Timesheets -->
-              <router-link
-                :to="'/tasks/timesheets'"
-                custom
-                v-slot="{ isActive, navigate }"
-              >
-                <div
-                  :class="[
-                    'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                    isActive
-                      ? 'bg-red-50 text-red-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  ]"
-                  @click="navigate"
-                >
-                  <Clock
-                    class="w-3 h-3 shrink-0"
-                    :class="isActive ? 'text-red-600' : 'text-gray-600'"
-                  />
-                  <span class="ml-2 font-medium text-xs">Timesheets</span>
-                </div>
-              </router-link>
-          
-              <!-- Time Reports -->
-              <router-link
-                :to="'/tasks/time-reports'"
-                custom
-                v-slot="{ isActive, navigate }"
-              >
-                <div
-                  :class="[
-                    'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                    isActive
-                      ? 'bg-red-50 text-red-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  ]"
-                  @click="navigate"
-                >
-                  <BarChart
-                    class="w-3 h-3 shrink-0"
-                    :class="isActive ? 'text-red-600' : 'text-gray-600'"
-                  />
-                  <span class="ml-2 font-medium text-xs">Time Reports</span>
-                </div>
-              </router-link>
+              <Clock
+                class="w-4 h-4 shrink-0"
+                :class="isActive ? 'text-red-600' : 'text-gray-600'"
+              />
+              <span class="ml-2 font-medium text-sm">Lembar Waktu</span>
             </div>
-          </div>
+          </router-link>
+          
+          <!-- Time Reports (not as a submenu) -->
+          <router-link
+            :to="'/team/time-reports'"
+            custom
+            v-slot="{ isActive, navigate }"
+          >
+            <div
+              :class="[
+                'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
+                isActive
+                  ? 'bg-red-50 text-red-600'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              ]"
+              @click="navigate"
+            >
+              <BarChart
+                class="w-4 h-4 shrink-0"
+                :class="isActive ? 'text-red-600' : 'text-gray-600'"
+              />
+              <span class="ml-2 font-medium text-sm">Time Reports</span>
+            </div>
+          </router-link>
 
           <!-- Team BAU with Submenu -->
           <div>
@@ -608,59 +552,12 @@
               </router-link>
             </div>
           </div>
-
-          <!-- Team Analytics -->
-          <!-- <router-link
-            :to="'/team/analytics'"
-            custom
-            v-slot="{ isActive, navigate }"
-          >
-            <div
-              :class="[
-                'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                isActive
-                  ? 'bg-red-50 text-red-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              ]"
-              @click="navigate"
-            >
-              <BarChart3
-                class="w-4 h-4 shrink-0"
-                :class="isActive ? 'text-red-600' : 'text-gray-600'"
-              />
-              <span class="ml-2 font-medium text-sm">Analytics</span>
-            </div>
-          </router-link> -->
-
-          <!-- Team Members -->
-          <!-- <router-link
-            :to="'/team/members'"
-            custom
-            v-slot="{ isActive, navigate }"
-          >
-            <div
-              :class="[
-                'relative flex items-center py-2 pl-4 pr-2 cursor-pointer transition-all duration-200 rounded-lg',
-                isActive
-                  ? 'bg-red-50 text-red-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              ]"
-              @click="navigate"
-            >
-              <User
-                class="w-4 h-4 shrink-0"
-                :class="isActive ? 'text-red-600' : 'text-gray-600'"
-              />
-              <span class="ml-2 font-medium text-sm">Members</span>
-            </div>
-          </router-link> -->
         </div>
       </div>
     </nav>
 
     <!-- Version Info -->
-    <div class="px-4 text-xs text-gray-400 mb-2"
-      :class="isExpanded ? 'text-center' : 'text-center w-full'">
+    <div class="px-4 text-xs text-gray-400 mb-2 text-center">
       <p>v{{ version }}</p>
     </div>
 
@@ -678,15 +575,15 @@
             class="ml-3 transition-all duration-300 overflow-hidden"
             :class="isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'"
           >
-            <div class="font-medium text-gray-900">{{ authStore.user?.name || 'User' }}</div>
-            <div class="text-xs text-gray-500">{{ authStore.user?.is_admin ? 'Administrator' : 'Team Member' }}</div>
+            <div class="font-medium text-gray-900 truncate">{{ authStore.user?.name || 'User' }}</div>
+            <div class="text-xs text-gray-500 truncate">{{ authStore.user?.is_admin ? 'Administrator' : 'Team Member' }}</div>
           </div>
         </button>
 
         <!-- Dropdown -->
         <div 
           v-if="showDropdown && isExpanded"
-          class="absolute bottom-full left-0 w-full mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1"
+          class="absolute bottom-full left-0 w-full mb-2 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10"
         >
           <button 
             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
@@ -728,7 +625,6 @@ import {
   LogOut,
   ChevronDown,
   ClipboardList,
-  ClipboardCheck,
   Calendar,
   Megaphone,
   Clock,
@@ -740,47 +636,33 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
-// Mengubah nilai default isExpanded menjadi true agar menu terbuka by default
 const showDropdown = ref(false)
 const version = packageJson.version
 
 const isPinned = ref(false)
 const isExpanded = ref(isPinned.value)
+
 const togglePin = () => {
   isPinned.value = !isPinned.value
-  // When pinned, sidebar should stay expanded
   isExpanded.value = isPinned.value
-  // Store preference in localStorage to persist across sessions
   localStorage.setItem('sidebarPinned', isPinned.value.toString())
 }
 
-
-// Task Management menu state
-// Default menu terbuka
-const showTaskSubMenu = ref(false)
-const isTaskActive = computed(() => {
-  const path = router.currentRoute.value.path
-  return path.includes('/tasks') || path.includes('/team/tasks')
-})
-
 // Marketing menu state
-// Default menu terbuka
-const showMarketingSubMenu = ref(true)
+const showMarketingSubMenu = ref(false)
 const isMarketingActive = computed(() => {
   const path = router.currentRoute.value.path
-  return path.includes('/marketing')
+  return path.startsWith('/marketing')
 })
 
 // Team Management menu state
-// Default menu terbuka
 const showTeamSubMenu = ref(true)
 const isTeamActive = computed(() => {
   const path = router.currentRoute.value.path
-  return path.includes('/team') || path.includes('/tasks')
+  return path.startsWith('/team')
 })
 
 // BAU menu state for Marketing
-// Default menu terbuka
 const showBAUSubMenu = ref(false)
 const isBAUActive = computed(() => {
   const path = router.currentRoute.value.path
@@ -788,22 +670,11 @@ const isBAUActive = computed(() => {
 })
 
 // BAU menu state for Team
-// Default menu terbuka
 const showTeamBAUSubMenu = ref(false)
 const isTeamBAUActive = computed(() => {
   const path = router.currentRoute.value.path
   return path.includes('/team/bau')
 })
-
-// Toggle Task Management menu
-const toggleTaskMenu = () => {
-  if (isExpanded.value) {
-    showTaskSubMenu.value = !showTaskSubMenu.value
-  } else {
-    isExpanded.value = true
-    showTaskSubMenu.value = true
-  }
-}
 
 // Toggle Marketing menu
 const toggleMarketingMenu = () => {
@@ -860,32 +731,31 @@ const closeDropdown = (e) => {
 onMounted(() => {
   document.addEventListener('click', closeDropdown)
   
-  // Secara otomatis menemukan section aktif dan memastikan menu tetap terbuka
+  // Automatically find active section and ensure menus stay open
   const path = router.currentRoute.value.path
-  if (path.includes('/tasks') || path.includes('/team/tasks')) {
+  
+  // Set correct menu states based on current route
+  if (path.startsWith('/team')) {
     showTeamSubMenu.value = true
-    showTaskSubMenu.value = true
-  } else if (path.includes('/team/bau')) {
-    showTeamSubMenu.value = true
-    showTeamBAUSubMenu.value = true
-  } else if (path.includes('/marketing/bau')) {
+    
+    if (path.includes('/team/bau')) {
+      showTeamBAUSubMenu.value = true
+    }
+  } else if (path.startsWith('/marketing')) {
     showMarketingSubMenu.value = true
-    showBAUSubMenu.value = true
-  } else if (path.includes('/team')) {
-    showTeamSubMenu.value = true
-  } else if (path.includes('/marketing')) {
-    showMarketingSubMenu.value = true
+    
+    if (path.includes('/marketing/bau')) {
+      showBAUSubMenu.value = true
+    }
   }
   
   // Load pinned state from localStorage
   const savedPinState = localStorage.getItem('sidebarPinned')
   if (savedPinState !== null) {
     isPinned.value = savedPinState === 'true'
-    // Set isExpanded to match isPinned state on load
     isExpanded.value = isPinned.value
   }
 })
-
 
 onUnmounted(() => {
   document.removeEventListener('click', closeDropdown)
@@ -896,16 +766,12 @@ onUnmounted(() => {
 .router-link-active {
   background-color: inherit;
 }
-.absolute {
+
+/* Smooth transitions for all interactive elements */
+.absolute, .dropdown-item, .transition-all {
   transition: all 0.2s ease-in-out;
 }
-/* Optional: Add hover effect for dropdown items */
-.dropdown-item {
-  transition: all 0.2s ease-in-out;
-}
-.dropdown-item:hover {
-  background-color: #F3F4F6;
-}
+
 /* Hover expand behavior only applies when not pinned */
 .hover-expand {
   transition-delay: 0s;

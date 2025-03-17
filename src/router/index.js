@@ -164,7 +164,7 @@ const routes = [
 
   // Task Management Routes
   {
-    path: '/tasks',
+    path: '/team/tasks',
     name: 'tasks',
     component: TeamTaskManager,
     meta: {
@@ -185,7 +185,7 @@ const routes = [
     }
   },
   {
-    path: '/tasks/timesheets',
+    path: '/team/timesheets',
     name: 'timesheets',
     component: TaskTimesheetsPage,
     meta: {
@@ -194,7 +194,7 @@ const routes = [
     }
   },
   {
-    path: '/tasks/time-reports',
+    path: '/team/time-reports',
     name: 'timeReports',
     component: TaskTimeReportsPage,
     meta: {

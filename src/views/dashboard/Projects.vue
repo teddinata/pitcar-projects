@@ -231,7 +231,7 @@ const resetFilters = () => {
 }
 
 const viewProject = (projectId) => {
-  router.push(`/dashboard/project/${projectId}`)
+  router.push(`/marketing/project/${projectId}`)
 }
 
 const closeModal = () => {

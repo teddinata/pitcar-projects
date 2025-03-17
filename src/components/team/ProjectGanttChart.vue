@@ -555,26 +555,30 @@ function fetchProjects() {
     method: 'call'
   };
   
-  // Use effective date range for API call
-  const dateRange = effectiveDateRange.value;
+  // Get date range, either from props or from internal state
+  let dateStart, dateEnd;
   
-  // Add date range to params
-  if (isInternalNavigation.value || (!props.startDateFilter || !props.endDateFilter)) {
-    // Use calculated date range from our component
-    params.date_start = format(dateRange.start, 'yyyy-MM-dd');
-    params.date_end = format(dateRange.end, 'yyyy-MM-dd');
+  if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
+    // Use props directly without parsing to avoid any potential issues
+    dateStart = props.startDateFilter;
+    dateEnd = props.endDateFilter;
   } else {
-    // Use props if provided and not overridden by internal navigation
-    params.date_start = props.startDateFilter;
-    params.date_end = props.endDateFilter;
+    // Use the calculated date range from our component
+    const dateRange = effectiveDateRange.value;
+    dateStart = format(dateRange.start, 'yyyy-MM-dd');
+    dateEnd = format(dateRange.end, 'yyyy-MM-dd');
   }
+  
+  // Add date parameters
+  params.date_start = dateStart;
+  params.date_end = dateEnd;
   
   // Add department id if present
   if (props.departmentId) {
     params.department_id = props.departmentId;
   }
 
-  // Rest of the fetchProjects function remains the same
+  // API call
   apiClient.post('/web/v2/team/dashboard/timeline', params)
     .then(response => {
       if (response.data.result?.status === 'success') {
@@ -834,23 +838,22 @@ function moveTimelinePrev() {
       startDate.value = subDays(startDate.value, 14);
     }
     
-    // Calculate the new date range based on updated startDate
-    const newRange = effectiveDateRange.value;
+    // Calculate the new date range
+    const range = effectiveDateRange.value;
     
     // Emit the new date range to parent component
     emit('update:dateRange', {
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
+      start: format(range.start, 'yyyy-MM-dd'),
+      end: format(range.end, 'yyyy-MM-dd')
     });
     
     // Fetch projects with the new date range
     fetchProjects();
   } catch (error) {
     console.error('Error navigating to previous period:', error);
-  } finally {
-    isInternalNavigation.value = false;
   }
 }
+
 
 // 4. Modify the moveTimelineNext function similarly
 function moveTimelineNext() {
@@ -866,23 +869,22 @@ function moveTimelineNext() {
       startDate.value = addDays(startDate.value, 14);
     }
     
-    // Calculate the new date range based on updated startDate
-    const newRange = effectiveDateRange.value;
+    // Calculate the new date range
+    const range = effectiveDateRange.value;
     
     // Emit the new date range to parent component
     emit('update:dateRange', {
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
+      start: format(range.start, 'yyyy-MM-dd'),
+      end: format(range.end, 'yyyy-MM-dd')
     });
     
     // Fetch projects with the new date range
     fetchProjects();
   } catch (error) {
     console.error('Error navigating to next period:', error);
-  } finally {
-    isInternalNavigation.value = false;
   }
 }
+
 
 // 5. Modify the resetTimeline function
 function resetTimeline() {
@@ -961,18 +963,14 @@ function setViewMode(mode) {
 function getTodayPosition() {
   try {
     const today = new Date();
+    // Use effectiveDateRange.value.start directly
     const viewStart = effectiveDateRange.value.start;
     
-    // Ensure both are valid dates
-    if (!viewStart || isNaN(viewStart.getTime()) || 
-        !today || isNaN(today.getTime())) {
+    if (!viewStart || isNaN(viewStart.getTime())) {
       return 0;
     }
     
-    // Calculate days difference
     const daysFromViewStart = differenceInDays(today, viewStart);
-    
-    // Calculate pixel position
     return Math.max(0, daysFromViewStart * getDayWidth());
   } catch (error) {
     console.error('Error calculating today position:', error);
@@ -984,56 +982,45 @@ function getTodayPosition() {
 // 3. Update the effectiveDateRange computed property to properly handle date changes:
 
 const effectiveDateRange = computed(() => {
-  try {
-    // Generate date range based on view mode and current startDate
-    let rangeStart, rangeEnd;
-    
-    if (viewMode.value === 'month') {
-      rangeStart = startOfMonth(startDate.value);
-      rangeEnd = endOfMonth(startDate.value);
-    } else if (viewMode.value === 'week') {
-      rangeStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
-      rangeEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
-    } else { // day view
-      rangeStart = startDate.value;
-      rangeEnd = addDays(startDate.value, 14); // 2 weeks default
-    }
-    
-    // If props provide date filters and we're in the initial load or filter mode, 
-    // override the internal state
-    if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
-      try {
-        const start = parseISO(props.startDateFilter);
-        const end = parseISO(props.endDateFilter);
-        
-        // Make sure both dates are valid
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          // Also update internal startDate to align with prop filters
-          startDate.value = start;
-          return { start, end };
-        }
-      } catch (e) {
-        console.error('Error parsing date filters:', e);
-      }
-    }
-    
-    // Ensure both dates are valid
-    if (isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
-      const today = new Date();
-      rangeStart = startOfMonth(today);
-      rangeEnd = endOfMonth(today);
-    }
-    
-    return { start: rangeStart, end: rangeEnd };
-  } catch (error) {
-    console.error('Error calculating date range:', error);
-    // Fallback to current month
-    const today = new Date();
-    return {
-      start: startOfMonth(today),
-      end: endOfMonth(today)
-    };
+  
+  // Generate date range based on view mode and current startDate
+  let rangeStart, rangeEnd;
+  
+  if (viewMode.value === 'month') {
+    rangeStart = startOfMonth(startDate.value);
+    rangeEnd = endOfMonth(startDate.value);
+  } else if (viewMode.value === 'week') {
+    rangeStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
+    rangeEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
+  } else { // day view
+    rangeStart = startDate.value;
+    rangeEnd = addDays(startDate.value, 14); // 2 weeks default
   }
+  
+  // If props provide date filters and not in internal navigation mode,
+  // use them for display but DON'T update internal startDate
+  if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
+    try {
+      const start = parseISO(props.startDateFilter);
+      const end = parseISO(props.endDateFilter);
+      
+      // Make sure both dates are valid
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        return { start, end };
+      }
+    } catch (e) {
+      console.error('Error parsing date filters:', e);
+    }
+  }
+  
+  // Ensure both dates are valid
+  if (isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
+    const today = new Date();
+    rangeStart = startOfMonth(today);
+    rangeEnd = endOfMonth(today);
+  }
+  
+  return { start: rangeStart, end: rangeEnd };
 });
 
 
@@ -1112,15 +1099,31 @@ function handleEditTask(task) {
   // router.push(`/team/task/${task.id}/edit`);
 }
 
+// Lifecycle hooks
+onMounted(() => {
+  // Initialize startDate from props if available, but only once
+  if (props.startDateFilter) {
+    try {
+      const date = parseISO(props.startDateFilter);
+      if (!isNaN(date.getTime())) {
+        startDate.value = date;
+      }
+    } catch (e) {
+      console.error('Error parsing initial startDateFilter:', e);
+    }
+  }
+  
+  // Initial data fetch (only once)
+  fetchProjects();
+});
+
 watch(
   [() => props.startDateFilter, () => props.endDateFilter, () => props.departmentId],
   ([newStart, newEnd, newDept], [oldStart, oldEnd, oldDept]) => {
-    // Only react to actual changes
-    if (newStart !== oldStart || newEnd !== oldEnd || newDept !== oldDept) {
-      isInternalNavigation.value = false; // Reset internal navigation flag
-      
-      // Update internal startDate if valid date provided
-      if (newStart) {
+    // Only react to actual changes from parent, not self-triggered ones
+    if ((newStart !== oldStart || newEnd !== oldEnd || newDept !== oldDept) && !isInternalNavigation.value) {
+      // If date filters change, update starting point
+      if (newStart && newStart !== oldStart) {
         try {
           const date = parseISO(newStart);
           if (!isNaN(date.getTime())) {
@@ -1137,22 +1140,12 @@ watch(
   }
 );
 
-// Lifecycle hooks
-onMounted(() => {
-  // Initialize startDate from props if available
-  if (props.startDateFilter) {
-    try {
-      const date = parseISO(props.startDateFilter);
-      if (!isNaN(date.getTime())) {
-        startDate.value = date;
-      }
-    } catch (e) {
-      console.error('Error parsing initial startDateFilter:', e);
-    }
+watch(loading, (newVal, oldVal) => {
+  // When loading finishes
+  if (oldVal === true && newVal === false) {
+    // Reset internal navigation flag after data is fetched
+    isInternalNavigation.value = false;
   }
-  
-  // Initial data fetch
-  fetchProjects();
 });
 
 
