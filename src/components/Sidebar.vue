@@ -123,7 +123,7 @@
       
           <!-- Marketing Tasks -->
           <router-link
-            :to="'/marketing/tasks'"
+            :to="'/marketing/project/tasks'"
             custom
             v-slot="{ isActive, navigate }"
           >
@@ -444,7 +444,7 @@
                 class="w-4 h-4 shrink-0"
                 :class="isTeamBAUActive ? 'text-red-600' : 'text-gray-600'"
               />
-              <span class="ml-2 font-medium text-sm">Business as Usual</span>
+              <span class="ml-2 font-medium text-sm">Kegiatan Harian</span>
               <ChevronDown
                 class="w-3 h-3 ml-auto transition-transform"
                 :class="[
