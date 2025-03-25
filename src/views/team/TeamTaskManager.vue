@@ -2810,7 +2810,12 @@ const fetchProjects = async () => {
     const response = await apiClient.post('/web/v2/team/projects/list', {
       jsonrpc: '2.0',
       method: 'call',
-      id: new Date().getTime()
+      id: new Date().getTime(),
+      params: {
+        // Tambahkan parameter pagination
+        page: 1,
+        limit: 100
+      }
     });
     
     if (response.data.result?.status === 'success') {
