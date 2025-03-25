@@ -1,349 +1,349 @@
-<!-- src/components/team/TeamBAUFormModal.vue -->
+<!-- components/team/TeamBAUFormModal.vue -->
 <template>
-  <Modal :show="show" @close="handleClose">
-    <template #title>
-      <div>
-        <h3 class="text-xl font-semibold text-gray-900">
-          {{ editMode ? 'Edit BAU Activity' : 'Add BAU Activity' }}
-        </h3>
-        <p class="mt-1 text-sm text-gray-500">
-          {{ editMode ? 'Update business as usual activity details' : 'Record a business as usual activity for this project' }}
-        </p>
-      </div>
-    </template>
-    
-    <div class="max-h-[calc(100vh-200px)] overflow-y-auto px-1">
-      <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Activity Name -->
-          <div class="sm:col-span-2">
-            <label class="block text-sm font-medium text-gray-700">Activity Name *</label>
-            <input
-              v-model="formData.name"
-              type="text"
-              required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              placeholder="Enter activity name"
-            />
-          </div>
+  <div 
+    v-if="show" 
+    class="fixed inset-0 z-50 overflow-y-auto"
+    aria-labelledby="modal-title" 
+    role="dialog" 
+    aria-modal="true"
+  >
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Background overlay with blur effect -->
+      <div 
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+        aria-hidden="true"
+        @click="$emit('close')"
+      ></div>
 
-          <!-- Date and Hours -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Date *</label>
-            <input
-              v-model="formData.date"
-              type="date"
-              required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
+      <!-- Modal panel -->
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <!-- Header with Gradient -->
+        <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-white flex items-center">
+              <Clock class="w-5 h-5 mr-2" />
+              Add BAU Activity
+            </h3>
+            <button @click="$emit('close')" class="text-white hover:text-gray-200 focus:outline-none">
+              <X class="h-5 w-5" />
+            </button>
+          </div>
+          <p class="mt-1 text-sm text-red-100">Create a business-as-usual activity from existing tasks or manually</p>
+        </div>
+        
+        <form @submit.prevent="submitForm">
+          <!-- Task Selection Section -->
+          <div class="px-6 pt-5 pb-3 border-b border-gray-100">
+            <label for="task_id" class="block text-sm font-medium text-gray-700">Select from existing task</label>
+            <div class="mt-2 relative rounded-md shadow-sm">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <CheckSquare class="h-4 w-4 text-gray-400" />
+              </div>
+              <select 
+                id="task_id" 
+                v-model="selectedTaskId" 
+                @change="selectTask"
+                class="block w-full pl-10 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-lg"
+                :class="{'border-red-300 bg-red-50': selectedTaskId}"
+              >
+                <option value="">Create a new activity</option>
+                <option 
+                  v-for="task in projectTasks" 
+                  :key="task.id" 
+                  :value="task.id"
+                >
+                  {{ task.name }}
+                </option>
+              </select>
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <ChevronDown class="h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+            <p class="mt-1 text-xs text-gray-500">Optional: Select a task to automatically fill activity details</p>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Hours Spent *</label>
-            <input
-              v-model.number="formData.hours_spent"
-              type="number"
-              min="0"
-              step="0.1"
-              required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              placeholder="0.0"
-            />
+          <!-- Activity Details Section -->
+          <div class="px-6 py-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div class="space-y-5">
+              <!-- Activity Name -->
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Activity Name</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FileText class="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Time Range -->
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Clock class="w-4 h-4 mr-1.5 text-red-500" />
+                  Time Allocation
+                </h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label for="time_start" class="block text-xs font-medium text-gray-500">Start Time</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                      <input 
+                        type="time" 
+                        id="time_start" 
+                        v-model="form.time_start" 
+                        class="block w-full py-2 sm:text-sm border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label for="time_end" class="block text-xs font-medium text-gray-500">End Time</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                      <input 
+                        type="time" 
+                        id="time_end" 
+                        v-model="form.time_end" 
+                        class="block w-full py-2 sm:text-sm border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500 flex items-center">
+                  <Info class="w-3 h-3 mr-1" />
+                  Estimated duration: {{ calculateDuration() }} hours
+                </div>
+              </div>
+              
+              <!-- Description -->
+              <div>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                  <textarea 
+                    id="description" 
+                    v-model="form.description" 
+                    rows="3" 
+                    class="block w-full sm:text-sm border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                    placeholder="Describe the activity..."
+                  ></textarea>
+                </div>
+              </div>
+              
+              <!-- Status -->
+              <div>
+                <label for="state" class="block text-sm font-medium text-gray-700">Status</label>
+                <div class="mt-1">
+                  <div class="flex items-center space-x-4">
+                    <div 
+                      v-for="(statusLabel, statusValue) in statusOptions" 
+                      :key="statusValue"
+                      class="flex items-center"
+                    >
+                      <input 
+                        type="radio" 
+                        :id="`status_${statusValue}`" 
+                        :name="'status'" 
+                        :value="statusValue" 
+                        v-model="form.state" 
+                        class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300"
+                      />
+                      <label :for="`status_${statusValue}`" class="ml-2 block text-sm text-gray-700">
+                        {{ statusLabel }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <!-- Activity Type -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Activity Type *</label>
-            <select
-              v-model="formData.activity_type"
-              required
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          
+          <!-- Footer Actions -->
+          <div class="bg-gray-50 px-6 py-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
+            <button
+              type="button"
+              @click="$emit('close')"
+              class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
-              <option value="" disabled>Select activity type</option>
-              <option value="meeting">Meeting</option>
-              <option value="training">Training</option>
-              <option value="support">Support</option>
-              <option value="admin">Administrative</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <!-- Creator -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Creator</label>
-            <TeamSelect
-              v-model="formData.creator_id"
-              :multiple="false"
-              :disabled="loading"
-              class="mt-1 block w-full"
-              placeholder="Select creator"
-            />
-          </div>
-
-          <!-- Status -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Status</label>
-            <select
-              v-model="formData.state"
-              class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
+              :disabled="isSubmitting"
             >
-              <option value="planned">Planned</option>
-              <option value="done">Done</option>
-              <option value="not_done">Not Done</option>
-            </select>
+              <span v-if="isSubmitting" class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </span>
+              <span v-else class="flex items-center">
+                <Save class="w-4 h-4 mr-1.5" />
+                Save Activity
+              </span>
+            </button>
           </div>
-        </div>
-
-        <!-- Description -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Description</label>
-          <textarea
-            v-model="formData.description"
-            rows="3"
-            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            placeholder="Enter activity description"
-          ></textarea>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="flex justify-end space-x-3 pt-4 border-t mb-4 border-gray-200">
-          <button
-            type="button"
-            @click="handleClose"
-            class="px-4 py-2 mb-4 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            :disabled="loading || !isFormValid"
-            class="inline-flex mb-4 items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-          >
-            <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
-            {{ editMode ? 'Update Activity' : 'Add Activity' }}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
-  </Modal>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { Loader2 } from 'lucide-vue-next'
-import Modal from '@/components/projects/ProjectModal.vue'
-import TeamSelect from '@/components/TeamSelect.vue'
+import { ref, computed, onMounted } from 'vue'
+import { Clock, Calendar, FileText, CheckSquare, Tag, ChevronDown, X, Info, Save } from 'lucide-vue-next'
 import apiClient from '@/config/api'
 
 const props = defineProps({
   show: Boolean,
-  bauId: {
-    type: [Number, String],
-    default: null
-  },
-  projectId: {
-    type: [Number, String],
-    required: true
-  }
+  projectId: Number
 })
 
 const emit = defineEmits(['close', 'submit'])
-const loading = ref(false)
-const employeeMasters = ref(null)
 
-const editMode = computed(() => !!props.bauId)
-
-const formData = ref({
+// Form data
+const form = ref({
   name: '',
-  date: '',
-  hours_spent: 0,
-  activity_type: '',
-  creator_id: null,
-  state: 'planned',
-  description: ''
+  date: new Date().toISOString().substring(0, 10), // Today's date in YYYY-MM-DD format
+  activity_type: 'support',
+  time_start: '09:00',
+  time_end: '10:00',
+  description: '',
+  state: 'planned'
 })
 
-const isFormValid = computed(() => {
-  return (
-    formData.value.name &&
-    formData.value.date &&
-    formData.value.hours_spent > 0 &&
-    formData.value.activity_type
-  )
-})
-
-const fetchEmployeeMasters = async () => {
-  try {
-    const response = await apiClient.post('/web/employees/masters', {
-      jsonrpc: '2.0',
-      id: new Date().getTime()
-    })
-
-    if (response.data.result?.status === 'success') {
-      employeeMasters.value = response.data.result.data
-    }
-  } catch (error) {
-    console.error('Error fetching employee masters:', error)
-  }
+// Status options
+const statusOptions = {
+  'planned': 'Planned',
+  'done': 'Done',
+  'not_done': 'Not Done'
 }
 
-const fetchBAUData = async () => {
-  if (!props.bauId) return
-  
+// Tasks from the project
+const projectTasks = ref([])
+const selectedTaskId = ref('')
+const isSubmitting = ref(false)
+
+onMounted(async () => {
+  // Load tasks related to this project
+  if (props.projectId) {
+    await fetchProjectTasks()
+  }
+})
+
+const fetchProjectTasks = async () => {
   try {
-    loading.value = true
-    const response = await apiClient.post('/web/v2/team/bau', {
+    const response = await apiClient.post('/web/v2/team/tasks', {
       jsonrpc: '2.0',
       id: new Date().getTime(),
       params: {
-        operation: 'read',
-        bau_id: props.bauId
+        operation: 'list',
+        project_id: props.projectId
       }
     })
 
     if (response.data.result?.status === 'success') {
-      const bau = response.data.result.data
-      formData.value = {
-        name: bau.name,
-        date: bau.date,
-        hours_spent: bau.hours_spent,
-        activity_type: bau.activity_type,
-        creator_id: bau.creator?.id,
-        state: bau.state,
-        description: bau.description || ''
-      }
+      projectTasks.value = response.data.result.data
     }
   } catch (error) {
-    console.error('Error fetching BAU data:', error)
-  } finally {
-    loading.value = false
+    console.error('Error fetching tasks:', error)
   }
 }
 
-const getCurrentUserEmployee = async () => {
-  try {
-    const response = await apiClient.post('/web/session/get_session_info', {
-      jsonrpc: '2.0',
-      method: 'call'
-    })
-    
-    if (response.data.result && response.data.result.uid) {
-      const uid = response.data.result.uid
-      
-      const userResponse = await apiClient.post('/web/dataset/call_kw', {
-        jsonrpc: '2.0',
-        method: 'call',
-        params: {
-          model: 'res.users',
-          method: 'search_read',
-          args: [[['id', '=', uid]]],
-          kwargs: {
-            fields: ['employee_id']
-          }
-        }
-      })
-      
-      if (userResponse.data.result && userResponse.data.result[0] && userResponse.data.result[0].employee_id) {
-        return userResponse.data.result[0].employee_id[0]
-      }
-    }
-    
-    return null
-  } catch (error) {
-    console.error('Error getting current user employee:', error)
-    return null
-  }
-}
-
-const setCurrentUserAsCreator = async () => {
-  if (!editMode.value && !formData.value.creator_id) {
-    const currentUserEmployeeId = await getCurrentUserEmployee()
-    if (currentUserEmployeeId) {
-      formData.value.creator_id = currentUserEmployeeId
-    }
-  }
-}
-
-const setDefaultDate = () => {
-  if (!editMode.value && !formData.value.date) {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    formData.value.date = `${year}-${month}-${day}`
-  }
-}
-
-const handleSubmit = () => {
-  if (!isFormValid.value) {
+const selectTask = () => {
+  if (!selectedTaskId.value) {
+    // Reset form if "Create new" is selected
+    form.value.name = ''
+    form.value.description = ''
     return
   }
-
-  loading.value = true
-
-  const submitData = {
-    name: formData.value.name.trim(),
-    date: formData.value.date,
-    hours_spent: formData.value.hours_spent,
-    activity_type: formData.value.activity_type,
-    project_id: props.projectId,
-    state: formData.value.state,
-    description: formData.value.description?.trim() || ''
-  }
-
-  if (formData.value.creator_id) {
-    submitData.creator_id = formData.value.creator_id
-  }
-
-  if (editMode.value) {
-    submitData.bau_id = props.bauId
-  }
-
-  console.log('Submitting BAU form data:', submitData)
-  emit('submit', submitData)
-
-  loading.value = false
-}
-
-const handleClose = () => {
-  formData.value = {
-    name: '',
-    date: '',
-    hours_spent: 0,
-    activity_type: '',
-    creator_id: null,
-    state: 'planned',
-    description: ''
-  }
-  emit('close')
-}
-
-// Lifecycle hooks
-onMounted(async () => {
-  await fetchEmployeeMasters()
   
-  if (editMode.value) {
-    await fetchBAUData()
-  } else {
-    setDefaultDate()
-    await setCurrentUserAsCreator()
+  // Find the selected task
+  const task = projectTasks.value.find(t => t.id === parseInt(selectedTaskId.value))
+  if (task) {
+    // Pre-fill form with task data
+    form.value.name = task.name
+    form.value.description = task.description || ''
   }
-})
+}
 
-// Reset form when modal is closed and reopened
-watch(() => props.show, async (newVal) => {
-  if (newVal && !editMode.value) {
-    formData.value = {
-      name: '',
-      date: '',
-      hours_spent: 0,
-      activity_type: '',
-      creator_id: null,
-      state: 'planned',
-      description: ''
-    }
-    setDefaultDate()
-    await setCurrentUserAsCreator()
+const calculateDuration = () => {
+  // Parse the time values
+  const startParts = form.value.time_start.split(':').map(Number)
+  const endParts = form.value.time_end.split(':').map(Number)
+  
+  // Calculate duration in hours
+  let startHours = startParts[0] + startParts[1] / 60
+  let endHours = endParts[0] + endParts[1] / 60
+  
+  // Handle overnight case
+  if (endHours < startHours) {
+    endHours += 24
   }
-})
+  
+  const duration = endHours - startHours
+  return duration.toFixed(1)
+}
+
+const submitForm = async () => {
+  if (isSubmitting.value) return
+  
+  isSubmitting.value = true
+  
+  try {
+    const payload = {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        operation: 'create',
+        project_id: props.projectId,
+        name: form.value.name,
+        date: form.value.date,
+        activity_type: form.value.activity_type,
+        time_start: form.value.time_start,
+        time_end: form.value.time_end,
+        description: form.value.description,
+        state: form.value.state
+      }
+    }
+    
+    // Log payload for debugging
+    console.log('Submitting BAU activity:', payload)
+    
+    const response = await apiClient.post('/web/v2/team/bau', payload)
+    
+    if (response.data.result?.status === 'success') {
+      console.log('BAU activity created:', response.data.result.data)
+      emit('submit', response.data.result.data)
+    } else {
+      console.error('Error creating BAU activity:', response.data.result?.message)
+      alert('Failed to create activity: ' + (response.data.result?.message || 'Unknown error'))
+    }
+  } catch (error) {
+    console.error('Error submitting BAU form:', error)
+    alert('Failed to create activity: ' + (error.message || 'Network error'))
+  } finally {
+    isSubmitting.value = false
+  }
+}
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #d1d1d1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #a0a0a0;
+}
+</style>

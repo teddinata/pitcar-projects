@@ -735,7 +735,7 @@
           </div>
         </div>
       </div>
-
+      
       <!-- CALENDAR VIEW -->
       <div v-else-if="viewMode === 'calendar'" class="bg-white shadow rounded-lg overflow-hidden">
         <div class="p-4 border-b border-gray-200">
@@ -892,18 +892,185 @@
       <!-- GANTT CHART VIEW -->
       <div v-else-if="viewMode === 'gantt'" class="bg-white shadow rounded-lg overflow-hidden">
         <!-- Gantt Chart Header -->
-        <ModernGanttChart
-          :department-id="departmentFilter || null"
-          :department-name="getDepartmentName(departmentFilter)"
-          :start-date-filter="dueDateFilter.from || null"
-          :end-date-filter="dueDateFilter.to || null"
-          @view-task-detail="handleTaskDetailView"
-          @view-project-detail="handleProjectDetailView"
-          @edit-task="editTask"
-          @update:dateRange="handleDateRangeUpdate"
-          @clearFilter="clearSingleFilter"
-          @resetFilters="clearFilters"
-        />
+        <div class="p-4 border-b border-gray-200">
+          <div class="flex justify-between items-center mb-4">
+            <!-- Controls kiri: Navigasi -->
+            <div class="flex space-x-2">
+              <button @click="prevGanttPeriod" class="p-1 rounded border border-gray-300 hover:bg-gray-100">
+                <ChevronLeftIcon class="h-5 w-5 text-gray-700" />
+              </button>
+              <button @click="nextGanttPeriod" class="p-1 rounded border border-gray-300 hover:bg-gray-100">
+                <ChevronRightIcon class="h-5 w-5 text-gray-700" />
+              </button>
+              <button @click="resetGanttToToday" class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 text-sm font-medium">
+                Today
+              </button>
+            </div>
+            
+            <!-- Judul periode -->
+            <h2 class="text-lg font-semibold text-gray-900">{{ ganttPeriodLabel }}</h2>
+            
+            <!-- Controls kanan: View mode -->
+            <div class="flex space-x-2">
+              <button 
+                @click="ganttView = 'week'" 
+                class="px-3 py-1 text-sm font-medium rounded"
+                :class="ganttView === 'week' 
+                  ? 'bg-red-600 text-white' 
+                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'"
+              >
+                Week
+              </button>
+              <button 
+                @click="ganttView = 'month'" 
+                class="px-3 py-1 text-sm font-medium rounded"
+                :class="ganttView === 'month' 
+                  ? 'bg-red-600 text-white' 
+                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'"
+              >
+                Month
+              </button>
+              <button 
+                @click="setupCustomGanttView()" 
+                class="px-3 py-1 text-sm font-medium rounded"
+                :class="ganttView === 'custom' 
+                  ? 'bg-red-600 text-white' 
+                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'"
+              >
+                Custom
+              </button>
+            </div>
+          </div>
+          
+          <!-- Informasi rentang waktu di mode Custom -->
+          <div v-if="ganttView === 'custom'" class="flex justify-between items-center text-sm text-gray-600 mt-2">
+            <div>
+              <span>Showing custom range: </span>
+              <span class="font-medium">{{ formatDate(dateRange.start) }}</span>
+              <span> to </span>
+              <span class="font-medium">{{ formatDate(dateRange.end) }}</span>
+              <span v-if="isRangeTruncated" class="text-red-600 ml-2">(Range dibatasi maksimal 60 hari)</span>
+            </div>
+            
+            <button 
+              @click="applyDateFilter"
+              class="text-sm text-red-600 hover:text-red-800 flex items-center"
+            >
+              <ArrowPathIcon class="h-4 w-4 mr-1" />
+              Refresh View
+            </button>
+          </div>
+        </div>
+        
+        <!-- Gantt Chart Content -->
+        <div class="p-4 overflow-x-auto">
+          <div class="flex">
+            <!-- Task labels column -->
+            <div class="flex-shrink-0 w-64 border-r border-gray-200 pr-2">
+              <div class="h-8 font-medium text-gray-700 flex items-center">
+                Task
+              </div>
+              <div class="space-y-2 mt-2">
+                <div 
+                  v-for="task in ganttTasks" 
+                  :key="task.id"
+                  class="h-8 flex items-center overflow-hidden"
+                >
+                  <div class="text-sm font-medium text-gray-900 truncate">
+                    {{ task.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Gantt chart area -->
+            <div class="flex-grow relative">
+              <GanttZoomControls
+                v-model:zoomLevel="ganttZoomLevel"
+                :minZoom="1"
+                :maxZoom="6"
+              />
+              <!-- Timeline header -->
+              <div class="flex border-b border-gray-200">
+                <div 
+                  v-for="(day, index) in ganttView === 'custom' ? ganttDaysCustomRange : ganttDays" 
+                  :key="index"
+                  class="flex-shrink-0 text-center text-xs font-medium py-2"
+                  :class="[day.isWeekend ? 'bg-gray-50' : '']"
+                  :style="{ width: `${ganttZoomLevel}rem` }"
+                >
+                  <!-- Bulan label (hanya ditampilkan pada tanggal 1 atau hari pertama) -->
+                  <div 
+                    v-if="day.dateLabel === '1' || index === 0 || (index > 0 && day.monthLabel !== (ganttView === 'custom' ? ganttDaysCustomRange[index-1].monthLabel : ganttDays[index-1].monthLabel))" 
+                    class="text-xs font-semibold text-gray-600 -mt-1 mb-1"
+                  >
+                    {{ day.monthLabel }}
+                  </div>
+                  <div>{{ day.dayLabel }}</div>
+                  <div>{{ day.dateLabel }}</div>
+                </div>
+              </div>
+              
+              <!-- Task bars -->
+              <div class="relative">
+                <!-- Background grid lines -->
+                <div 
+                  class="absolute inset-0 grid" 
+                  :style="{ gridTemplateColumns: `repeat(${ganttView === 'custom' ? ganttDaysCustomRange.length : ganttDays.length}, ${ganttZoomLevel}rem)` }"
+                  >
+                  <div 
+                    v-for="(day, index) in ganttView === 'custom' ? ganttDaysCustomRange : ganttDays" 
+                    :key="index"
+                    class="border-r border-gray-100"
+                    :class="day.isWeekend ? 'bg-gray-50' : ''"
+                  ></div>
+                </div>
+                
+                <!-- Task bars -->
+                <div class="space-y-2 mt-2 relative">
+                  <div 
+                    v-for="task in ganttTasks" 
+                    :key="task.id"
+                    class="h-8 relative"
+                  >
+                    <div 
+                      v-if="getGanttTaskPosition(task, ganttView === 'custom')"
+                      class="absolute top-1 h-6 rounded-md cursor-pointer"
+                      :class="getStatusBackgroundClass(task.state)"
+                      :style="{
+                        left: getGanttTaskPosition(task, ganttView === 'custom').left + 'rem',
+                        width: getGanttTaskPosition(task, ganttView === 'custom').width + 'rem'
+                      }"
+                      @click.stop="selectTask(task)"
+                    >
+                      <div class="px-2 py-1 text-xs font-medium truncate">
+                        {{ task.name }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Today indicator -->
+                <div 
+                  class="absolute top-0 bottom-0 w-px bg-red-500"
+                  :style="{ left: getTodayPosition(ganttView === 'custom') + 'rem' }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Empty state jika tidak ada tasks -->
+        <div v-if="ganttTasks.length === 0" class="p-12 text-center">
+          <svg class="h-12 w-12 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">No tasks found in this time range</h3>
+          <p class="mt-1 text-sm text-gray-500">
+            {{ dateRange.start && dateRange.end ? 'Try adjusting your date filters or add tasks with due dates.' : 'Add tasks with start and end dates to see them here.' }}
+          </p>
+        </div>
       </div>
       <!-- Task Detail Section (when a task is selected) -->
       <TeamTaskDetailManagerPopup
@@ -1907,7 +2074,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/vue/24/outline';
 import TeamTaskDetailManagerPopup from '@/components/team/TeamTaskDetailManagerPopup.vue';
-import ModernGanttChart from '@/components/charts/ModernGanttChart.vue';
+import ModernGanttChart from '@/components/team/ModernGanttChart.vue';
 import Toast from '@/components/Toast.vue';
 import Draggable from 'vuedraggable';
 import DeleteConfirmationModal from '@/components/modal/DeleteConfirmationModal.vue';
@@ -3679,84 +3846,6 @@ function customGanttNextPeriod() {
 // Override fungsi prev/next Gantt period untuk menangani custom view
 const originalPrevGanttPeriod = prevGanttPeriod;
 const originalNextGanttPeriod = nextGanttPeriod;
-
-// VIEW GANTT CHART HELPER & METHOD
-// Method untuk mendapatkan nama departemen dari ID
-function getDepartmentName(departmentId) {
-  if (!departmentId) return '';
-  const department = departments.value.find(dept => dept.id == departmentId);
-  return department ? department.name : '';
-}
-
-// Method untuk menangani view detail task
-function handleTaskDetailView(task) {
-  selectTask(task);
-}
-
-// Method untuk menangani view detail project
-function handleProjectDetailView(project) {
-  // Implementasi sesuai kebutuhan, misalnya redirect ke halaman detail proyek
-  console.log('View project detail:', project);
-  // router.push({ name: 'project-detail', params: { id: project.id } });
-}
-
-// Method untuk menangani perubahan rentang tanggal dari Gantt Chart
-function handleDateRangeUpdate(dateRange) {
-  // Update filter tanggal berdasarkan rentang tanggal dari Gantt Chart
-  dueDateFilter.value = {
-    from: dateRange.start,
-    to: dateRange.end
-  };
-  // Opsional: refresh data task
-  fetchTasks();
-}
-
-// Method untuk menghapus satu filter
-function clearSingleFilter(filterName) {
-  if (filterName === 'department_id') {
-    departmentFilter.value = '';
-  } else if (filterName === 'date_range') {
-    dueDateFilter.value = { from: '', to: '' };
-  }
-  fetchTasks();
-}
-
-// State untuk aktifitas loading pada Gantt Chart
-const ganttLoading = ref(false);
-
-// State untuk menyimpan rentang tanggal saat ini pada Gantt
-const currentGanttDateRange = ref({
-  start: null,
-  end: null
-});
-
-// Method untuk inisialisasi tampilan Gantt
-function initGanttView() {
-  // Set rentang tanggal default jika belum ada
-  if (!dueDateFilter.value.from || !dueDateFilter.value.to) {
-    const today = new Date();
-    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    
-    dueDateFilter.value = {
-      from: format(startOfCurrentMonth, 'yyyy-MM-dd'),
-      to: format(endOfCurrentMonth, 'yyyy-MM-dd')
-    };
-  }
-  
-  // Simpan rentang tanggal saat ini
-  currentGanttDateRange.value = {
-    start: dueDateFilter.value.from,
-    end: dueDateFilter.value.to
-  };
-}
-
-// Panggil initGanttView saat viewMode berubah ke 'gantt'
-watch(viewMode, (newMode) => {
-  if (newMode === 'gantt') {
-    initGanttView();
-  }
-});
 
 prevGanttPeriod = function() {
   if (ganttView.value === 'custom') {

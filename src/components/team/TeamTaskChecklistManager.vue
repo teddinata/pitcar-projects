@@ -300,11 +300,16 @@ import SearchableSelect from '@/components/SearchableSelect.vue';
 import apiClient from '@/config/api';
 import { useToast } from '@/composables/useToast';
 const { toast, showToast } = useToast();
+import { debounce } from 'lodash';
 
 const props = defineProps({
   taskId: {
     type: [Number, String],
-    required: true
+    required: true,
+    validator: (value) => {
+      // Pastikan nilai valid dan tidak undefined
+      return value !== undefined && value !== null && value !== '';
+    }
   },
   employees: {
     type: Array,
@@ -327,6 +332,7 @@ const currentChecklistItem = ref({
   notes: '',
   is_done: false
 });
+const dataLoaded = ref(false);
 
 const showDeleteConfirm = ref(false);
 const itemToDelete = ref(null);
@@ -349,18 +355,48 @@ const sortedChecklist = computed(() => {
 const progress = computed(() => {
   if (checklist.value.length === 0) return 0;
   const completed = checklist.value.filter(item => item.is_done).length;
-  const progressValue = Math.round((completed / checklist.value.length) * 100);
-  emit('update:progress', progressValue);
-  return progressValue;
+  return Math.round((completed / checklist.value.length) * 100);
+});
+
+watch(progress, (newProgress) => {
+  // Hanya emit jika progress benar-benar berubah
+  if (newProgress !== lastEmittedProgress.value) {
+    lastEmittedProgress.value = newProgress;
+    emit('update:progress', newProgress);
+  }
+});
+
+// Tambahkan ref untuk melacak progress terakhir yang di-emit
+const lastEmittedProgress = ref(0);
+
+// Debounce fetchChecklist untuk mencegah permintaan berlebihan
+const debouncedFetch = debounce(async () => {
+  await fetchChecklist();
+}, 300);
+
+// Ubah watcher untuk menggunakan versi debounced
+watch(() => props.taskId, (newId, oldId) => {
+  if (newId && newId !== oldId && !dataLoaded.value) {
+    debouncedFetch();
+  }
 });
 
 // Fetch checklist items for the task
 const fetchChecklist = async () => {
   if (!props.taskId) return;
   
+  // Jangan fetch jika task ID tidak berubah dan data sudah dimuat
+  const taskIdStr = String(props.taskId);
+  if (dataLoaded.value && loadedTaskId.value === taskIdStr) {
+    console.log(`Checklist data for task ${taskIdStr} already loaded, skipping fetch`);
+    return;
+  }
+
+  
   loading.value = true;
   try {
-    // We'll use a custom endpoint to get all checklist items for a task
+    console.log(`Fetching checklist for task ${taskIdStr}`);
+    
     const response = await apiClient.post('/web/v2/team/tasks', {
       jsonrpc: '2.0',
       method: 'call',
@@ -371,9 +407,10 @@ const fetchChecklist = async () => {
     });
     
     if (response.data.result?.status === 'success') {
-      // If the task has checklist items, they should be included in the response
       checklist.value = response.data.result.data?.checklists || [];
       console.log('Checklist items loaded:', checklist.value);
+      dataLoaded.value = true;
+      loadedTaskId.value = taskIdStr; // Catat task ID yang sudah dimuat
     } else {
       console.error('Error fetching checklist:', response.data.result?.message);
       showToast('Failed to load checklist items. Please try again.', 'error');
@@ -386,9 +423,13 @@ const fetchChecklist = async () => {
   }
 };
 
+// Tambahkan ref untuk melacak task ID yang sudah dimuat
+const loadedTaskId = ref(null);
+
 // Watch for task ID changes to reload the checklist
-watch(() => props.taskId, () => {
-  if (props.taskId) {
+watch(() => props.taskId, (newId, oldId) => {
+  if (newId && newId !== oldId) {
+    dataLoaded.value = false; // Reset flag ketika task ID berubah
     fetchChecklist();
   }
 });
@@ -584,7 +625,9 @@ const formatDate = (dateString) => {
 
 // Load data when component is mounted
 onMounted(() => {
+  console.log(`TeamTaskChecklistManager mounted for task ID: ${props.taskId}`);
   if (props.taskId) {
+    console.log(`Initiating fetch for task ID: ${props.taskId}`);
     fetchChecklist();
   }
 });

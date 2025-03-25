@@ -13,15 +13,51 @@
           </h3>
           <p class="text-sm text-gray-500">{{ project.code }}</p>
         </div>
-        <div 
-          class="px-2.5 py-1 text-xs font-semibold rounded-full"
-          :class="{
-            'bg-yellow-100 text-yellow-800': project.state === 'in_progress',
-            'bg-green-100 text-green-800': project.state === 'completed',
-            'bg-gray-100 text-gray-800': project.state === 'draft'
-          }"
-        >
-          {{ formatState(project.state) }}
+        <div class="flex items-center space-x-2">
+          <div 
+            class="px-2.5 py-1 text-xs font-semibold rounded-full"
+            :class="{
+              'bg-yellow-100 text-yellow-800': project.state === 'in_progress',
+              'bg-green-100 text-green-800': project.state === 'completed',
+              'bg-gray-100 text-gray-800': project.state === 'draft',
+              'bg-red-100 text-red-800': project.state === 'cancelled'
+            }"
+          >
+            {{ formatState(project.state) }}
+          </div>
+          
+          <!-- Status Edit Dropdown -->
+          <div class="relative" @click.stop>
+            <button 
+              @click="isStatusDropdownOpen = !isStatusDropdownOpen"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <Edit2 class="h-4 w-4" />
+            </button>
+            
+            <div v-if="isStatusDropdownOpen" class="absolute right-0 z-10 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100">
+              <div class="py-1">
+                <button
+                  v-for="option in statusOptions" 
+                  :key="option.value"
+                  @click="updateStatus(option.value)"
+                  class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center space-x-2"
+                  :class="project.state === option.value ? 'bg-gray-50 font-medium' : ''"
+                >
+                  <span 
+                    class="w-2 h-2 rounded-full"
+                    :class="{
+                      'bg-yellow-400': option.value === 'in_progress',
+                      'bg-green-400': option.value === 'completed',
+                      'bg-gray-400': option.value === 'draft',
+                      'bg-red-400': option.value === 'cancelled'
+                    }"
+                  ></span>
+                  <span>{{ option.label }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -71,7 +107,7 @@
 
       <!-- Team & Tasks -->
       <div class="border-t pt-4">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="flex justify-between items-center">
           <div class="flex items-center">
             <div class="relative flex -space-x-2">
               <div 
@@ -97,11 +133,34 @@
               {{ project.team.members.length }} members
             </span>
           </div>
-          <div class="flex items-center justify-end">
-            <ListChecks class="w-4 h-4 text-gray-400 mr-1.5" />
-            <span class="text-sm text-gray-600">
-              {{ project.tasks.length }} tasks
-            </span>
+          
+          <!-- Task Status Summary -->
+          <div class="flex items-center space-x-1">
+            <div 
+              v-for="(count, status) in taskStatusCounts" 
+              :key="status"
+              v-show="count > 0"
+              class="flex items-center"
+              :class="{ 'ml-2': status !== 'draft' }"
+            >
+              <span 
+                class="w-2 h-2 rounded-full"
+                :class="{
+                  'bg-gray-400': status === 'draft',
+                  'bg-yellow-400': status === 'in_progress',
+                  'bg-purple-400': status === 'review',
+                  'bg-amber-400': status === 'revision',
+                  'bg-green-400': status === 'done'
+                }"
+              ></span>
+              <span class="ml-1 text-xs text-gray-500">{{ count }}</span>
+            </div>
+            <div class="flex items-center ml-2">
+              <ListChecks class="w-4 h-4 text-gray-400 mr-1" />
+              <span class="text-sm text-gray-600">
+                {{ project.tasks.length }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -128,11 +187,17 @@
         </div>
       </div>
     </div>
+    
+    <!-- Status Change Indicator -->
+    <div v-if="showStatusChangeIndicator" class="px-5 py-2 text-center text-xs font-medium bg-blue-50 text-blue-700 rounded-b-xl border-t">
+      Status updated to {{ formatState(project.state) }}
+    </div>
   </div>
 </template>
 
 <script setup>
-import { Video, Palette, ListChecks } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { Video, Palette, ListChecks, Edit2 } from 'lucide-vue-next'
 import { format, isPast } from 'date-fns'
 
 const props = defineProps({
@@ -142,13 +207,24 @@ const props = defineProps({
   }
 })
 
-defineEmits(['click'])
+const emit = defineEmits(['click', 'status-change'])
+
+const isStatusDropdownOpen = ref(false)
+const showStatusChangeIndicator = ref(false)
+
+const statusOptions = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' }
+]
 
 const formatState = (state) => {
   const states = {
     'draft': 'Draft',
     'in_progress': 'In Progress',
-    'completed': 'Completed'
+    'completed': 'Completed',
+    'cancelled': 'Cancelled'
   }
   return states[state] || state
 }
@@ -168,4 +244,50 @@ const getInitials = (name) => {
     .join('')
     .toUpperCase()
 }
+
+// Update project status
+const updateStatus = (newStatus) => {
+  if (newStatus !== props.project.state) {
+    emit('status-change', props.project.id, newStatus)
+    showStatusChangeIndicator.value = true
+    setTimeout(() => {
+      showStatusChangeIndicator.value = false
+    }, 3000)
+  }
+  isStatusDropdownOpen.value = false
+}
+
+// Compute task status counts
+const taskStatusCounts = computed(() => {
+  const counts = {
+    draft: 0,
+    in_progress: 0,
+    review: 0,
+    revision: 0,
+    done: 0
+  }
+  
+  props.project.tasks.forEach(task => {
+    if (counts[task.state] !== undefined) {
+      counts[task.state]++
+    }
+  })
+  
+  return counts
+})
+
+// Close dropdown when clicking outside
+onMounted(() => {
+  const handleClickOutside = (event) => {
+    if (isStatusDropdownOpen.value) {
+      isStatusDropdownOpen.value = false
+    }
+  }
+  
+  document.addEventListener('click', handleClickOutside)
+  
+  return () => {
+    document.removeEventListener('click', handleClickOutside)
+  }
+})
 </script>

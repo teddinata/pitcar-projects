@@ -1,14 +1,14 @@
-<!-- src/components/team/ProjectGanttChart.vue -->
+<!-- src/components/team/ImprovedGanttChart.vue -->
 <template>
   <div class="bg-white shadow rounded-lg overflow-hidden flex flex-col h-full">
-    <!-- Header with filters and controls -->
+    <!-- Header dengan filter dan kontrol -->
     <div class="p-4 border-b border-gray-200">
       <div class="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between">
-        <!-- Title with filter indicators -->
+        <!-- Judul dengan indikator filter -->
         <div class="flex flex-col">
-          <h2 class="text-xl font-semibold text-gray-900">Project Timeline</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Timeline Proyek</h2>
           
-          <!-- Active filters indication -->
+          <!-- Indikator filter aktif -->
           <div class="flex flex-wrap gap-2 mt-2 items-center text-sm text-gray-600">
             <span v-if="departmentName" class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center">
               {{ departmentName }}
@@ -21,70 +21,70 @@
               {{ dateRangeLabel }}
             </span>
             <span v-if="!departmentName && !dateRangeLabel" class="text-gray-500 text-xs">
-              Showing all projects
+              Menampilkan semua proyek
             </span>
           </div>
         </div>
 
-        <!-- Controls -->
+        <!-- Kontrol -->
         <div class="flex flex-wrap gap-2 items-center">
-          <!-- Time range navigation -->
+          <!-- Navigasi rentang waktu -->
           <div class="inline-flex items-center rounded-md shadow-sm">
             <button
               @click="moveTimelinePrev"
               class="px-2.5 py-1.5 border border-gray-300 rounded-l-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-              title="Previous Period"
+              title="Periode Sebelumnya"
             >
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
             <button
               @click="resetTimeline"
               class="px-3 py-1.5 border-t border-b border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-              title="Reset to current period"
+              title="Kembali ke hari ini"
             >
-              Today
+              Hari Ini
             </button>
             <button
               @click="moveTimelineNext"
               class="px-2.5 py-1.5 border border-gray-300 rounded-r-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-              title="Next Period"
+              title="Periode Berikutnya"
             >
               <ChevronRightIcon class="h-4 w-4" />
             </button>
           </div>
 
-          <!-- Time scale selector -->
+          <!-- Pemilih skala waktu -->
           <div class="inline-flex rounded-md shadow-sm">
             <button
               @click="setViewMode('day')"
               class="px-3 py-1.5 text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500"
               :class="viewMode === 'day' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
             >
-              Day
+              Hari
             </button>
             <button
               @click="setViewMode('week')"
               class="px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-red-500"
               :class="viewMode === 'week' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border-t border-b border-gray-300 hover:bg-gray-50'"
             >
-              Week
+              Minggu
             </button>
             <button
               @click="setViewMode('month')"
               class="px-3 py-1.5 text-sm font-medium rounded-r-md focus:outline-none focus:ring-1 focus:ring-red-500"
               :class="viewMode === 'month' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
             >
-              Month
+              Bulan
             </button>
           </div>
 
-          <!-- Zoom controls -->
+          <!-- Kontrol zoom -->
           <div class="inline-flex rounded-md shadow-sm">
             <button
               @click="decreaseZoom"
               class="px-2.5 py-1.5 border border-gray-300 rounded-l-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50"
               :disabled="zoomLevel <= minZoomLevel"
-              title="Zoom Out"
+              title="Perkecil"
             >
               <MinusIcon class="h-4 w-4" />
             </button>
@@ -95,7 +95,7 @@
               @click="increaseZoom"
               class="px-2.5 py-1.5 border border-gray-300 rounded-r-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50"
               :disabled="zoomLevel >= maxZoomLevel"
-              title="Zoom In"
+              title="Perbesar"
             >
               <PlusIcon class="h-4 w-4" />
             </button>
@@ -105,60 +105,66 @@
           <button
             @click="toggleExpandAll"
             class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-            :title="allExpanded ? 'Collapse All' : 'Expand All'"
+            :title="allExpanded ? 'Ciutkan Semua' : 'Perluas Semua'"
           >
             <ChevronRightIcon
               class="h-4 w-4 mr-1 transform transition-transform"
               :class="{ 'rotate-90': allExpanded }"
             />
-            {{ allExpanded ? 'Collapse All' : 'Expand All' }}
+            {{ allExpanded ? 'Ciutkan Semua' : 'Perluas Semua' }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Gantt Chart Container -->
+    <!-- Container Gantt Chart -->
     <div class="flex-grow overflow-auto">
       <!-- Project Gantt Chart -->
       <div class="gantt-container grid grid-cols-[minmax(250px,auto)_1fr]" style="min-width: 1000px; min-height: 400px">
-        <!-- Left side: Project & task names with sticky header -->
+        <!-- Sisi kiri: Nama proyek & tugas dengan header sticky -->
         <div class="project-names bg-white">
           <!-- Header -->
           <div class="h-16 sticky top-0 z-10 border-b border-gray-200 bg-gray-50 px-4 flex items-end">
-            <h3 class="font-medium text-gray-700 pb-2">Projects & Tasks</h3>
+            <h3 class="font-medium text-gray-700 pb-2">Proyek & Tugas</h3>
           </div>
 
-          <!-- Projects list -->
+          <!-- Daftar proyek -->
           <div class="project-list divide-y divide-gray-200">
             <div
               v-for="(project, projectIndex) in projects"
               :key="project.id"
               class="project-item"
             >
-              <!-- Project row -->
+              <!-- Baris proyek -->
               <div 
                 class="project-row group flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer"
                 @click="toggleProject(projectIndex)"
                 :class="{'bg-gray-50': project.expanded}"
               >
-                <!-- Expand/collapse icon -->
+                <!-- Ikon expand/collapse -->
                 <button class="mr-2 flex-shrink-0 text-gray-400">
                   <ChevronRightIcon 
-                    class="h-4 w-4 transform transition-transform" 
+                    class="h-4.5 w-4.5 transform transition-transform" 
                     :class="{ 'rotate-90': project.expanded, 'text-gray-600': project.expanded }"
                   />
                 </button>
                 
-                <!-- Project status indicator -->
+                <!-- Indikator status proyek dengan warna -->
                 <div class="w-2 h-2 rounded-full mr-2 flex-shrink-0" :class="getStatusIndicatorClass(project.state)"></div>
                 
-                <!-- Project name -->
+                <!-- Nama proyek -->
                 <div class="flex-grow mr-3">
                   <div class="font-medium text-gray-900 truncate">{{ project.name }}</div>
                 </div>
                 
-                <!-- Project progress indicator -->
-                <div class="w-12 flex-shrink-0">
+                <!-- Tanggal proyek - fitur baru -->
+                <!-- <div class="mr-4 text-xs text-gray-500 hidden sm:flex items-center">
+                  <CalendarIcon class="h-3.5 w-3.5 mr-1 text-gray-400" />
+                  <span>{{ formatDateShort(project.start) }} - {{ formatDateShort(project.end) }}</span>
+                </div> -->
+                
+                <!-- Indikator progres proyek -->
+                <div class="w-14 flex-shrink-0">
                   <div class="w-full bg-gray-200 rounded-full h-1.5">
                     <div
                       class="h-1.5 rounded-full" 
@@ -170,7 +176,7 @@
                 </div>
               </div>
 
-              <!-- Task rows (when expanded) -->
+              <!-- Baris tugas (ketika diperluas) -->
               <div v-if="project.expanded" class="task-list bg-gray-50">
                 <div
                   v-for="task in project.tasks"
@@ -178,15 +184,39 @@
                   class="task-row flex items-center px-4 py-2.5 hover:bg-gray-100 pl-10 border-t border-gray-100 cursor-pointer"
                   @click.stop="handleTaskClick(task)"
                 >
-                  <!-- Task status indicator -->
+                  <!-- Indikator status tugas -->
                   <div class="w-2 h-2 rounded-full mr-2" :class="getStatusIndicatorClass(task.state)"></div>
                   
-                  <!-- Task name -->
+                  <!-- Nama tugas -->
                   <div class="flex-grow mr-3">
                     <div class="text-sm text-gray-900 truncate">{{ task.name }}</div>
                   </div>
                   
-                  <!-- Task progress indicator -->
+                  <!-- Due date tugas - fitur baru -->
+                  <!-- <div class="mr-3 text-xs text-gray-500 hidden sm:flex items-center">
+                    <CalendarIcon class="h-3.5 w-3.5 mr-1 text-gray-400" />
+                    <span>{{ formatDateShort(task.end) }}</span>
+                  </div> -->
+                  
+                  <!-- Avatar pengguna yang ditugaskan - fitur baru -->
+                  <div v-if="task.assigned_to && task.assigned_to.length > 0" class="mr-3 flex -space-x-1.5">
+                    <div 
+                      v-for="(user, index) in task.assigned_to.slice(0, 2)" 
+                      :key="index"
+                      class="h-6 w-6 rounded-full bg-blue-100 border border-white text-blue-600 font-medium flex items-center justify-center text-xs overflow-hidden"
+                      :title="user.name"
+                    >
+                      {{ getInitials(user.name) }}
+                    </div>
+                    <div 
+                      v-if="task.assigned_to.length > 2" 
+                      class="h-6 w-6 rounded-full bg-gray-100 border border-white text-gray-600 font-medium flex items-center justify-center text-xs"
+                    >
+                      +{{ task.assigned_to.length - 2 }}
+                    </div>
+                  </div>
+                  
+                  <!-- Indikator progres tugas -->
                   <div class="w-12 flex-shrink-0">
                     <div class="w-full bg-gray-200 rounded-full h-1.5">
                       <div
@@ -199,18 +229,18 @@
                   </div>
                 </div>
                 <div v-if="project.tasks.length === 0" class="task-row flex items-center px-4 py-2.5 pl-10 italic text-gray-400 text-sm">
-                  No tasks found
+                  Tidak ada tugas ditemukan
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right side: Timeline chart -->
+        <!-- Sisi kanan: Grafik timeline -->
         <div class="gantt-timeline relative">
-          <!-- Timeline header (sticky) -->
+          <!-- Header timeline (sticky) -->
           <div class="timeline-header h-16 sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-            <!-- Top-level time units (months or weeks) -->
+            <!-- Unit waktu tingkat atas (bulan atau minggu) -->
             <div class="h-8 flex border-b border-gray-200">
               <div
                 v-for="timeUnit in timeUnits.major"
@@ -222,7 +252,7 @@
               </div>
             </div>
             
-            <!-- Detail time units (days) -->
+            <!-- Unit waktu detail (hari) -->
             <div class="h-8 flex">
               <div
                 v-for="timeUnit in timeUnits.minor"
@@ -239,21 +269,21 @@
             </div>
           </div>
 
-          <!-- Gantt bars area -->
+          <!-- Area batang Gantt -->
           <div class="timeline-content">
-            <!-- Project and task bars -->
+            <!-- Batang proyek dan tugas -->
             <div class="gantt-bars">
               <div
                 v-for="(project) in projects"
                 :key="project.id"
                 class="project-bar-container"
               >
-                <!-- Project timeline row -->
+                <!-- Baris timeline proyek -->
                 <div 
                   class="project-timeline-row relative h-12 hover:bg-gray-50"
                   :class="{ 'bg-gray-50': project.expanded, 'border-b border-gray-100': !project.expanded }"
                 >
-                  <!-- Date grid background -->
+                  <!-- Latar belakang grid tanggal -->
                   <div class="absolute inset-0 grid-background">
                     <div
                       v-for="timeUnit in timeUnits.minor"
@@ -270,10 +300,10 @@
                     ></div>
                   </div>
                   
-                  <!-- Project timeline bar -->
+                  <!-- Batang timeline proyek -->
                   <div
                     v-if="getBarPosition(project).width > 0"
-                    class="absolute top-1/2 transform -translate-y-1/2 h-7 rounded-md shadow-sm cursor-pointer border z-10"
+                    class="absolute top-1/2 transform -translate-y-1/2 h-8 rounded-md shadow-sm cursor-pointer border z-10"
                     :class="getProjectStatusClass(project.state)"
                     :style="{
                       left: `${getBarPosition(project).left}px`,
@@ -282,20 +312,20 @@
                     @click.stop="handleProjectClick(project)"
                     :title="getProjectTooltip(project)"
                   >
-                    <!-- Progress indicator -->
+                    <!-- Indikator progres -->
                     <div 
                       class="absolute top-0 left-0 bottom-0 rounded-l-md transition-all duration-300"
                       :class="getProgressBarClass(project.state, project.progress)"
                       :style="{ width: `${project.progress || 0}%` }"
                     ></div>
                     
-                    <!-- Text label (only if enough space) -->
-                    <div v-if="getBarPosition(project).width > 50" class="px-2 py-1 flex items-center h-full z-20 relative">
+                    <!-- Label teks (hanya jika cukup ruang) -->
+                    <div v-if="getBarPosition(project).width > 80" class="px-2 py-1.5 flex items-center h-full z-20 relative">
                       <span class="text-xs font-medium truncate text-current">{{ project.name }}</span>
                     </div>
                   </div>
                     
-                  <!-- Today indicator (vertical line) -->
+                  <!-- Indikator hari ini (garis vertikal) -->
                   <div
                     v-if="isTodayVisible"
                     class="absolute top-0 bottom-0 w-px bg-red-500 z-20"
@@ -303,14 +333,14 @@
                   ></div>
                 </div>
                 
-                <!-- Task timeline bars (when project expanded) -->
+                <!-- Batang timeline tugas (ketika proyek diperluas) -->
                 <div v-if="project.expanded">
                   <div
                     v-for="task in project.tasks"
                     :key="task.id"
                     class="task-timeline-row relative h-10 hover:bg-gray-100 border-t border-gray-100"
                   >
-                    <!-- Date grid background -->
+                    <!-- Latar belakang grid tanggal -->
                     <div class="absolute inset-0 grid-background">
                       <div
                         v-for="timeUnit in timeUnits.minor"
@@ -327,10 +357,10 @@
                       ></div>
                     </div>
                     
-                    <!-- Task timeline bar -->
+                    <!-- Batang timeline tugas yang ditingkatkan -->
                     <div
                       v-if="getBarPosition(task).width > 0"
-                      class="absolute top-1/2 transform -translate-y-1/2 h-6 rounded-md shadow-sm cursor-pointer border z-10"
+                      class="absolute top-1/2 transform -translate-y-1/2 h-7 rounded-md shadow-sm cursor-pointer border z-10"
                       :class="getTaskStatusClass(task.state)"
                       :style="{
                         left: `${getBarPosition(task).left}px`,
@@ -339,42 +369,51 @@
                       @click.stop="handleTaskClick(task)"
                       :title="getTaskTooltip(task, project)"
                     >
-                      <!-- Progress indicator -->
+                      <!-- Indikator progres -->
                       <div 
                         class="absolute top-0 left-0 bottom-0 rounded-l-md transition-all duration-300"
                         :class="getProgressBarClass(task.state, task.progress)"
                         :style="{ width: `${task.progress || 0}%` }"
                       ></div>
                         
-                      <!-- Text label (only if enough space) -->
-                      <div v-if="getBarPosition(task).width > 50" class="px-2 py-1 flex items-center h-full z-20 relative">
+                      <!-- Label teks (hanya jika cukup ruang) -->
+                      <div v-if="getBarPosition(task).width > 60" class="px-2 py-1 flex items-center h-full z-20 relative">
                         <span class="text-xs truncate text-current">{{ task.name }}</span>
                       </div>
                       
-                      <!-- Assigned Users (if space permits) -->
+                      <!-- Avatar pengguna yang ditugaskan (jika ada ruang) dengan badge baru -->
                       <div 
-                        v-if="task.assigned_to && task.assigned_to.length > 0 && getBarPosition(task).width > 150"
+                        v-if="task.assigned_to && task.assigned_to.length > 0 && getBarPosition(task).width > 80"
                         class="absolute -bottom-1.5 right-1.5 flex -space-x-1.5"
                       >
                         <div 
-                          v-for="(user, index) in task.assigned_to.slice(0, 3)" 
+                          v-for="(user, index) in task.assigned_to.slice(0, 2)" 
                           :key="index"
-                          class="h-5 w-5 rounded-full bg-gray-200 border border-white text-xs flex items-center justify-center overflow-hidden"
+                          class="h-5 w-5 rounded-full bg-blue-100 border border-white text-blue-600 text-xs flex items-center justify-center overflow-hidden shadow-sm"
                           :title="user.name"
                         >
-                          <span>{{ getInitials(user.name) }}</span>
+                          {{ getInitials(user.name) }}
                         </div>
                         <div 
-                          v-if="task.assigned_to.length > 3"
-                          class="h-5 w-5 rounded-full bg-gray-200 border border-white text-xs flex items-center justify-center"
-                          :title="getRemainingUsersTitle(task.assigned_to, 3)"
+                          v-if="task.assigned_to.length > 2"
+                          class="h-5 w-5 rounded-full bg-gray-100 border border-white text-xs flex items-center justify-center shadow-sm"
+                          :title="getRemainingUsersTitle(task.assigned_to, 2)"
                         >
-                          <span>+{{ task.assigned_to.length - 3 }}</span>
+                          +{{ task.assigned_to.length - 2 }}
                         </div>
                       </div>
+                      
+                      <!-- Badge due date (fitur baru) -->
+                      <!-- <div 
+                        v-if="getBarPosition(task).width > 100"
+                        class="absolute -top-1.5 right-1.5 bg-white text-xs rounded-full px-1.5 py-0.5 border border-gray-200 shadow-sm flex items-center"
+                      >
+                        <CalendarIcon class="h-3 w-3 mr-0.5 text-gray-500" />
+                        {{ formatDateShort(task.end) }}
+                      </div> -->
                     </div>
                       
-                    <!-- Today indicator (vertical line) -->
+                    <!-- Indikator hari ini (garis vertikal) -->
                     <div
                       v-if="isTodayVisible"
                       class="absolute top-0 bottom-0 w-px bg-red-500 z-20"
@@ -389,29 +428,29 @@
       </div>
     </div>
     
-    <!-- Loading State -->
+    <!-- Keadaan Loading -->
     <div 
       v-if="loading" 
       class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-30"
     >
       <div class="flex flex-col items-center">
         <div class="animate-spin rounded-full h-10 w-10 border-2 border-red-600 border-t-transparent"></div>
-        <p class="mt-2 text-sm text-gray-600">Loading timeline...</p>
+        <p class="mt-2 text-sm text-gray-600">Memuat timeline...</p>
       </div>
     </div>
 
-    <!-- Empty State -->
+    <!-- Keadaan Kosong -->
     <div 
       v-if="!loading && projects.length === 0" 
       class="flex flex-col items-center justify-center p-10 flex-grow"
     >
       <CalendarIcon class="h-12 w-12 text-gray-400" />
-      <h3 class="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada proyek ditemukan</h3>
       <p v-if="departmentId" class="mt-1 text-sm text-gray-500">
-        No projects found in the selected department or date range.
+        Tidak ada proyek ditemukan di departemen atau rentang tanggal yang dipilih.
       </p>
       <p v-else class="mt-1 text-sm text-gray-500">
-        Create some projects with tasks to see them on the timeline.
+        Buat beberapa proyek dengan tugas untuk melihatnya di timeline.
       </p>
       <button
         v-if="departmentId || startDateFilter || endDateFilter"
@@ -419,11 +458,11 @@
         class="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
       >
         <ArrowPathIcon class="h-4 w-4 mr-1.5" />
-        Reset Filters
+        Reset Filter
       </button>
     </div>
 
-    <!-- Task Detail Modal -->
+    <!-- Modal Detail Tugas -->
     <TaskDetailPopup
       :show="showTaskModal"
       :task-id="selectedTaskId"
@@ -516,12 +555,12 @@ const showTaskModal = ref(false);
 const selectedTaskId = ref(null);
 const isInternalNavigation = ref(false);
 
-// Format date range for display
+// Format rentang tanggal untuk tampilan
 const dateRangeLabel = computed(() => {
   if (props.startDateFilter && props.endDateFilter) {
     try {
-      const start = format(parseISO(props.startDateFilter), 'MMM d, yyyy');
-      const end = format(parseISO(props.endDateFilter), 'MMM d, yyyy');
+      const start = format(parseISO(props.startDateFilter), 'dd MMM yyyy');
+      const end = format(parseISO(props.endDateFilter), 'dd MMM yyyy');
       return `${start} - ${end}`;
     } catch (e) {
       return `${props.startDateFilter} - ${props.endDateFilter}`;
@@ -539,15 +578,15 @@ const timelinePeriodLabel = computed(() => {
   } else if (viewMode.value === 'week') {
     const weekStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
-    return `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
+    return `${format(weekStart, 'dd MMM')} - ${format(weekEnd, 'dd MMM yyyy')}`;
   } else { // day view
     const dayStart = startDate.value;
     const dayEnd = addDays(startDate.value, 14); // Show 2 weeks in day view
-    return `${format(dayStart, 'MMM d')} - ${format(dayEnd, 'MMM d, yyyy')}`;
+    return `${format(dayStart, 'dd MMM')} - ${format(dayEnd, 'dd MMM yyyy')}`;
   }
 });
 
-// Effective date range based on view mode and filters
+// Rentang tanggal efektif berdasarkan mode tampilan dan filter
 const effectiveDateRange = computed(() => {
   // Generate date range based on view mode and current startDate
   let rangeStart, rangeEnd;
@@ -569,7 +608,6 @@ const effectiveDateRange = computed(() => {
     try {
       const start = parseISO(props.startDateFilter);
       const end = parseISO(props.endDateFilter);
-      
       // Make sure both dates are valid
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         return { start, end };
@@ -589,7 +627,7 @@ const effectiveDateRange = computed(() => {
   return { start: rangeStart, end: rangeEnd };
 });
 
-// Time units for the timeline display
+// Unit waktu untuk tampilan timeline
 const timeUnits = computed(() => {
   try {
     // Get date range safely
@@ -664,7 +702,7 @@ const timeUnits = computed(() => {
   }
 });
 
-// Check if today is visible in the current view
+// Memeriksa apakah hari ini terlihat di tampilan saat ini
 const isTodayVisible = computed(() => {
   try {
     // Get today's date
@@ -681,9 +719,7 @@ const isTodayVisible = computed(() => {
   }
 });
 
-// Methods for ProjectGanttChart
-
-// Core data fetching function
+// Method untuk mengambil data proyek
 function fetchProjects() {
   loading.value = true;
   error.value = null;
@@ -789,19 +825,19 @@ function fetchProjects() {
         });
       } else {
         console.error('Error fetching Gantt data:', response.data.result?.message);
-        error.value = response.data.result?.message || 'Failed to load projects';
+        error.value = response.data.result?.message || 'Gagal memuat proyek';
       }
     })
     .catch(err => {
       console.error('API error fetching project timeline data:', err);
-      error.value = 'Error loading project data';
+      error.value = 'Error memuat data proyek';
     })
     .finally(() => {
       loading.value = false;
     });
 }
 
-// Timeline navigation and control methods
+// Methods navigasi dan kontrol timeline
 function getDayWidth() {
   // Base day width multiplied by zoom level
   const baseDayWidth = 30;
@@ -874,7 +910,7 @@ function getTodayPosition() {
   }
 }
 
-// Navigation methods
+// Metode navigasi
 function moveTimelinePrev() {
   try {
     isInternalNavigation.value = true;
@@ -986,7 +1022,7 @@ function setViewMode(mode) {
   }
 }
 
-// Zoom methods
+// Metode zoom
 function increaseZoom() {
   if (zoomLevel.value < maxZoomLevel.value) {
     zoomLevel.value += 0.5;
@@ -999,7 +1035,7 @@ function decreaseZoom() {
   }
 }
 
-// Project and task interaction
+// Interaksi proyek dan tugas
 function toggleProject(projectIndex) {
   projects.value[projectIndex].expanded = !projects.value[projectIndex].expanded;
   
@@ -1031,12 +1067,9 @@ function handleTaskClick(task) {
     return;
   }
   
-  // Hanya tampilkan modal tanpa navigasi halaman
+  // Tampilkan modal tanpa navigasi halaman
   selectedTaskId.value = task.id;
   showTaskModal.value = true;
-  
-  // Jangan memancarkan event view-task-detail
-  // ATAU ubah penanganan event di komponen induk
 }
 
 function closeTaskModal() {
@@ -1052,29 +1085,29 @@ function handleEditTask(task) {
   emit('edit-task', task);
 }
 
-// Helper methods for tooltips and formatting
+// Helper methods untuk tooltips dan format
 function getProjectTooltip(project) {
   if (!project) return '';
   
-  let tooltip = `Project: ${project.name || 'Unnamed Project'}\n`;
+  let tooltip = `Proyek: ${project.name || 'Proyek Tanpa Nama'}\n`;
   
   try {
     if (project.startDate) {
-      tooltip += `Start: ${format(parseISO(project.startDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `Mulai: ${format(parseISO(project.startDate), 'd MMMM yyyy')}\n`;
     }
   } catch (e) {
-    tooltip += 'Start: Not set\n';
+    tooltip += 'Mulai: Belum diatur\n';
   }
   
   try {
     if (project.endDate) {
-      tooltip += `End: ${format(parseISO(project.endDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `Selesai: ${format(parseISO(project.endDate), 'd MMMM yyyy')}\n`;
     }
   } catch (e) {
-    tooltip += 'End: Not set\n';
+    tooltip += 'Selesai: Belum diatur\n';
   }
   
-  tooltip += `Progress: ${project.progress || 0}%\n`;
+  tooltip += `Progres: ${project.progress || 0}%\n`;
   tooltip += `Status: ${formatState(project.state)}`;
   
   return tooltip;
@@ -1083,47 +1116,58 @@ function getProjectTooltip(project) {
 function getTaskTooltip(task, project) {
   if (!task) return '';
   
-  let tooltip = `Task: ${task.name || 'Unnamed Task'}\n`;
+  let tooltip = `Tugas: ${task.name || 'Tugas Tanpa Nama'}\n`;
   
   if (project) {
-    tooltip += `Project: ${project.name || 'Unnamed Project'}\n`;
+    tooltip += `Proyek: ${project.name || 'Proyek Tanpa Nama'}\n`;
   }
   
   try {
     if (task.startDate) {
-      tooltip += `Start: ${format(parseISO(task.startDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `Mulai: ${format(parseISO(task.startDate), 'd MMMM yyyy')}\n`;
     }
   } catch (e) {
-    tooltip += 'Start: Not set\n';
+    tooltip += 'Mulai: Belum diatur\n';
   }
   
   try {
     if (task.endDate) {
-      tooltip += `End: ${format(parseISO(task.endDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `Tenggat: ${format(parseISO(task.endDate), 'd MMMM yyyy')}\n`;
     }
   } catch (e) {
-    tooltip += 'End: Not set\n';
+    tooltip += 'Tenggat: Belum diatur\n';
   }
   
-  tooltip += `Progress: ${task.progress || 0}%\n`;
+  tooltip += `Progres: ${task.progress || 0}%\n`;
   tooltip += `Status: ${formatState(task.state)}`;
   
   if (task.assigned_to && task.assigned_to.length > 0) {
-    tooltip += `\nAssigned to: ${task.assigned_to.map(u => u.name).join(', ')}`;
+    tooltip += `\nDitugaskan kepada: ${task.assigned_to.map(u => u.name).join(', ')}`;
   }
   
   return tooltip;
 }
 
 function formatState(state) {
-  // Convert snake_case to Title Case
-  return state
+  // Convert snake_case to Title Case in Indonesian
+  const stateMap = {
+    'draft': 'Draft',
+    'planning': 'Perencanaan',
+    'in_progress': 'Sedang Dikerjakan',
+    'on_hold': 'Ditahan',
+    'review': 'Dalam Review',
+    'completed': 'Selesai',
+    'done': 'Selesai',
+    'cancelled': 'Dibatalkan'
+  };
+  
+  return stateMap[state] || state
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
 
-// Visual styling helper methods
+// Mendapatkan inisial nama untuk avatar
 function getInitials(name) {
   if (!name) return '?';
   return name
@@ -1134,11 +1178,36 @@ function getInitials(name) {
     .toUpperCase();
 }
 
+// Mendapatkan label pengguna tambahan saat ada terlalu banyak untuk ditampilkan
 function getRemainingUsersTitle(users, shown) {
   if (!users || users.length <= shown) return '';
   return users.slice(shown).map(u => u.name).join(', ');
 }
 
+// Format tanggal untuk tampilan
+function formatDate(dateStr) {
+  try {
+    if (!dateStr) return '';
+    const date = parseISO(dateStr);
+    return format(date, 'd MMMM yyyy');
+  } catch (e) {
+    console.error('Error formatting date:', e);
+    return dateStr || '';
+  }
+}
+
+// Format tanggal singkat untuk badges
+function formatDateShort(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const date = parseISO(dateStr);
+    return format(date, 'd/M');
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+// Helper methods untuk kelas CSS dan gaya visual
 function getStatusIndicatorClass(state) {
   const classes = {
     'draft': 'bg-gray-400',
@@ -1148,7 +1217,8 @@ function getStatusIndicatorClass(state) {
     'review': 'bg-purple-400',
     'completed': 'bg-indigo-400',
     'done': 'bg-indigo-400',
-    'cancelled': 'bg-red-400'
+    'cancelled': 'bg-red-400',
+    'planned': 'bg-blue-400'
   };
   
   return classes[state] || 'bg-gray-400';
@@ -1217,9 +1287,9 @@ function getProgressBarColorClass(progress) {
   }
 }
 
-// Lifecycle hooks and watches
+// Lifecycle hooks dan watches
 
-// On component mount, initialize and fetch data
+// Saat komponen di-mount, inisialisasi dan ambil data
 onMounted(() => {
   console.log('Gantt Chart component mounted');
   console.log('Department ID from props:', props.departmentId);
@@ -1240,7 +1310,7 @@ onMounted(() => {
   fetchProjects();
 });
 
-// Watch for prop changes to refresh data
+// Watch perubahan props untuk merefresh data
 watch(
   [() => props.startDateFilter, () => props.endDateFilter, () => props.departmentId],
   ([newStart, newEnd, newDept], [oldStart, oldEnd, oldDept]) => {
@@ -1274,11 +1344,8 @@ watch(loading, (newVal, oldVal) => {
     isInternalNavigation.value = false;
   }
 });
-
-// Export methods for use in template
 </script>
 
-/* Add these styles to your component */
 <style scoped>
 .gantt-container {
   height: calc(100vh - 250px);
@@ -1310,7 +1377,7 @@ watch(loading, (newVal, oldVal) => {
   position: relative;
 }
 
-/* Smooth transitions for hover and expand/collapse */
+/* Transisi smooth saat hover dan expand/collapse */
 .project-row, .task-row {
   transition: background-color 0.15s ease;
 }
@@ -1319,7 +1386,7 @@ watch(loading, (newVal, oldVal) => {
   transition: background-color 0.15s ease;
 }
 
-/* Additional custom scrollbar styles for better UX */
+/* Gaya scrollbar untuk UX yang lebih baik */
 .gantt-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1338,7 +1405,7 @@ watch(loading, (newVal, oldVal) => {
   background: #9ca3af;
 }
 
-/* Animation for loading state */
+/* Animasi untuk keadaan loading */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -1352,12 +1419,12 @@ watch(loading, (newVal, oldVal) => {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Today indicator pulsing effect */
+/* Efek pulsing untuk indikator hari ini */
 .today-indicator {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Custom tooltip for task details */
+/* Tooltip kustom untuk detail tugas */
 .task-tooltip {
   position: absolute;
   background: white;
@@ -1368,5 +1435,119 @@ watch(loading, (newVal, oldVal) => {
   z-index: 30;
   max-width: 250px;
   font-size: 12px;
+}
+
+/* Badge profil untuk tugas */
+.avatar-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background-color: #e5edff;
+  color: #3b82f6;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1.5px solid white;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Badge tanggal untuk menampilkan due date */
+.date-badge {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #4b5563;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Efek hover pada batang timeline */
+.project-timeline-bar, .task-timeline-bar {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.project-timeline-bar:hover, .task-timeline-bar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Status badges untuk tugas */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.status-badge-draft {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.status-badge-planned {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.status-badge-in-progress {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-badge-review {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.status-badge-done {
+  background-color: #c7d2fe;
+  color: #4f46e5;
+}
+
+.status-badge-cancelled {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Animasi saat elemen dipilih */
+@keyframes highlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.highlight-animation {
+  animation: highlight 1s ease-in-out;
+}
+
+/* Responsive styling for different screen sizes */
+@media (max-width: 768px) {
+  .gantt-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .project-names {
+    position: relative;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .gantt-timeline {
+    overflow-x: auto;
+  }
 }
 </style>

@@ -1,6 +1,4 @@
 <!-- src/views/dashboard/TeamProjects.vue -->
-<!-- Modifikasi src/views/dashboard/TeamProjects.vue -->
-
 <template>
   <div class="min-h-screen bg-gray-50">
     <Toast
@@ -10,117 +8,100 @@
       :duration="toast.duration"
     />
     
-    <!-- Header with Filters -->
+    <!-- Header with Filter Button -->
     <div class="bg-white shadow">
       <div class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
           <!-- Title -->
           <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">All Teams Projects</h1>
           
-          <!-- Controls Container -->
-          <div class="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+          <!-- Controls Container - Simplified for efficiency -->
+          <div class="flex items-center space-x-3">
             <!-- View toggle buttons -->
             <div class="inline-flex rounded-md shadow-sm">
               <button
                 @click="viewMode = 'grid'"
-                class="px-4 py-2 text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center"
+                class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center"
                 :class="viewMode === 'grid' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
               >
-                <ViewColumnsIcon class="h-4 w-4 mr-1.5" />
+                <ViewColumnsIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                 Grid
               </button>
               <button
                 @click="viewMode = 'gantt'"
-                class="px-4 py-2 text-sm font-medium rounded-r-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center"
+                class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-r-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center"
                 :class="viewMode === 'gantt' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
               >
-                <ChartBarIcon class="h-4 w-4 mr-1.5" />
+                <ChartBarIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                 Timeline
               </button>
             </div>
             
-            <!-- Department Filter -->
-            <select
-              v-model="filters.department_id"
-              class="w-full sm:w-auto rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:ring-red-500 focus:border-red-500"
+            <!-- Filter Button with Badge Indicators -->
+            <button
+              @click="showFilterModal = true"
+              class="relative inline-flex items-center justify-center px-3.5 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
-              <option value="">All Departments</option>
-              <option v-for="dept in departments" :key="dept.id" :value="dept.id">
-                {{ dept.name }}
-              </option>
-            </select>
+              <FunnelIcon class="h-4 w-4 mr-1.5" />
+              <span>Filters</span>
+              
+              <!-- Badge indicator for active filters -->
+              <span 
+                v-if="activeFilterCount > 0" 
+                class="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold shadow-sm"
+              >
+                {{ activeFilterCount }}
+              </span>
+            </button>
             
-            <!-- Status Filter -->
-            <select
-              v-model="filters.state"
-              class="w-full sm:w-auto rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:ring-red-500 focus:border-red-500"
-            >
-              <option value="">All Status</option>
-              <option value="draft">Draft</option>
-              <option value="planning">Planning</option>
-              <option value="in_progress">In Progress</option>
-              <option value="on_hold">On Hold</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-
-            <!-- Date Filters -->
-            <!-- Date Filters with label -->
-            <div class="flex flex-col space-y-1">
-              <label class="text-xs font-medium text-gray-700">Period Filter</label>
-              <div class="flex space-x-2">
-                <div class="relative">
-                  <input 
-                    type="date" 
-                    v-model="filters.date_start"
-                    class="w-full sm:w-auto rounded-md border-gray-300 py-2 pl-9 pr-2 text-sm focus:ring-red-500 focus:border-red-500"
-                    placeholder="Start Date"
-                  >
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                    <CalendarIcon class="h-4 w-4 text-gray-400" />
-                  </span>
-                </div>
-                <span class="flex items-center text-gray-400">to</span>
-                <div class="relative">
-                  <input 
-                    type="date" 
-                    v-model="filters.date_end"
-                    class="w-full sm:w-auto rounded-md border-gray-300 py-2 pl-9 pr-2 text-sm focus:ring-red-500 focus:border-red-500"
-                    placeholder="End Date"
-                  >
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                    <CalendarIcon class="h-4 w-4 text-gray-400" />
-                  </span>
-                </div>
+            <!-- Active Filter Pills - Shows on larger screens -->
+            <div class="hidden md:flex md:flex-wrap md:gap-2 md:items-center">
+              <!-- Department Filter Pill -->
+              <div 
+                v-if="filters.department_id" 
+                class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+              >
+                <span>{{ getDepartmentName(filters.department_id) }}</span>
+                <XMarkIcon 
+                  @click="clearFilter('department_id')" 
+                  class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+                />
+              </div>
+              
+              <!-- Status Filter Pill -->
+              <div 
+                v-if="filters.state" 
+                class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+              >
+                <span>{{ formatState(filters.state) }}</span>
+                <XMarkIcon 
+                  @click="clearFilter('state')" 
+                  class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+                />
+              </div>
+              
+              <!-- Date Range Pill -->
+              <div 
+                v-if="filters.date_start || filters.date_end" 
+                class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+              >
+                <span>{{ formatDateRange() }}</span>
+                <XMarkIcon 
+                  @click="clearDateFilter" 
+                  class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+                />
               </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="flex space-x-2">
-              <button
-                @click="fetchProjects(false)"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                <FunnelIcon class="h-4 w-4 mr-1.5" />
-                Apply Filters
-              </button>
-
-              <button
-                @click="resetFilters"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                <ArrowPathIcon class="h-4 w-4 mr-1.5" />
-                Reset
-              </button>
-
-              <button
-                @click="showCreateModal = true"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                <PlusIcon class="h-4 w-4 mr-1.5" />
-                New Project
-              </button>
-            </div>
+            
+            <!-- New Project Button -->
+            <button
+              @click="showCreateModal = true"
+              class="inline-flex justify-center items-center px-3.5 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <PlusIcon class="h-4 w-4 mr-1.5" />
+              <span class="hidden xs:inline">New Project</span>
+              <span class="xs:hidden">New</span>
+            </button>
           </div>
         </div>
       </div>
@@ -129,79 +110,326 @@
     <!-- Main Content -->
     <main class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Grid View -->
-      <div v-if="viewMode === 'grid'">
-        <!-- Projects Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <TeamProjectCard 
-            v-for="project in projects"
-            :key="project.id"
-            :project="project"
-            @click="viewProject(project.id)"
-            @status-change="updateProjectStatus"
-            class="cursor-pointer"
+      <!-- Grid View -->
+    <div v-if="viewMode === 'grid'">
+      <!-- Applied Filters Summary (Mobile) -->
+      <div class="flex flex-wrap gap-2 mb-4 md:hidden">
+        <div 
+          v-if="activeFilterCount > 0" 
+          class="w-full text-sm text-gray-700 mb-1"
+        >
+          Applied Filters:
+        </div>
+        <!-- Department Filter Pill -->
+        <div 
+          v-if="filters.department_id" 
+          class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+        >
+          <span>{{ getDepartmentName(filters.department_id) }}</span>
+          <XMarkIcon 
+            @click.stop="clearFilter('department_id')" 
+            class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
           />
         </div>
-
-        <!-- Empty State -->
+        
+        <!-- Status Filter Pill -->
         <div 
-          v-if="!loading && projects.length === 0" 
-          class="text-center py-12"
+          v-if="filters.state" 
+          class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
         >
-          <DocumentIcon class="mx-auto h-12 w-12 text-gray-400" />
-          <h3 class="mt-2 text-sm font-medium text-gray-900">No projects</h3>
-          <p class="mt-1 text-sm text-gray-500">
-            Get started by creating a new team project.
-          </p>
-          <div class="mt-6">
-            <button
-              @click="showCreateModal = true"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-            >
-              <PlusIcon class="h-4 w-4 mr-1.5" />
-              New Project
-            </button>
-          </div>
+          <span>{{ formatState(filters.state) }}</span>
+          <XMarkIcon 
+            @click.stop="clearFilter('state')" 
+            class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+          />
+        </div>
+        
+        <!-- Date Range Pill -->
+        <div 
+          v-if="filters.date_start || filters.date_end" 
+          class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+        >
+          <span>{{ formatDateRange() }}</span>
+          <XMarkIcon 
+            @click.stop="clearDateFilter" 
+            class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+          />
         </div>
       </div>
 
+      <!-- Projects Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <TeamProjectCard 
+          v-for="project in projects"
+          :key="project.id"
+          :project="project"
+          @click="viewProject(project.id)"
+          @status-change="updateProjectStatus"
+          @view-details="viewProject"
+          class="h-full cursor-pointer"
+        />
+      </div>
+
+      <!-- Empty State -->
+      <div 
+        v-if="!loading && projects.length === 0" 
+        class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center my-6"
+      >
+        <DocumentIcon class="mx-auto h-12 w-12 text-gray-400" />
+        <h3 class="mt-3 text-sm font-medium text-gray-900">No projects found</h3>
+        <p class="mt-2 text-sm text-gray-500">
+          {{ activeFilterCount > 0 ? 'Try changing your filter criteria or create a new project.' : 'Get started by creating a new team project.' }}
+        </p>
+        <div class="mt-5">
+          <button
+            v-if="activeFilterCount > 0"
+            @click="resetFilters"
+            class="inline-flex items-center px-4 py-2 mr-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <ArrowPathIcon class="h-4 w-4 mr-1.5" />
+            Reset Filters
+          </button>
+          <button
+            @click="showCreateModal = true"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+          >
+            <PlusIcon class="h-4 w-4 mr-1.5" />
+            New Project
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div 
+        v-if="loading" 
+        class="flex flex-col items-center justify-center py-20"
+      >
+        <div class="animate-spin rounded-full h-10 w-10 border-2 border-red-600 border-t-transparent mb-3"></div>
+        <p class="text-sm text-gray-600">Loading projects...</p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="!loading && projects.length > 0 && viewMode === 'grid'" class="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+      <div class="flex flex-1 justify-between sm:hidden">
+        <button 
+          @click="prevPage" 
+          :disabled="pagination.currentPage <= 1"
+          class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          :class="{'opacity-50 cursor-not-allowed': pagination.currentPage <= 1}"
+        >
+          Previous
+        </button>
+        <button 
+          @click="nextPage" 
+          :disabled="pagination.currentPage >= pagination.totalPages"
+          class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          :class="{'opacity-50 cursor-not-allowed': pagination.currentPage >= pagination.totalPages}"
+        >
+          Next
+        </button>
+      </div>
+      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">{{ (pagination.currentPage - 1) * pagination.limit + 1 }}</span>
+            to
+            <span class="font-medium">{{ Math.min(pagination.currentPage * pagination.limit, pagination.total) }}</span>
+            of
+            <span class="font-medium">{{ pagination.total }}</span>
+            projects
+          </p>
+        </div>
+        <div class="isolate inline-flex -space-x-px rounded-md shadow-sm">
+          <!-- First Page Button -->
+          <button
+            v-if="pagination.totalPages > 3"
+            @click="goToPage(1)"
+            :disabled="pagination.currentPage === 1"
+            class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            :class="{'opacity-50 cursor-not-allowed': pagination.currentPage === 1}"
+          >
+            <span class="sr-only">First</span>
+            <span class="text-xs">First</span>
+          </button>
+          
+          <!-- Previous Button -->
+          <button
+            @click="prevPage"
+            :disabled="pagination.currentPage <= 1"
+            class="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            :class="{'opacity-50 cursor-not-allowed': pagination.currentPage <= 1}"
+          >
+            <span class="sr-only">Previous</span>
+            &laquo;
+          </button>
+          
+          <!-- Page Numbers -->
+          <template v-for="page in pagination.totalPages" :key="page">
+            <!-- Render with logic to limit visible pages -->
+            <button
+              v-if="
+                page === 1 || 
+                page === pagination.totalPages || 
+                (page >= pagination.currentPage - 1 && page <= pagination.currentPage + 1)
+              "
+              @click="goToPage(page)"
+              :class="[
+                pagination.currentPage === page 
+                  ? 'relative z-10 inline-flex items-center bg-red-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600' 
+                  : 'relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0',
+              ]"
+            >
+              {{ page }}
+            </button>
+            
+            <!-- Ellipsis if needed -->
+            <span
+              v-else-if="
+                (page === 2 && pagination.currentPage > 3) || 
+                (page === pagination.totalPages - 1 && pagination.currentPage < pagination.totalPages - 2)
+              "
+              class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300"
+            >
+              ...
+            </span>
+          </template>
+          
+          <!-- Next Button -->
+          <button
+            @click="nextPage"
+            :disabled="pagination.currentPage >= pagination.totalPages"
+            class="relative inline-flex items-center px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            :class="{'opacity-50 cursor-not-allowed': pagination.currentPage >= pagination.totalPages}"
+          >
+            <span class="sr-only">Next</span>
+            &raquo;
+          </button>
+          
+          <!-- Last Page Button -->
+          <button
+            v-if="pagination.totalPages > 3"
+            @click="goToPage(pagination.totalPages)"
+            :disabled="pagination.currentPage === pagination.totalPages"
+            class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            :class="{'opacity-50 cursor-not-allowed': pagination.currentPage === pagination.totalPages}"
+          >
+            <span class="sr-only">Last</span>
+            <span class="text-xs">Last</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
       <!-- Gantt Chart View -->
       <div v-else-if="viewMode === 'gantt'">
+        <!-- Applied Filters Summary (Mobile View) -->
+        <div class="flex flex-wrap gap-2 mb-4 md:hidden">
+          <div 
+            v-if="activeFilterCount > 0" 
+            class="w-full text-sm text-gray-700 mb-1"
+          >
+            Applied Filters:
+          </div>
+          <!-- Department Filter Pill -->
+          <div 
+            v-if="filters.department_id" 
+            class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+          >
+            <span>{{ getDepartmentName(filters.department_id) }}</span>
+            <XMarkIcon 
+              @click.stop="clearFilter('department_id')" 
+              class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+            />
+          </div>
+          
+          <!-- Status Filter Pill -->
+          <div 
+            v-if="filters.state" 
+            class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+          >
+            <span>{{ formatState(filters.state) }}</span>
+            <XMarkIcon 
+              @click.stop="clearFilter('state')" 
+              class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+            />
+          </div>
+          
+          <!-- Date Range Pill -->
+          <div 
+            v-if="filters.date_start || filters.date_end" 
+            class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center"
+          >
+            <span>{{ formatDateRange() }}</span>
+            <XMarkIcon 
+              @click.stop="clearDateFilter" 
+              class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
+            />
+          </div>
+        </div>
+
         <ProjectGanttChart 
-          :department-id="filters.department_id"
+          :department-id="filters.department_id ? parseInt(filters.department_id) : null"
+          :department-name="filters.department_id ? getDepartmentName(filters.department_id) : ''"
           :start-date-filter="filters.date_start"
           :end-date-filter="filters.date_end"
           @view-task-detail="handleViewTaskDetail"
           @view-project-detail="handleViewProjectDetail"
           @edit-task="handleEditTask"
           @update:dateRange="handleDateRangeUpdate"
+          @clearFilter="clearFilter"
+          @resetFilters="resetFilters"
         />
       </div>
 
       <!-- Loading State -->
-      <div 
+      <!-- <div 
         v-if="loading" 
         class="flex justify-center py-12"
       >
         <div class="animate-spin rounded-full h-8 w-8 border-2 border-red-600 border-t-transparent"></div>
-      </div>
+      </div> -->
     </main>
+
+    <!-- Filter Modal -->
+    <TeamProjectFilterModal
+      :show="showFilterModal"
+      :filters="filters"
+      :departments="departments"
+      @close="showFilterModal = false"
+      @apply="handleFilterApply"
+      @reset="resetFilters"
+    />
 
     <!-- Create/Edit Project Modal -->
     <TeamProjectFormModal
-      v-if="showCreateModal"
+      v-if="showCreateModal && !selectedTask"
       :show="showCreateModal"
       :project="selectedProject"
       :departments="departments"
       @close="closeModal"
       @submit="handleProjectSubmit"
     />
+
+    <!-- Tambahkan di bawah bagian modal lainnya -->
+    <TaskFormModal
+    v-if="showTaskModal"
+    :show="showTaskModal"
+    :task="selectedTask"
+    :projects="projects"
+    @close="closeTaskModal"
+    @submit="handleTaskSubmit"
+    @delete="handleTaskDelete"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
+import TaskFormModal from '@/components/team/TaskFormPopup.vue';
 import apiClient from '@/config/api'
 import { 
   PlusIcon, 
@@ -210,7 +438,8 @@ import {
   FunnelIcon,
   ViewColumnsIcon,
   ChartBarIcon, 
-  CalendarIcon 
+  CalendarIcon,
+  XMarkIcon
 } from '@heroicons/vue/24/outline'
 import { 
   format, 
@@ -225,6 +454,7 @@ import {
 import TeamProjectCard from '@/components/team/TeamProjectCard.vue'
 import TeamProjectFormModal from '@/components/team/TeamProjectFormModal.vue'
 import ProjectGanttChart from '@/components/team/ProjectGanttChart.vue'
+import TeamProjectFilterModal from '@/components/filter/ProjectFilterModal.vue'
 import Toast from '@/components/Toast.vue'
 
 // State
@@ -234,7 +464,15 @@ const loading = ref(false)
 const projects = ref([])
 const departments = ref([])
 const showCreateModal = ref(false)
+const showFilterModal = ref(false)
 const selectedProject = ref(null)
+// State untuk pagination
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  limit: 7,
+  total: 0
+});
 
 // Add new view mode state
 const viewMode = ref('grid') // 'grid' or 'gantt'
@@ -245,7 +483,92 @@ const filters = ref({
   date_start: '',
   date_end: '',
   project_manager_id: ''
-}); 
+});
+
+// Fungsi untuk menangani pengiriman form
+const handleTaskSubmit = (taskData) => {
+  // Handle data yang dikirim dari modal
+  console.log('Task data submitted:', taskData);
+  
+  // Refresh data jika diperlukan
+  fetchProjects();
+  
+  // Tampilkan pesan sukses
+  showToast({
+    message: selectedTask.value ? 'Task updated successfully' : 'Task created successfully',
+    type: 'success'
+  });
+};
+
+// Fungsi untuk menangani penghapusan task
+const handleTaskDelete = (taskId) => {
+  console.log('Task deleted:', taskId);
+  
+  // Refresh data
+  fetchProjects();
+  
+  // Tampilkan pesan sukses
+  showToast({
+    message: 'Task deleted successfully',
+    type: 'success'
+  });
+};
+
+// Computed property to count active filters
+const activeFilterCount = computed(() => {
+  let count = 0;
+  
+  if (filters.value.department_id) count++;
+  if (filters.value.state) count++;
+  if (filters.value.date_start || filters.value.date_end) count++;
+  if (filters.value.project_manager_id) count++;
+  
+  return count;
+});
+
+// Helper function to get department name from ID
+const getDepartmentName = (departmentId) => {
+  const department = departments.value.find(dept => dept.id == departmentId);
+  return department ? department.name : 'Unknown Department';
+};
+
+// Helper function to format state for display
+const formatState = (state) => {
+  // Convert snake_case to Title Case
+  return state
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+// Format date range for display
+const formatDateRange = () => {
+  const start = filters.value.date_start;
+  const end = filters.value.date_end;
+  
+  if (start && end) {
+    return `${start} to ${end}`;
+  } else if (start) {
+    return `From ${start}`;
+  } else if (end) {
+    return `Until ${end}`;
+  }
+  
+  return 'Date Range';
+};
+
+// Clear a specific filter
+const clearFilter = (filterName) => {
+  filters.value[filterName] = '';
+  fetchProjects(false); // Refresh with updated filters
+};
+
+// Clear date filter (both start and end)
+const clearDateFilter = () => {
+  filters.value.date_start = '';
+  filters.value.date_end = '';
+  fetchProjects(false); // Refresh with updated filters
+};
 
 const handleDateRangeUpdate = (dateRange) => {
   if (dateRange && dateRange.start && dateRange.end) {
@@ -260,6 +583,13 @@ const handleDateRangeUpdate = (dateRange) => {
 
 
 // Methods
+// Handle filter apply from modal
+const handleFilterApply = (newFilters) => {
+  filters.value = { ...newFilters };
+  pagination.value.currentPage = 1; // Reset ke halaman 1 saat filter berubah
+  fetchProjects(false);
+};
+
 // Modifikasi fungsi fetchProjects untuk menerima parameter isInitialLoad
 const fetchProjects = async (isInitialLoad = false) => {
   try {
@@ -272,28 +602,36 @@ const fetchProjects = async (isInitialLoad = false) => {
       date_end: format(addDays(today, 14), 'yyyy-MM-dd'),
     };
     
-    // Siapkan parameter yang akan dikirim
-    let params = {};
+    // Siapkan parameter yang akan dikirim dalam format yang benar
+    let params = {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        // Tambahkan parameter pagination
+        page: pagination.value.currentPage,
+        limit: pagination.value.limit
+      }
+    };
     
     // Jika ini adalah load awal, gunakan hanya filter tanggal default
     if (isInitialLoad) {
-      params = { ...defaultParams };
+      params.params = { ...params.params, ...defaultParams };
     } else {
       // Jika bukan load awal, gunakan filter yang dipilih pengguna
       if (filters.value.department_id) {
-        params.department_id = parseInt(filters.value.department_id);
+        params.params.department_id = parseInt(filters.value.department_id);
       }
       
       if (filters.value.state) {
-        params.state = filters.value.state;
+        params.params.state = filters.value.state;
       }
       
       // Selalu gunakan filter tanggal, baik dari filter pengguna atau default
-      params.date_start = filters.value.date_start || defaultParams.date_start;
-      params.date_end = filters.value.date_end || defaultParams.date_end;
+      params.params.date_start = filters.value.date_start || defaultParams.date_start;
+      params.params.date_end = filters.value.date_end || defaultParams.date_end;
       
       if (filters.value.project_manager_id) {
-        params.project_manager_id = parseInt(filters.value.project_manager_id);
+        params.params.project_manager_id = parseInt(filters.value.project_manager_id);
       }
     }
     
@@ -301,15 +639,21 @@ const fetchProjects = async (isInitialLoad = false) => {
     console.log('Fetching projects with params:', params);
     
     // Kirim request dengan parameter yang benar
-    const response = await apiClient.post('/web/v2/team/projects/list', {
-      jsonrpc: '2.0',
-      method: 'call',
-      params: params
-    });
+    const response = await apiClient.post('/web/v2/team/projects/list', params);
 
     // Periksa respons
     if (response.data.result?.status === 'success') {
       projects.value = response.data.result.data;
+      
+      // Update pagination state dari respons server
+      if (response.data.result.pagination) {
+        pagination.value = {
+          currentPage: response.data.result.pagination.page || 1,
+          totalPages: response.data.result.pagination.total_pages || 1,
+          limit: response.data.result.pagination.limit || 10,
+          total: response.data.result.pagination.total || 0
+        };
+      }
       
       // Hanya tampilkan toast jika ini bukan load awal
       if (!isInitialLoad) {
@@ -330,6 +674,7 @@ const fetchProjects = async (isInitialLoad = false) => {
         message: response.data.result?.message || 'Failed to load projects',
         type: 'error'
       });
+      console.error('API Error:', response.data.result);
     }
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -340,6 +685,24 @@ const fetchProjects = async (isInitialLoad = false) => {
     });
   } finally {
     loading.value = false;
+  }
+};
+
+const goToPage = (page) => {
+  if (page < 1 || page > pagination.value.totalPages) return;
+  pagination.value.currentPage = page;
+  fetchProjects(false);
+};
+
+const prevPage = () => {
+  if (pagination.value.currentPage > 1) {
+    goToPage(pagination.value.currentPage - 1);
+  }
+};
+
+const nextPage = () => {
+  if (pagination.value.currentPage < pagination.value.totalPages) {
+    goToPage(pagination.value.currentPage + 1);
   }
 };
 
@@ -410,6 +773,9 @@ const resetFilters = () => {
     project_manager_id: ''
   };
   
+  // Reset pagination
+  pagination.value.currentPage = 1;
+  
   // Fetch projects tanpa filter (isInitialLoad = true)
   fetchProjects(true);
 };
@@ -424,21 +790,32 @@ const closeModal = () => {
   selectedProject.value = null
 }
 
-const handleEditTask = (task) => {
-  showCreateModal.value = true;
-  selectedTask.value = task;
-}
+// const handleEditTask = (task) => {
+//   showCreateModal.value = true;
+//   selectedTask.value = task;
+// }
 
 
 const handleViewTaskDetail = (task) => {
   // Navigate to task detail page
-  router.push(`/team/task/${task.id}`);
+  // router.push(`/team/task/${task.id}`);
 }
 
 // Handler untuk melihat detail project
 const handleViewProjectDetail = (project) => {
   // Navigate to project detail page
   router.push(`/team/project/${project.id}`);
+}
+
+const debouncedFetch = useDebounce(fetchProjects, 300);
+
+// Helper function untuk debounce
+function useDebounce(fn, delay) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
 }
 
 const effectiveDateFilter = computed(() => {
@@ -508,6 +885,63 @@ const handleProjectSubmit = async (projectData) => {
   }
 }
 
+// Script di TeamProjects.vue
+const selectedTask = ref(null);
+const showTaskModal = ref(false);
+
+// Perbaiki metode handleEditTask
+const handleEditTask = (task) => {
+  console.log('Editing task:', task);
+  selectedTask.value = task;
+  showTaskModal.value = true;
+  showCreateModal.value = false; // Pastikan modal project tidak muncul
+};
+
+// Tambahkan metode untuk close task modal
+const closeTaskModal = () => {
+  showTaskModal.value = false;
+  selectedTask.value = null;
+};
+
+// Tambahkan metode untuk handle submit task
+// const handleTaskSubmit = async (taskData) => {
+//   try {
+//     loading.value = true;
+//     const response = await apiClient.post('/web/v2/team/tasks', {
+//       jsonrpc: '2.0',
+//       id: new Date().getTime(),
+//       params: {
+//         operation: 'update',
+//         task_id: selectedTask.value.id,
+//         ...taskData
+//       }
+//     });
+
+//     if (response.data.result?.status === 'success') {
+//       showToast({
+//         message: 'Task updated successfully',
+//         type: 'success'
+//       });
+//       closeTaskModal();
+      
+//       // Refresh data jika perlu
+//       if (viewMode.value === 'gantt') {
+//         // Refresh gantt chart data
+//       } else {
+//         fetchProjects();
+//       }
+//     }
+//   } catch (error) {
+//     console.error('Error updating task:', error);
+//     showToast({
+//       message: error.message || 'Failed to update task',
+//       type: 'error'
+//     });
+//   } finally {
+//     loading.value = false;
+//   }
+// };
+
 onMounted(() => {
   const today = new Date();
   
@@ -522,5 +956,8 @@ onMounted(() => {
   fetchProjects(true);
 });
 
-
+// Watch filters untuk reset page saat terjadi perubahan
+watch(filters, () => {
+  pagination.value.currentPage = 1;
+}, { deep: true });
 </script>

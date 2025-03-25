@@ -289,7 +289,7 @@
                   v-model="formData.name"
                   type="text"
                   required
-                  class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                 />
               </div>
               
@@ -301,7 +301,7 @@
                     id="content-type"
                     v-model="formData.content_type"
                     required
-                    class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option value="" disabled>Select content type</option>
                     <option value="video">Video</option>
@@ -316,7 +316,7 @@
                     id="task-status"
                     v-model="formData.state"
                     required
-                    class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option value="draft">Draft</option>
                     <option value="in_progress">In Progress</option>
@@ -336,7 +336,7 @@
                       :multiple="true"
                       class="mt-2"
                     />
-                  <p class="px-3 py-2 mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple members</p>
+                  <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple members</p>
                 </div>
                 
                 <div>
@@ -353,22 +353,38 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label for="planned-start" class="block text-sm font-medium text-gray-700 mb-1">Planned Start Date</label>
-                  <input
-                    id="planned-start"
-                    v-model="formData.planned_date_start"
-                    type="datetime-local"
-                    class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                  />
+                  <div class="flex items-center space-x-2">
+                    <input
+                      id="planned-start-date"
+                      v-model="formData.planned_date_start"
+                      type="date"
+                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    />
+                    <input
+                      id="planned-start-time"
+                      v-model="formData.planned_time_start"
+                      type="time"
+                      class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    />
+                  </div>
                 </div>
                 
                 <div>
                   <label for="planned-end" class="block text-sm font-medium text-gray-700 mb-1">Planned End Date</label>
-                  <input
-                    id="planned-end"
-                    v-model="formData.planned_date_end"
-                    type="datetime-local"
-                    class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                  />
+                  <div class="flex items-center space-x-2">
+                    <input
+                      id="planned-end-date"
+                      v-model="formData.planned_date_end"
+                      type="date"
+                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    />
+                    <input
+                      id="planned-end-time"
+                      v-model="formData.planned_time_end"
+                      type="time"
+                      class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -382,7 +398,7 @@
                     type="number"
                     min="0"
                     step="0.5"
-                    class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   />
                 </div>
                 
@@ -394,7 +410,7 @@
                     type="number"
                     min="0"
                     max="100"
-                    class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -406,7 +422,7 @@
                   id="description"
                   v-model="formData.description"
                   rows="3"
-                  class="px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                 ></textarea>
               </div>
               
@@ -491,19 +507,9 @@ const emit = defineEmits(['close', 'update', 'delete'])
 // State variables
 const editMode = ref(false)
 const formData = ref({
-  id: null // Make sure ID is always initialized
+  id: null // Pastikan id selalu diinisialisasi
 })
 const showDeleteConfirm = ref(false)
-
-// Mock team members data (in a real app, this would come from an API)
-const teamMembers = ref([
-  { id: 1, name: 'John Doe', position: 'Marketing Director' },
-  { id: 2, name: 'Jane Smith', position: 'Creative Lead' },
-  { id: 3, name: 'Mike Johnson', position: 'Content Manager' },
-  { id: 4, name: 'Sara Wilson', position: 'Video Producer' },
-  { id: 5, name: 'Tom Brown', position: 'Graphic Designer' },
-  { id: 6, name: 'Emily Davis', position: 'Content Writer' }
-])
 
 // Computed properties
 const isInProgress = computed(() => props.task.state === 'in_progress')
@@ -536,23 +542,23 @@ const formatState = (state) => {
 
 const formatDate = (date) => {
   if (!date) return '-'
-  return format(new Date(date), 'dd MMM yyyy')
-}
-
-const formatDateTime = (date, time) => {
-  // Mengubah format dari yyyy-MM-ddTHH:mm menjadi yyyy-MM-dd HH:mm:00
-  if (date && time) {
-    // Jika date adalah format ISO (dengan T), maka kita pisahkan
-    if (date.includes('T')) {
-      const [datePart] = date.split('T')
-      return `${datePart} ${time}:00`
-    }
-    // Jika tidak, gunakan format normal
-    return `${date} ${time}:00`
+  try {
+    return format(new Date(date), 'dd MMM yyyy')
+  } catch (e) {
+    console.error('Error formatting date:', e)
+    return date
   }
-  return null
 }
 
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return '-'
+  try {
+    return format(new Date(dateTime), 'dd MMM yyyy, HH:mm')
+  } catch (e) {
+    console.error('Error formatting datetime:', e)
+    return dateTime
+  }
+}
 
 const getInitials = (name) => {
   if (!name) return ''
@@ -569,16 +575,44 @@ const closeModal = () => {
 }
 
 const enableEditMode = () => {
+  // Ekstrak tanggal dan waktu dari planned_date
+  let startDate = ''
+  let startTime = '09:00'
+  let endDate = ''
+  let endTime = '17:00'
+  
+  if (props.task.dates?.planned_start) {
+    try {
+      const startDateTime = new Date(props.task.dates.planned_start)
+      startDate = format(startDateTime, 'yyyy-MM-dd')
+      startTime = format(startDateTime, 'HH:mm')
+    } catch (e) {
+      console.error('Error parsing start date:', e)
+    }
+  }
+  
+  if (props.task.dates?.planned_end) {
+    try {
+      const endDateTime = new Date(props.task.dates.planned_end)
+      endDate = format(endDateTime, 'yyyy-MM-dd')
+      endTime = format(endDateTime, 'HH:mm')
+    } catch (e) {
+      console.error('Error parsing end date:', e)
+    }
+  }
+  
   // Initialize form data from task
   formData.value = {
-    id: props.task.id, // Make sure the ID is set here
+    id: props.task.id,
     name: props.task.name,
     content_type: props.task.content_type,
     state: props.task.state,
     assigned_to: props.task.assigned_to?.map(member => member.id) || [],
     reviewer_id: props.task.reviewer?.id || '',
-    planned_date_start: props.task.dates?.planned_start ? formatDateForInput(props.task.dates.planned_start) : '',
-    planned_date_end: props.task.dates?.planned_end ? formatDateForInput(props.task.dates.planned_end) : '',
+    planned_date_start: startDate,
+    planned_time_start: startTime,
+    planned_date_end: endDate,
+    planned_time_end: endTime,
     planned_hours: props.task.hours?.planned || 0,
     progress: props.task.progress || 0,
     description: props.task.description || ''
@@ -587,61 +621,35 @@ const enableEditMode = () => {
   editMode.value = true
 }
 
-const formatDateForInput = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return format(date, "yyyy-MM-dd'T'HH:mm")
-}
-
-
 const cancelEdit = () => {
   editMode.value = false
 }
 
 const submitForm = () => {
-  // Pisahkan tanggal dan waktu jika formData.planned_date_start berisi 'T'
-  let startDate = formData.value.planned_date_start
-  let startTime = formData.value.planned_time_start
-  
-  if (startDate && startDate.includes('T')) {
-    const [datePart, timePart] = startDate.split('T')
-    startDate = datePart
-    if (!startTime && timePart) {
-      startTime = timePart
-    }
+  // Format tanggal sesuai dengan yang diharapkan backend (YYYY-MM-DD HH:MM:SS)
+  const formatDateForBackend = (date, time) => {
+    if (!date) return null
+    return `${date} ${time || '00:00'}:00`
   }
   
-  // Pisahkan tanggal dan waktu jika formData.planned_date_end berisi 'T'
-  let endDate = formData.value.planned_date_end
-  let endTime = formData.value.planned_time_end
-  
-  if (endDate && endDate.includes('T')) {
-    const [datePart, timePart] = endDate.split('T')
-    endDate = datePart
-    if (!endTime && timePart) {
-      endTime = timePart
-    }
-  }
-  
-  // Buat data yang akan dikirim dengan format tanggal yang benar
+  // Buat data yang akan dikirim
   const submitData = {
     task_id: props.task.id,
     name: formData.value.name.trim(),
     content_type: formData.value.content_type,
     state: formData.value.state,
-    planned_date_start: formatDateTime(startDate, startTime),
-    planned_date_end: formatDateTime(endDate, endTime),
+    planned_date_start: formatDateForBackend(formData.value.planned_date_start, formData.value.planned_time_start),
+    planned_date_end: formatDateForBackend(formData.value.planned_date_end, formData.value.planned_time_end),
     planned_hours: formData.value.planned_hours,
-    actual_hours: formData.value.actual_hours,
     progress: formData.value.progress,
     assigned_to: formData.value.assigned_to,
     reviewer_id: formData.value.reviewer_id,
     description: formData.value.description?.trim() || null
   }
-
+  
   emit('update', submitData)
+  editMode.value = false
 }
-
 
 const confirmDeleteTask = () => {
   showDeleteConfirm.value = true
