@@ -28,7 +28,7 @@
           </div>
 
           <!-- Header with Gradient -->
-          <div class="relative bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+          <div class="relative bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-4">
             <div class="flex items-center justify-between">
               <h3 class="text-xl font-medium text-white">Task Details</h3>
               <button @click="closeModal" class="text-white hover:text-gray-200 focus:outline-none">
@@ -264,7 +264,7 @@
               </button>
               <button
                 @click="editTask"
-                class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
+                class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
               >
                 <PencilIcon class="w-4 h-4 mr-1.5" />
                 Edit Task
@@ -436,7 +436,8 @@ const updateTaskProgress = async (progress) => {
       params: {
         operation: 'update',
         task_id: parseInt(props.taskId),
-        progress: progress
+        progress: progress,
+        auto_timesheet: true
       }
     });
     

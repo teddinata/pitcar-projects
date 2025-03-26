@@ -534,7 +534,7 @@
         <div class="mt-6">
           <button
             @click="showCreateModal = true"
-            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600"
           >
             <PlusIcon class="h-4 w-4 mr-1.5" />
             Tambah Aktivitas

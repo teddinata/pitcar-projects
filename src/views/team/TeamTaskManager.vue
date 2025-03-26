@@ -71,7 +71,7 @@
             <!-- Create task button - more prominence -->
             <button
               @click="showTaskModal = true; isEditingTask = false; resetTaskForm()"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
             >
               <PlusIcon class="h-4 w-4 mr-1.5" />
               Create New Task
@@ -202,6 +202,60 @@
               </div>
             </div>
           </div>
+
+          <!-- Filter Project (tambahkan setelah department) -->
+          <div class="w-full sm:w-64">
+            <label for="task-project" class="block text-xs text-gray-500 mb-1">Project</label>
+            <div class="relative">
+              <div
+                class="w-full relative"
+                @click="showProjectDropdown = !showProjectDropdown"
+                @keydown.esc="showProjectDropdown = false"
+                @blur="setTimeout(() => showProjectDropdown = false, 100)"
+              >
+                <div class="relative rounded-md shadow-sm">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FolderIcon class="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="task-project"
+                    v-model="projectSearchText"
+                    @input="handleProjectSearch"
+                    @focus="showProjectDropdown = true"
+                    class="px-3 py-2 focus:ring-red-500 focus:border-red-500 block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md"
+                    placeholder="All projects"
+                  />
+                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <ChevronDownIcon class="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+                
+                <!-- Dropdown options -->
+                <div
+                  v-if="showProjectDropdown"
+                  class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm"
+                >
+                  <div
+                    @click="() => { projectFilter = ''; projectSearchText = ''; showProjectDropdown = false; }"
+                    class="cursor-default select-none relative py-2 px-4 hover:bg-gray-100"
+                    :class="projectFilter === '' ? 'text-red-600 font-medium' : 'text-gray-900'"
+                  >
+                    All projects
+                  </div>
+                  <div
+                    v-for="project in filteredProjects"
+                    :key="project.id"
+                    @click="() => { selectProject(project); showProjectDropdown = false; }"
+                    class="cursor-default select-none relative py-2 px-4 hover:bg-gray-100"
+                    :class="projectFilter === project.id ? 'text-red-600 font-medium' : 'text-gray-900'"
+                  >
+                    {{ project.name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           
           <!-- Project dropdown (similar autocomplete implementation) -->
           
@@ -227,7 +281,7 @@
           <div class="w-full sm:w-auto sm:flex-none mb-0">
             <button
               @click="fetchTasks"
-              class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full sm:w-auto"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full sm:w-auto"
             >
               <ArrowPathIcon class="h-4 w-4 mr-1.5" />
               Apply Filters
@@ -1247,7 +1301,7 @@
                     </button>
                     <button
                       @click="applyFilters"
-                      class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      class="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                       Apply Filters
                     </button>
@@ -1832,7 +1886,7 @@
                   </button>
                   <button
                     type="button"
-                    class="px-4 py-2 rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
+                    class="px-4 py-2 rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
                     @click="submitTask"
                     :disabled="isSubmitting"
                   >
@@ -3091,7 +3145,8 @@ const handleDragEnd = async (event) => {
         operation: 'update',
         task_id: task.id,
         state: newState,
-        progress: newState === 'done' ? 100 : task.progress
+        progress: newState === 'done' ? 100 : task.progress,
+        auto_timesheet: true
       }
     });
     

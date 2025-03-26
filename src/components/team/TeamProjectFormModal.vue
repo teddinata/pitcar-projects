@@ -1,38 +1,54 @@
 <!-- src/components/team/TeamProjectFormModal.vue -->
 <template>
   <div v-if="show" class="fixed inset-0 overflow-y-auto z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <!-- Background overlay -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="$emit('close')"></div>
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" @click="$emit('close')"></div>
 
       <!-- Modal panel -->
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
       
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div class="sm:flex sm:items-start">
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-              <!-- Modal Header -->
-              <div class="mb-6">
-                <h3 class="text-lg font-medium text-gray-900" id="modal-title">
-                  {{ isEditing ? 'Edit Project' : 'Create New Project' }}
-                </h3>
-                <p class="mt-1 text-sm text-gray-500">
-                  Fill in the information below to {{ isEditing ? 'update' : 'create' }} your project
-                </p>
-              </div>
+      <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full">
+        <!-- Header with Gradient -->
+        <div class="relative bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-medium text-white">{{ isEditing ? 'Edit Project' : 'Create New Project' }}</h3>
+            <button @click="$emit('close')" class="text-white hover:text-gray-200 focus:outline-none">
+              <span class="sr-only">Close</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Project Title Section -->
+        <div class="px-6 pt-5 pb-4 border-b border-gray-100">
+          <h2 class="text-xl font-semibold text-gray-900">Project Details</h2>
+          
+          <!-- Form Error Messages -->
+          <div 
+            v-if="error" 
+            class="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600"
+          >
+            {{ error }}
+          </div>
+        </div>
+
+        <!-- Project Details Content -->
+        <div class="px-6 py-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          <div class="space-y-5">
+            <!-- Basic Information -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Basic Information
+              </h4>
               
-              <!-- Form Error Messages -->
-              <div 
-                v-if="error" 
-                class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600"
-              >
-                {{ error }}
-              </div>
-              
-              <!-- Project Form -->
-              <form @submit.prevent="submitForm" class="space-y-6">
-                <!-- Project Name -->
+              <div class="space-y-4">
                 <div>
                   <label for="project-name" class="block text-sm font-medium text-gray-700">
                     Project Name <span class="text-red-500">*</span>
@@ -41,13 +57,12 @@
                     type="text"
                     id="project-name"
                     v-model="formData.name"
-                    class="w-full px-3 py-2 border focus:outline-none focus:ring-2  mt-1 block rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     placeholder="Enter project name"
                     required
                   />
                 </div>
 
-                <!-- Department -->
                 <div>
                   <label for="department" class="block text-sm font-medium text-gray-700">
                     Department <span class="text-red-500">*</span>
@@ -65,35 +80,70 @@
                   </p>
                 </div>
 
-                <!-- Date Range -->
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label for="start-date" class="block text-sm font-medium text-gray-700">
-                      Start Date <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="start-date"
-                      v-model="formData.date_start"
-                      class="px-3 py-2 border focus:outline-none focus:ring-2  mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label for="end-date" class="block text-sm font-medium text-gray-700">
-                      End Date <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="end-date"
-                      v-model="formData.date_end"
-                      class="px-3 py-2 border focus:outline-none focus:ring-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label for="project-type" class="block text-sm font-medium text-gray-700">
+                    Project Type <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="project-type"
+                    v-model="formData.project_type"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  >
+                    <option value="creation">Creation/Pembuatan</option>
+                    <option value="development">Development/Pengembangan</option>
+                    <option value="training">Training/Pelatihan</option>
+                    <option value="documentation">Documentation/Dokumentasi</option>
+                    <option value="general">General/Umum</option>
+                    <option value="weekly">Weekly/Mingguan</option>
+                    <option value="monthly">Monthly/Bulanan</option>
+                  </select>
                 </div>
+              </div>
+            </div>
+            
+            <!-- Timeline -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Timeline
+              </h4>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <div class="text-xs text-gray-500 mb-1">Start Date <span class="text-red-500">*</span></div>
+                  <input
+                    type="date"
+                    id="start-date"
+                    v-model="formData.date_start"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500 mb-1">End Date <span class="text-red-500">*</span></div>
+                  <input
+                    type="date"
+                    id="end-date"
+                    v-model="formData.date_end"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
 
-                <!-- Project Manager -->
+            <!-- Team Members -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Team Assignment
+              </h4>
+              
+              <div class="space-y-4">
                 <div>
                   <label for="manager" class="block text-sm font-medium text-gray-700">
                     Project Manager <span class="text-red-500">*</span>
@@ -105,7 +155,7 @@
                     :multiple="false"
                     :disabled="!formData.department_id"
                     placeholder="Select Manager"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                    class="mt-1 block w-full"
                     required
                   />
                   <p v-if="!formData.department_id" class="mt-1 text-xs text-orange-500">
@@ -113,7 +163,6 @@
                   </p>
                 </div>
 
-                <!-- Team Members -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700">
                     Team Members
@@ -124,86 +173,106 @@
                     :multiple="true"
                     :disabled="!formData.department_id"
                     placeholder="Select Team Members"
+                    class="mt-1 block w-full"
                   />
                   <p v-if="!formData.department_id" class="mt-1 text-xs text-orange-500">
                     Please select a department first
                   </p>
                 </div>
+              </div>
+            </div>
 
-                <!-- Status & Priority -->
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select
-                      id="status"
-                      v-model="formData.state"
-                      class="px-3 py-2 border focus:outline-none focus:ring-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="planning">Planning</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="on_hold">On Hold</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
-                    <select
-                      id="priority"
-                      v-model="formData.priority"
-                      class="px-3 py-2 border focus:outline-none focus:ring-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                    >
-                      <option value="0">Low</option>
-                      <option value="1">Medium</option>
-                      <option value="2">High</option>
-                      <option value="3">Critical</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Description -->
+            <!-- Status & Priority -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Status & Priority
+              </h4>
+              
+              <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    id="description"
-                    v-model="formData.description"
-                    rows="3"
-                    class="px-3 py-2 border focus:outline-none focus:ring-2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                    placeholder="Enter project description"
-                  ></textarea>
+                  <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                  <select
+                    id="status"
+                    v-model="formData.state"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="planning">Planning</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="on_hold">On Hold</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                 </div>
-              </form>
+                <div>
+                  <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                  <select
+                    id="priority"
+                    v-model="formData.priority"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="0">Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                    <option value="3">Critical</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                Description
+              </h4>
+              <textarea
+                id="description"
+                v-model="formData.description"
+                rows="3"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Enter project description"
+              ></textarea>
             </div>
           </div>
         </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        
+        <!-- Footer Actions -->
+        <div class="bg-gray-50 px-6 py-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
+          <button
+            @click="$emit('close')"
+            class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Close
+          </button>
           <button
             type="button"
             @click="submitForm"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+            class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             :disabled="loading || !formData.department_id"
           >
             <span v-if="loading" class="mr-2">
-              <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg class="animate-spin h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            {{ isEditing ? 'Update' : 'Create' }}
-          </button>
-          <button
-            type="button"
-            @click="$emit('close')"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-          >
-            Cancel
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            {{ isEditing ? 'Update Project' : 'Create Project' }}
           </button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
@@ -238,7 +307,8 @@ const formData = ref({
   team_ids: [],
   description: '',
   state: 'draft',
-  priority: '1'
+  priority: '1',
+  project_type: 'general' // Default ke general sesuai model
 })
 
 const isEditing = computed(() => {
@@ -296,6 +366,7 @@ const fetchDepartments = async () => {
 }
 
 // Initialize form with project data if editing
+// Initialize form with project data if editing
 const initForm = () => {
   if (props.project) {
     formData.value = {
@@ -307,7 +378,8 @@ const initForm = () => {
       team_ids: props.project.team?.members?.map(m => m.id) || [],
       description: props.project.description || '',
       state: props.project.state || 'draft',
-      priority: props.project.priority || '1'
+      priority: props.project.priority || '1',
+      project_type: props.project.project_type || 'general'
     }
   } else {
     // Reset to defaults if creating new
@@ -320,7 +392,8 @@ const initForm = () => {
       team_ids: [],
       description: '',
       state: 'draft',
-      priority: '1'
+      priority: '1',
+      project_type: 'general'
     }
   }
 }
@@ -355,6 +428,11 @@ const validateForm = () => {
     return false
   }
   
+  if (!formData.value.project_type) {
+    error.value = 'Project type is required'
+    return false
+  }
+  
   // Validate end date is after start date
   if (formData.value.date_start && formData.value.date_end) {
     const startDate = new Date(formData.value.date_start)
@@ -376,20 +454,21 @@ const submitForm = () => {
   loading.value = true
   
   // Format data for API
-  const submitData = {
-    name: formData.value.name.trim(),
-    department_id: parseInt(formData.value.department_id),
-    date_start: formData.value.date_start,
-    date_end: formData.value.date_end,
-    project_manager_id: parseInt(formData.value.project_manager_id),
-    team_ids: Array.isArray(formData.value.team_ids) 
-      ? formData.value.team_ids.map(id => parseInt(id)) 
-      : formData.value.team_ids ? [parseInt(formData.value.team_ids)] : [],
-    description: formData.value.description?.trim() || '',
-    state: formData.value.state,
-    priority: formData.value.priority,
-    // Don't include user_id in the payload as it's causing errors with notifications
-  }
+const submitData = {
+  name: formData.value.name.trim(),
+  department_id: parseInt(formData.value.department_id),
+  date_start: formData.value.date_start,
+  date_end: formData.value.date_end,
+  project_manager_id: parseInt(formData.value.project_manager_id),
+  team_ids: Array.isArray(formData.value.team_ids) 
+    ? formData.value.team_ids.map(id => parseInt(id)) 
+    : formData.value.team_ids ? [parseInt(formData.value.team_ids)] : [],
+  description: formData.value.description?.trim() || '',
+  state: formData.value.state,
+  priority: formData.value.priority,
+  project_type: formData.value.project_type,
+  // Don't include user_id in the payload as it's causing errors with notifications
+}
   
   // For editing, add project_id to the payload
   if (isEditing.value && props.project?.id) {

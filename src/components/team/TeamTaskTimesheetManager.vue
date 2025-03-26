@@ -5,7 +5,7 @@
       <h3 class="px-6 py-2 text-lg font-medium text-gray-900">Timesheets</h3>
       <button
         @click="addNewTimesheet"
-        class="px-6 py-2 inline-flex items-center mr-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+        class="px-6 py-2 inline-flex items-center mr-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600"
       >
         <PlusIcon class="h-4 w-4 mr-1.5" />
         Add Time

@@ -14,7 +14,7 @@
           <button
             @click="exportReport"
             :disabled="loading || reportData.length === 0"
-            class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white disabled:bg-gray-400 bg-red-600 hover:bg-red-700"
+            class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white disabled:bg-gray-400 bg-gradient-to-r from-purple-600 to-indigo-600"
           >
             <DownloadIcon class="h-4 w-4 mr-1" />
             Export
@@ -90,7 +90,7 @@
           <button
             @click="generateReport"
             :disabled="loading"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white disabled:bg-gray-400 bg-red-600 hover:bg-red-700"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white disabled:bg-gray-400 bg-gradient-to-r from-purple-600 to-indigo-600"
           >
             <RefreshCwIcon v-if="!loading" class="h-4 w-4 mr-1" />
             <Loader2Icon v-else class="h-4 w-4 mr-1 animate-spin" />

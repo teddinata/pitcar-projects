@@ -5,7 +5,7 @@
       <h3 class="text-lg font-medium text-gray-900">Checklist Items</h3>
       <button
         @click="addNewItem"
-        class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+        class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600"
       >
         <PlusIcon class="h-4 w-4 mr-1.5" />
         Add Item

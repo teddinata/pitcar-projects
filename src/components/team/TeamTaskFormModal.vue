@@ -19,7 +19,7 @@
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
       <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
         <!-- Header with Gradient -->
-        <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-4">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-lg font-medium text-white flex items-center">
@@ -251,6 +251,92 @@
                   placeholder="Enter task description"
                 ></textarea>
               </div>
+
+              <!-- Tambahkan bagian ini pada TeamTaskFormModal.vue setelah section Description -->
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                  <div class="flex items-center">
+                    <Paperclip class="w-4 h-4 mr-1.5 text-red-500" />
+                    Attachments
+                  </div>
+                </label>
+                
+                <!-- Current Attachments (Show in Edit Mode) -->
+                <div v-if="isEditMode && taskAttachments.length > 0" class="mb-3 space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div
+                    v-for="file in taskAttachments" 
+                    :key="file.id"
+                    class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+                  >
+                    <!-- File icon and details -->
+                    <div class="flex items-center">
+                      <!-- Icon based on file type -->
+                      <div class="flex-shrink-0 mr-3 p-1.5 rounded-lg" :class="getFileIconClass(file.mimetype)">
+                        <FileText v-if="!file.is_image" class="h-4 w-4" :class="getFileIconColor(file.mimetype)" />
+                        <Image v-else class="h-4 w-4 text-blue-500" />
+                      </div>
+                      
+                      <!-- File details -->
+                      <div>
+                        <div class="text-sm font-medium text-gray-900 truncate max-w-[200px]">{{ file.name }}</div>
+                        <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
+                      </div>
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div class="flex space-x-1">
+                      <button
+                        @click="downloadFile(file)"
+                        class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        title="Download"
+                      >
+                        <Download class="h-3.5 w-3.5" />
+                      </button>
+                      
+                      <button
+                        @click="removeAttachment(file)"
+                        class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                        title="Remove"
+                      >
+                        <Trash2 class="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Upload Button and Dropzone -->
+                <div 
+                  class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-red-500 transition-colors cursor-pointer"
+                  @click="handleFileUpload"
+                  @dragover.prevent
+                  @drop.prevent="onFileDrop"
+                >
+                  <UploadCloud class="mx-auto h-8 w-8 text-gray-400" />
+                  <p class="mt-1 text-sm text-gray-500">
+                    <span class="font-medium text-red-600 hover:text-red-500">
+                      Click to upload
+                    </span>
+                    or drag and drop
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    PDF, Word, Excel, images, or text files (max 20MB)
+                  </p>
+                </div>
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  @change="onFileChange"
+                  class="hidden"
+                />
+                
+                <!-- Upload Progress -->
+                <div v-if="uploadingFile" class="mt-2">
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-red-600 h-2 rounded-full animate-pulse" style="width: 100%"></div>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">Uploading file...</p>
+                </div>
+              </div>
             </div>
 
             <!-- Form Actions -->
@@ -265,7 +351,7 @@
               <button
                 type="submit"
                 :disabled="loading || !isFormValid"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
               >
                 <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
                 <span v-if="isEditMode">Update Task</span>
@@ -284,7 +370,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { 
   Loader2, CheckSquare, Tag, Users, Calendar, Clock, Flag, 
   FileText, AlignLeft, X, ChevronDown, FolderOpen, Edit,
-  CalendarDays
+  CalendarDays, Paperclip, UploadCloud, Download, Image, Trash2
 } from 'lucide-vue-next'
 import TeamSelect from '@/components/GeneralTeamSelect.vue'
 import apiClient from '@/config/api'
@@ -310,6 +396,11 @@ const employeeMasters = ref(null)
 
 // Check if we're in edit mode
 const isEditMode = computed(() => !!props.taskData)
+
+// Tambahkan state ini di dalam script setup setelah deklarasi state lainnya
+const fileInputRef = ref(null)
+const taskAttachments = ref([])
+const uploadingFile = ref(false)
 
 // Initialize form data
 const formData = ref({
@@ -504,6 +595,188 @@ const handleClose = () => {
   
   emit('close')
 }
+
+// Tambahkan method ini di dalam script setup
+const fetchTaskAttachments = async () => {
+  if (!props.taskData || !props.taskData.id) return
+  
+  try {
+    const response = await apiClient.post('/web/v2/team/get_attachments', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        model: 'team.project.task',
+        res_id: props.taskData.id
+      }
+    })
+
+    if (response.data.result?.status === 'success') {
+      taskAttachments.value = response.data.result.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching task attachments:', error)
+  }
+}
+
+const handleFileUpload = () => {
+  fileInputRef.value.click()
+}
+
+const onFileDrop = (event) => {
+  const file = event.dataTransfer.files[0]
+  if (file) {
+    uploadFile(file)
+  }
+}
+
+const onFileChange = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    uploadFile(file)
+  }
+}
+
+const uploadFile = async (file) => {
+  // Validasi ukuran file (maksimal 20 MB)
+  const maxSize = 20 * 1024 * 1024 // 20 MB
+  if (file.size > maxSize) {
+    alert('File size is too large. Maximum allowed is 20 MB.')
+    return
+  }
+  
+  // Validasi tipe file
+  const validTypes = [
+    'image/jpeg', 'image/png', 'image/gif', 
+    'application/pdf', 
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'application/zip', 'application/x-rar-compressed'
+  ]
+  
+  if (!validTypes.includes(file.type)) {
+    alert('File type is not allowed.')
+    return
+  }
+
+  uploadingFile.value = true
+  
+  try {
+    if (!props.taskData || !props.taskData.id) {
+      // Simpan referensi file untuk upload setelah task dibuat
+      // Ini bisa ditangani dengan emitting event ke parent untuk menyimpan attachment setelah task dibuat
+      alert('Please save the task first before uploading attachments.')
+      uploadingFile.value = false
+      return
+    }
+    
+    // Create form data
+    const formData = new FormData()
+    formData.append('model', 'team.project.task')
+    formData.append('res_id', props.taskData.id)
+    formData.append('file', file)
+    
+    // Use axios directly for file upload
+    const response = await apiClient.post('/web/v2/team/upload_attachment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    const result = response.data
+    
+    if (result.status === 'success') {
+      // Refresh attachments list
+      await fetchTaskAttachments()
+    } else {
+      throw new Error(result.message || 'Upload failed')
+    }
+  } catch (error) {
+    console.error('Error uploading file:', error)
+    alert('Failed to upload file: ' + (error.message || 'Unknown error'))
+  } finally {
+    uploadingFile.value = false
+    // Reset file input
+    if (fileInputRef.value) {
+      fileInputRef.value.value = null
+    }
+  }
+}
+
+const downloadFile = (file) => {
+  if (file.url) {
+    window.open(file.url, '_blank')
+  }
+}
+
+const removeAttachment = async (file) => {
+  if (!confirm(`Are you sure you want to remove "${file.name}"?`)) {
+    return
+  }
+  
+  try {
+    const response = await apiClient.post('/web/v2/team/delete_attachment', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        attachment_id: file.id
+      }
+    })
+
+    if (response.data.result?.status === 'success') {
+      // Remove from local list
+      taskAttachments.value = taskAttachments.value.filter(a => a.id !== file.id)
+    } else {
+      throw new Error(response.data.result?.message || 'Deletion failed')
+    }
+  } catch (error) {
+    console.error('Error deleting attachment:', error)
+    alert('Failed to delete attachment: ' + (error.message || 'Unknown error'))
+  }
+}
+
+const getFileIconClass = (mimetype) => {
+  if (!mimetype) return 'bg-gray-100'
+  
+  if (mimetype.startsWith('image/')) return 'bg-blue-50'
+  if (mimetype.includes('pdf')) return 'bg-red-50'
+  if (mimetype.includes('word') || mimetype.includes('document')) return 'bg-blue-50'
+  if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return 'bg-green-50'
+  if (mimetype.includes('zip') || mimetype.includes('compressed')) return 'bg-yellow-50'
+  
+  return 'bg-gray-50'
+}
+
+const getFileIconColor = (mimetype) => {
+  if (!mimetype) return 'text-gray-500'
+  
+  if (mimetype.includes('pdf')) return 'text-red-500'
+  if (mimetype.includes('word') || mimetype.includes('document')) return 'text-blue-500'
+  if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return 'text-green-500'
+  if (mimetype.includes('zip') || mimetype.includes('compressed')) return 'text-yellow-500'
+  
+  return 'text-gray-500'
+}
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 Bytes'
+  
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// Tambahkan watcher untuk taskData untuk memuat attachment saat detail task diubah
+watch(() => props.taskData, (newTaskData) => {
+  if (newTaskData && newTaskData.id) {
+    fetchTaskAttachments()
+  } else {
+    taskAttachments.value = []
+  }
+}, { immediate: true })
 
 onMounted(() => {
   fetchProjects()

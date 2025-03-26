@@ -38,7 +38,7 @@
           <p class="text-sm text-gray-500">{{ error }}</p>
           <button 
             @click="loadTaskDetails" 
-            class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none"
+            class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none"
           >
             <ArrowPathIcon class="h-4 w-4 mr-1.5" />
             Retry

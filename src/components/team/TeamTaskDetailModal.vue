@@ -1,4 +1,5 @@
 <!-- src/components/team/TeamTaskDetailModal.vue -->
+<!-- src/components/team/TeamTaskDetailModal.vue -->
 <template>
   <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -11,7 +12,7 @@
       
       <!-- Modal panel -->
       <div 
-        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full"
         role="dialog" 
         aria-modal="true" 
         aria-labelledby="modal-headline"
@@ -25,7 +26,7 @@
             <button 
               v-if="!editMode" 
               @click="enableEditMode" 
-              class="p-2 text-indigo-600 hover:text-indigo-800 rounded-full hover:bg-gray-100"
+              class="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-gray-100"
             >
               <Edit2 class="h-5 w-5" />
             </button>
@@ -40,20 +41,19 @@
         
         <!-- Loading state -->
         <div v-if="loading" class="p-6 flex justify-center">
-          <Loader2 class="w-8 h-8 animate-spin text-indigo-600" />
+          <Loader2 class="w-8 h-8 animate-spin text-red-600" />
         </div>
         
-        <!-- Task details -->
-        <div v-else class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div v-if="editMode" class="space-y-4">
-            <!-- Edit form -->
+        <!-- Edit form -->
+        <div v-else-if="editMode" class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="space-y-4">
             <div>
               <label for="edit-name" class="block text-sm font-medium text-gray-700">Task Name</label>
               <input 
                 id="edit-name"
                 v-model="editForm.name" 
                 type="text"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" 
               />
             </div>
             
@@ -62,7 +62,7 @@
               <select 
                 id="edit-type"
                 v-model="editForm.type_id" 
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
               >
                 <option value="">None</option>
                 <option v-for="type in taskTypes" :key="type.id" :value="type.id">
@@ -77,7 +77,7 @@
                 id="edit-assignees"
                 v-model="editForm.assigned_to"
                 multiple
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
               >
                 <option v-for="employee in employees" :key="employee.id" :value="employee.id">
                   {{ employee.name }}
@@ -91,7 +91,7 @@
               <select
                 id="edit-reviewer"
                 v-model="editForm.reviewer_id"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
               >
                 <option value="">None</option>
                 <option v-for="employee in employees" :key="employee.id" :value="employee.id">
@@ -107,7 +107,7 @@
                   id="edit-start-date"
                   v-model="editForm.planned_date_start" 
                   type="datetime-local"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" 
                 />
               </div>
               
@@ -117,7 +117,7 @@
                   id="edit-end-date"
                   v-model="editForm.planned_date_end" 
                   type="datetime-local"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" 
                 />
               </div>
             </div>
@@ -130,7 +130,7 @@
                 type="number"
                 min="0"
                 step="0.5"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" 
               />
             </div>
             
@@ -154,7 +154,7 @@
               <select 
                 id="edit-state"
                 v-model="editForm.state" 
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
               >
                 <option value="draft">Draft</option>
                 <option value="planned">Planned</option>
@@ -169,7 +169,7 @@
               <select 
                 id="edit-priority"
                 v-model="editForm.priority" 
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
               >
                 <option value="0">Low</option>
                 <option value="1">Normal</option>
@@ -184,139 +184,282 @@
                 id="edit-description"
                 v-model="editForm.description" 
                 rows="4"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" 
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" 
               ></textarea>
             </div>
           </div>
+        </div>
+        
+        <!-- View mode content - Two Column Layout -->
+        <div v-else class="px-6 py-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+          <!-- Task header -->
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">{{ task.name }}</h2>
+            <div class="mt-1 flex items-center">
+              <span 
+                v-if="task.type"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                :class="getTypeClasses(task.type)"
+              >
+                {{ task.type.name }}
+              </span>
+              
+              <div class="ml-2 flex items-center">
+                <div 
+                  class="w-2 h-2 rounded-full mr-1.5"
+                  :class="getPriorityClass(task.priority)"
+                ></div>
+                <span class="text-xs text-gray-500">{{ getPriorityLabel(task.priority) }}</span>
+              </div>
+              
+              <span 
+                class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                :class="getStatusClasses(task.state)"
+              >
+                {{ getStatusLabel(task.state) }}
+              </span>
+            </div>
+          </div>
           
-          <!-- View mode content -->
-          <div v-else class="space-y-6">
-            <!-- Task header -->
-            <div>
-              <h2 class="text-xl font-semibold text-gray-900">{{ task.name }}</h2>
-              <div class="mt-1 flex items-center">
-                <span 
-                  v-if="task.type"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  :class="getTypeClasses(task.type)"
-                >
-                  {{ task.type.name }}
-                </span>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column: Task Information -->
+            <div class="space-y-5">
+              <!-- Project info -->
+              <div v-if="task.project" class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <h4 class="text-sm font-medium text-gray-700 flex items-center">
+                  <Briefcase class="w-4 h-4 mr-1.5 text-red-500" />
+                  Project
+                </h4>
+                <p class="mt-1 text-sm text-gray-900">{{ task.project.name }}</p>
+              </div>
+              
+              <!-- Attachments -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-medium text-gray-700 flex items-center">
+                    <Paperclip class="w-4 h-4 mr-1.5 text-red-500" />
+                    Attachments
+                  </h4>
+                  <button
+                    @click="handleAttachmentUpload"
+                    class="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-gradient-to-r from-red-500 to-red-600 focus:outline-none"
+                  >
+                    <UploadCloud class="w-3 h-3 mr-1" />
+                    Upload
+                  </button>
+                </div>
                 
-                <div class="ml-2 flex items-center">
-                  <div 
-                    class="w-2 h-2 rounded-full mr-1.5"
-                    :class="getPriorityClass(task.priority)"
+                <!-- Loading state -->
+                <div v-if="loadingAttachments" class="flex justify-center py-4">
+                  <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                </div>
+                
+                <!-- Empty state -->
+                <div v-else-if="!taskAttachments.length" class="text-center py-2">
+                  <p class="text-xs text-gray-500 italic">No files attached</p>
+                </div>
+                
+                <!-- Attachment List -->
+                <div v-else class="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div
+                    v-for="file in taskAttachments" 
+                    :key="file.id"
+                    class="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    <!-- File icon and details -->
+                    <div class="flex items-center">
+                      <!-- Icon based on file type -->
+                      <div class="flex-shrink-0 mr-2 p-1.5 rounded-lg" :class="getFileIconClass(file.mimetype)">
+                        <FileText v-if="!file.is_image" class="h-3.5 w-3.5" :class="getFileIconColor(file.mimetype)" />
+                        <Image v-else class="h-3.5 w-3.5 text-blue-500" />
+                      </div>
+                      
+                      <!-- File details -->
+                      <div>
+                        <div class="text-xs font-medium text-gray-900 truncate max-w-[180px]">{{ file.name }}</div>
+                        <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
+                      </div>
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div class="flex space-x-1">
+                      <!-- Preview button -->
+                      <button
+                        v-if="canPreviewFile(file)"
+                        @click="openFilePreview(file)"
+                        class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                        title="Delete"
+                      >
+                        <Trash2 class="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Timeline -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Calendar class="w-4 h-4 mr-1.5 text-red-500" />
+                  Timeline
+                </h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <div class="text-xs text-gray-500 mb-1">Start Date</div>
+                    <div class="text-sm font-medium">
+                      {{ formatDateWithTime(task.dates?.planned_start) || 'Not set' }}
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-gray-500 mb-1">Due Date</div>
+                    <div 
+                      class="text-sm font-medium"
+                      :class="{'text-red-600': isOverdue(task.dates?.planned_end)}"
+                    >
+                      {{ formatDateWithTime(task.dates?.planned_end) || 'Not set' }}
+                      <span v-if="isOverdue(task.dates?.planned_end)" class="text-xs ml-1.5 font-normal text-red-500">(Overdue)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Progress -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Activity class="w-4 h-4 mr-1.5 text-red-500" />
+                  Progress
+                </h4>
+                <div class="mb-2 flex justify-between items-center">
+                  <div class="text-sm font-medium">Completion: {{ task.progress }}%</div>
+                  <div class="text-xs text-gray-500">
+                    {{ task.hours?.actual || 0 }}/{{ task.hours?.planned || 0 }} hours
+                  </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                  <div
+                    class="h-2.5 rounded-full transition-all duration-300"
+                    :class="{
+                      'bg-red-500': task.progress < 30,
+                      'bg-orange-500': task.progress >= 30 && task.progress < 70,
+                      'bg-green-500': task.progress >= 70
+                    }"
+                    :style="{ width: `${task.progress}%` }"
                   ></div>
-                  <span class="text-xs text-gray-500">{{ getPriorityLabel(task.priority) }}</span>
+                </div>
+              </div>
+              
+              <!-- Assigned Team Members -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Users class="w-4 h-4 mr-1.5 text-red-500" />
+                  Assigned Team Members
+                </h4>
+                <div class="space-y-2">
+                  <div v-for="person in task.assigned_to" :key="person.id" class="flex items-center">
+                    <div class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                      <span class="text-sm font-medium text-red-600">
+                        {{ getInitials(person.name) }}
+                      </span>
+                    </div>
+                    <span class="ml-3 text-sm">{{ person.name }}</span>
+                  </div>
+                  <div v-if="!task.assigned_to || task.assigned_to.length === 0" class="text-sm text-gray-500 italic">
+                    No team members assigned
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Description -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <AlignLeft class="w-4 h-4 mr-1.5 text-red-500" />
+                  Description
+                </h4>
+                <div class="prose prose-sm max-w-none text-gray-700">
+                  <p class="whitespace-pre-line">{{ task.description || 'No description provided' }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right Column: Checklist & Timesheet side by side -->
+            <div class="space-y-5">
+              <!-- Checklist Section -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-medium text-gray-700 flex items-center">
+                    <CheckSquare class="w-4 h-4 mr-1.5 text-red-500" />
+                    Checklist
+                  </h4>
+                  <div class="text-xs text-gray-600">
+                    {{ task.checklist_progress || 0 }}% Complete
+                  </div>
                 </div>
                 
-                <span 
-                  class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
-                  :class="getStatusClasses(task.state)"
-                >
-                  {{ getStatusLabel(task.state) }}
-                </span>
-              </div>
-            </div>
-            
-            <!-- Project info -->
-            <div v-if="task.project" class="bg-gray-50 p-3 rounded-lg">
-              <h3 class="text-sm font-medium text-gray-700">Project</h3>
-              <p class="mt-1 text-sm text-gray-900">{{ task.project.name }}</p>
-            </div>
-            
-            <!-- Task timing -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div v-if="task.dates?.planned_start || task.dates?.actual_start" class="bg-gray-50 p-3 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-700">Start Date</h3>
-                <p v-if="task.dates.actual_start" class="mt-1 text-sm text-gray-900">
-                  {{ formatDateWithTime(task.dates.actual_start) }} (Actual)
-                </p>
-                <p v-else-if="task.dates.planned_start" class="mt-1 text-sm text-gray-900">
-                  {{ formatDateWithTime(task.dates.planned_start) }} (Planned)
-                </p>
-              </div>
-              
-              <div v-if="task.dates?.planned_end || task.dates?.actual_end" class="bg-gray-50 p-3 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-700">End Date</h3>
-                <p v-if="task.dates.actual_end" class="mt-1 text-sm text-gray-900">
-                  {{ formatDateWithTime(task.dates.actual_end) }} (Actual)
-                </p>
-                <p v-else-if="task.dates.planned_end" class="mt-1 text-sm text-gray-900">
-                  {{ formatDateWithTime(task.dates.planned_end) }} (Planned)
-                </p>
-              </div>
-            </div>
-            
-            <!-- Task hours -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div v-if="task.hours?.planned" class="bg-gray-50 p-3 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-700">Planned Hours</h3>
-                <p class="mt-1 text-sm text-gray-900">{{ task.hours.planned }}</p>
-              </div>
-              
-              <div v-if="task.hours?.actual !== undefined" class="bg-gray-50 p-3 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-700">Actual Hours</h3>
-                <p class="mt-1 text-sm text-gray-900">{{ task.hours.actual }}</p>
-              </div>
-            </div>
-            
-            <!-- Progress -->
-            <div v-if="typeof task.progress === 'number'">
-              <div class="flex justify-between items-center mb-1">
-                <h3 class="text-sm font-medium text-gray-700">Progress</h3>
-                <span class="text-sm text-gray-500">{{ task.progress }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  class="bg-blue-600 h-2 rounded-full" 
-                  :style="{ width: `${task.progress}%` }"
-                ></div>
-              </div>
-            </div>
-            
-            <!-- Checklist progress -->
-            <div v-if="typeof task.checklist_progress === 'number'">
-              <div class="flex justify-between items-center mb-1">
-                <h3 class="text-sm font-medium text-gray-700">Checklist Progress</h3>
-                <span class="text-sm text-gray-500">{{ task.checklist_progress }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  class="bg-green-500 h-2 rounded-full" 
-                  :style="{ width: `${task.checklist_progress}%` }"
-                ></div>
-              </div>
-            </div>
-            
-            <!-- Assignees -->
-            <div v-if="task.assigned_to && task.assigned_to.length > 0">
-              <h3 class="text-sm font-medium text-gray-700 mb-2">Assignees</h3>
-              <div class="flex flex-wrap gap-2">
-                <div 
-                  v-for="assignee in task.assigned_to" 
-                  :key="assignee.id"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
-                >
-                  {{ assignee.name }}
+                <div class="mb-3 w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    class="bg-green-500 h-1.5 rounded-full" 
+                    :style="{ width: `${task.checklist_progress || 0}%` }"
+                  ></div>
+                </div>
+                
+                <!-- Checklist placeholder or integration with TeamTaskChecklistManager -->
+                <div v-if="task.checklist && task.checklist.length > 0">
+                  <div v-for="(item, index) in task.checklist" :key="index" class="flex items-start py-2">
+                    <input 
+                      type="checkbox" 
+                      :checked="item.completed" 
+                      @change="updateChecklistItem(index, !item.completed)" 
+                      class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    />
+                    <div class="ml-3">
+                      <p class="text-sm" :class="{'line-through text-gray-400': item.completed}">
+                        {{ item.name }}
+                      </p>
+                      <p v-if="item.assignee" class="text-xs text-gray-500">
+                        Assigned to: {{ item.assignee.name }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-sm text-gray-500 italic text-center py-2">
+                  No checklist items
                 </div>
               </div>
-            </div>
-            
-            <!-- Reviewer -->
-            <div v-if="task.reviewer">
-              <h3 class="text-sm font-medium text-gray-700 mb-2">Reviewer</h3>
-              <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {{ task.reviewer.name }}
-              </div>
-            </div>
-            
-            <!-- Description -->
-            <div v-if="task.description">
-              <h3 class="text-sm font-medium text-gray-700 mb-2">Description</h3>
-              <div class="prose prose-sm max-w-none bg-gray-50 p-3 rounded-lg">
-                <p class="whitespace-pre-line">{{ task.description }}</p>
+              
+              <!-- Timesheet Section -->
+              <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-medium text-gray-700 flex items-center">
+                    <Clock class="w-4 h-4 mr-1.5 text-red-500" />
+                    Time Tracking
+                  </h4>
+                  <button
+                    @click="addTimeEntry"
+                    class="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-gradient-to-r from-red-500 to-red-600 focus:outline-none"
+                  >
+                    <PlusCircle class="w-3 h-3 mr-1" />
+                    Add Time
+                  </button>
+                </div>
+                
+                <!-- Time entries placeholder or integration with TeamTaskTimesheetManager -->
+                <div v-if="task.time_entries && task.time_entries.length > 0">
+                  <div v-for="(entry, index) in task.time_entries" :key="index" class="border-b border-gray-200 py-2 last:border-0">
+                    <div class="flex justify-between">
+                      <span class="text-sm font-medium">{{ entry.user.name }}</span>
+                      <span class="text-sm text-gray-500">{{ entry.hours }} hours</span>
+                    </div>
+                    <div class="flex justify-between mt-1">
+                      <span class="text-xs text-gray-500">{{ formatDateOnly(entry.date) }}</span>
+                      <span class="text-xs" :class="{'text-green-600': entry.approved, 'text-gray-500': !entry.approved}">
+                        {{ entry.approved ? 'Approved' : 'Pending' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-sm text-gray-500 italic text-center py-2">
+                  No time entries recorded
+                </div>
               </div>
             </div>
           </div>
@@ -335,14 +478,14 @@
           <div v-if="editMode" class="flex space-x-3">
             <button 
               @click="cancelEdit" 
-              class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+              class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
             >
               Cancel
             </button>
             
             <button 
               @click="saveChanges" 
-              class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+              class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
             >
               Save Changes
             </button>
@@ -381,7 +524,7 @@
                 </button>
                 <button 
                   @click="showDeleteConfirm = false" 
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   Cancel
                 </button>
@@ -396,8 +539,10 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { format } from 'date-fns'
-import { Edit2, X, AlertCircle, Loader2 } from 'lucide-vue-next'
+import { format, isPast, parseISO } from 'date-fns'
+import { Edit2, X, AlertCircle, Loader2, Briefcase, Paperclip, 
+  UploadCloud, FileText, Image, Eye, Download, Trash2, Calendar, 
+  Activity, Users, AlignLeft, CheckSquare, Clock, PlusCircle } from 'lucide-vue-next'
 import apiClient from '@/config/api'
 
 const props = defineProps({
@@ -405,7 +550,7 @@ const props = defineProps({
   task: Object,
 })
 
-const emit = defineEmits(['close', 'update', 'delete'])
+const emit = defineEmits(['close', 'update', 'delete', 'upload-attachment'])
 
 // State
 const editMode = ref(false)
@@ -413,6 +558,8 @@ const loading = ref(false)
 const showDeleteConfirm = ref(false)
 const taskTypes = ref([])
 const employees = ref([])
+const loadingAttachments = ref(false)
+const taskAttachments = ref([])
 const editForm = ref({
   task_id: null,
   name: '',
@@ -464,6 +611,165 @@ const fetchEmployees = async () => {
     }
   } catch (error) {
     console.error('Error fetching employees:', error)
+  }
+}
+
+const fetchTaskAttachments = async () => {
+  if (!props.task?.id) return
+  
+  try {
+    loadingAttachments.value = true
+    
+    const response = await apiClient.post('/web/v2/team/task-attachments', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        task_id: props.task.id
+      }
+    })
+    
+    if (response.data.result?.status === 'success') {
+      taskAttachments.value = response.data.result.data || []
+    }
+  } catch (error) {
+    console.error('Error fetching task attachments:', error)
+  } finally {
+    loadingAttachments.value = false
+  }
+}
+
+// Attachment handling methods
+const handleAttachmentUpload = () => {
+  emit('upload-attachment', props.task.id)
+}
+
+const downloadFile = (file) => {
+  // Implementation depends on your API and file storage setup
+  window.open(file.url, '_blank')
+}
+
+const deleteFile = async (file) => {
+  try {
+    await apiClient.post('/web/v2/team/delete-attachment', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        attachment_id: file.id
+      }
+    })
+    
+    // Refresh attachments list
+    fetchTaskAttachments()
+  } catch (error) {
+    console.error('Error deleting file:', error)
+  }
+}
+
+const openFilePreview = (file) => {
+  // Implementation depends on your preview functionality
+  window.open(file.url, '_blank')
+}
+
+const canPreviewFile = (file) => {
+  // Determine if file is previewable based on mimetype
+  const previewableTypes = ['image/', 'application/pdf', 'text/']
+  return previewableTypes.some(type => file.mimetype.startsWith(type))
+}
+
+// Checklist methods
+const updateChecklistItem = async (index, completed) => {
+  // Implementation depends on your backend API
+  try {
+    const checklist = [...props.task.checklist]
+    checklist[index].completed = completed
+    
+    await apiClient.post('/web/v2/team/update-task-checklist', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        task_id: props.task.id,
+        checklist_items: checklist
+      }
+    })
+    
+    // Update the task locally
+    props.task.checklist = checklist
+    
+    // Update checklist progress
+    const totalItems = checklist.length
+    const completedItems = checklist.filter(item => item.completed).length
+    props.task.checklist_progress = Math.round((completedItems / totalItems) * 100)
+  } catch (error) {
+    console.error('Error updating checklist item:', error)
+  }
+}
+
+// Time tracking methods
+const addTimeEntry = () => {
+  // Implementation depends on your time tracking UI
+  // Could emit an event to open a time entry form
+  console.log('Add time entry for task', props.task.id)
+}
+
+// Helper functions for file handling
+const getFileIconClass = (mimetype) => {
+  if (mimetype.startsWith('image/')) return 'bg-blue-50'
+  if (mimetype.startsWith('application/pdf')) return 'bg-red-50'
+  if (mimetype.startsWith('text/')) return 'bg-green-50'
+  if (mimetype.startsWith('application/msword') || 
+      mimetype.includes('document')) return 'bg-blue-50'
+  if (mimetype.includes('spreadsheet') || 
+      mimetype.includes('excel')) return 'bg-green-50'
+  if (mimetype.includes('presentation') || 
+      mimetype.includes('powerpoint')) return 'bg-orange-50'
+  return 'bg-gray-50'
+}
+
+const getFileIconColor = (mimetype) => {
+  if (mimetype.startsWith('image/')) return 'text-blue-500'
+  if (mimetype.startsWith('application/pdf')) return 'text-red-500'
+  if (mimetype.startsWith('text/')) return 'text-green-500'
+  if (mimetype.startsWith('application/msword') || 
+      mimetype.includes('document')) return 'text-blue-500'
+  if (mimetype.includes('spreadsheet') || 
+      mimetype.includes('excel')) return 'text-green-500'
+  if (mimetype.includes('presentation') || 
+      mimetype.includes('powerpoint')) return 'text-orange-500'
+  return 'text-gray-500'
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return bytes + ' B'
+  else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+  else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB'
+  else return (bytes / 1073741824).toFixed(1) + ' GB'
+}
+
+const getInitials = (name) => {
+  if (!name) return ''
+  return name.split(' ')
+    .map(part => part.charAt(0))
+    .join('')
+    .substring(0, 2)
+    .toUpperCase()
+}
+
+const isOverdue = (dateString) => {
+  if (!dateString) return false
+  try {
+    return isPast(parseISO(dateString))
+  } catch (error) {
+    return false
+  }
+}
+
+const formatDateOnly = (dateString) => {
+  if (!dateString) return ''
+  try {
+    const date = new Date(dateString)
+    return format(date, 'dd MMM yyyy')
+  } catch (error) {
+    return dateString
   }
 }
 
@@ -611,15 +917,44 @@ const getStatusLabel = (state) => {
 
 // Watch for task changes
 watch(() => props.task, (newTask) => {
-  if (newTask && editMode.value) {
-    // If in edit mode and task changes, update the form
-    enableEditMode()
+  if (newTask) {
+    if (editMode.value) {
+      // If in edit mode and task changes, update the form
+      enableEditMode()
+    }
+    
+    // Fetch attachments when task changes
+    fetchTaskAttachments()
   }
-})
+}, { immediate: true })
 
 // Load data when component mounts
 onMounted(() => {
   fetchTaskTypes()
   fetchEmployees()
+  if (props.task?.id) {
+    fetchTaskAttachments()
+  }
 })
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+</style>

@@ -258,7 +258,8 @@ const updateTaskProgress = async (progress) => {
       params: {
         operation: 'update',
         task_id: parseInt(props.taskId),
-        progress: progress
+        progress: progress,
+        auto_timesheet: true
       }
     });
     
