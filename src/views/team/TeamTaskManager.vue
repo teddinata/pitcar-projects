@@ -1313,6 +1313,7 @@
         </div>
       </Transition>
     </Teleport>
+
     <!-- Task Form Modal -->
     <Teleport to="body">
       <Transition
@@ -1350,7 +1351,7 @@
                 class="bg-white rounded-xl shadow-xl overflow-hidden w-full max-w-5xl mx-auto relative z-10 transform transition-all"
               >
                 <!-- Header with Gradient Background -->
-                <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
                   <div class="flex items-center justify-between">
                     <div>
                       <h2 class="text-lg font-medium text-white flex items-center">

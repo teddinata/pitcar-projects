@@ -1,5 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-6">
+    <!-- Toast notification -->
+    <Toast
+      v-if="toast.show"
+      :message="toast.message"
+      :type="toast.type"
+      :duration="toast.duration"
+    />
     <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Task Timesheets</h1>
@@ -470,19 +477,14 @@
       </div>
     </div>
 
-    <!-- Toast notification -->
-    <Toast
-      v-if="toast.show"
-      :message="toast.message"
-      :type="toast.type"
-      :duration="toast.duration"
-    />
+    
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useToast } from '@/composables/useToast';
+import Toast from '@/components/Toast.vue';
 import apiClient from '@/config/api';
 import { 
   ArrowLeft, 
@@ -501,7 +503,6 @@ import {
   Filter as FilterIcon,
   AlertTriangle as ExclamationIcon,
 } from 'lucide-vue-next';
-import Toast from '@/components/Toast.vue';
 import SearchableSelect from '@/components/SearchableSelect.vue';
 
 const { toast, showToast } = useToast();
