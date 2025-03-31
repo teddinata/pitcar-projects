@@ -1,104 +1,122 @@
 <!-- src/components/team/BAUDayActivitiesModal.vue -->
 <template>
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition ease-out duration-200"
-      enter-from-class="transform opacity-0 scale-95"
-      enter-to-class="transform opacity-100 scale-100"
-      leave-active-class="transition ease-in duration-75"
-      leave-from-class="transform opacity-100 scale-100"
-      leave-to-class="transform opacity-0 scale-95"
-    >
-      <div v-if="show" class="fixed inset-0 z-40 overflow-y-auto" @click.self="$emit('close')">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black bg-opacity-30" @click.self="$emit('close')"></div>
+  <div v-if="show" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-lg font-medium text-gray-900">
+          Aktivitas BAU: {{ formatDate(date) }}
+        </h3>
+        <button
+          @click="$emit('close')"
+          class="text-gray-400 hover:text-gray-500 focus:outline-none"
+        >
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Content -->
+      <div class="p-4 flex-1 overflow-y-auto">
+        <div v-if="activities.length === 0" class="text-center py-6 text-gray-500">
+          Tidak ada aktivitas untuk tanggal ini.
+        </div>
         
-        <!-- Modal -->
-        <div class="flex items-center justify-center min-h-screen p-4">
+        <div v-else class="divide-y space-y-3">
           <div 
-            class="bg-white rounded-lg shadow-xl w-full max-w-md relative z-50 mx-auto"
-            @click.stop
+            v-for="activity in activities" 
+            :key="activity.id"
+            class="pt-3 cursor-pointer group"
+            @click="$emit('view-details', activity)"
           >
-            <!-- Modal Header -->
-            <div class="flex justify-between items-center border-b p-4">
-              <h3 class="text-lg font-medium text-gray-900" v-if="date">
-                Aktivitas untuk {{ formatDate(date) }}
-              </h3>
-              <button
-                @click="$emit('close')"
-                class="text-gray-400 hover:text-gray-500 focus:outline-none"
-              >
-                <span class="sr-only">Close</span>
-                <XCircleIcon class="h-6 w-6" />
-              </button>
-            </div>
-            
-            <!-- Modal Content -->
-            <div class="p-4">
-              <div class="mt-4">
-                <ul class="divide-y divide-gray-200">
-                  <li v-for="activity in activities" :key="activity.id" class="py-3">
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <h4 class="text-sm font-medium text-gray-900">{{ activity.name }}</h4>
-                        <div class="flex items-center text-xs text-gray-500">
-                          <span>{{ activity.time_start }} - {{ activity.time_end }}</span>
-                          <span class="mx-1">•</span>
-                          <span>{{ activity.hours_spent }} jam</span>
-                        </div>
-                      </div>
-                      <div class="flex items-center">
-                        <span 
-                          :class="[
-                            'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
-                            getActivityStatusClass(activity.state, activity.activity_type)
-                          ]"
-                        >
-                          {{ activity.state === 'done' ? 'Selesai' : 
-                            activity.state === 'not_done' ? 'Tidak Selesai' : 'Direncanakan' }}
-                        </span>
-                        <button
-                          @click="$emit('view-details', activity)"
-                          class="ml-2 text-xs text-red-600 hover:text-red-900"
-                        >
-                          Detail
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-start justify-between">
+                  <span 
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mb-1"
+                    :class="getStatusClass(activity.state)"
+                  >
+                    {{ getStatusText(activity.state) }}
+                  </span>
+                  <span 
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mb-1 ml-2"
+                    :class="getTypeClass(activity.activity_type)"
+                  >
+                    {{ getTypeText(activity.activity_type) }}
+                  </span>
+                </div>
+                <h4 class="text-sm font-medium text-gray-900 group-hover:text-red-600 transition-colors mb-1 flex items-center">
+                  {{ activity.name }}
+                  <span v-if="activity.creator?.id === userEmployeeId" class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-0.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    Saya
+                  </span>
+                </h4>
+                <div class="text-xs text-gray-500 mb-1">
+                  <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                    {{ activity.time?.start || '00:00' }} - {{ activity.time?.end || '00:00' }} ({{ activity.hours_spent }} jam)
+                  </div>
+                </div>
+                <div v-if="activity.project" class="text-xs text-gray-500 mb-1">
+                  <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                    </svg>
+                    {{ activity.project.name }}
+                  </div>
+                </div>
+                <div class="text-xs text-gray-500">
+                  <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                    </svg>
+                    {{ activity.creator?.name || 'Tidak diketahui' }}
+                  </div>
+                </div>
               </div>
-
-              <div class="mt-6 flex justify-between">
+              <div>
                 <button
-                  v-if="isToday"
-                  type="button"
-                  @click="$emit('add')"
-                  class="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  class="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-500 focus:outline-none transition-colors"
                 >
-                  <PlusIcon class="h-4 w-4 mr-1" />
-                  Tambah
-                </button>
-                <div v-else></div> <!-- Spacer when button isn't shown -->
-                <button
-                  type="button"
-                  @click="$emit('close')"
-                  class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                >
-                  Tutup
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+      
+      <!-- Footer -->
+      <div class="p-4 border-t">
+        <div class="flex justify-between">
+          <div>
+            <span class="text-sm text-gray-500">Total: {{ activities.length }} aktivitas</span>
+          </div>
+          <div>
+            <button
+              v-if="isToday"
+              @click="$emit('add')"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Tambah Aktivitas
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { XCircleIcon, PlusIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
   show: {
@@ -107,67 +125,93 @@ const props = defineProps({
   },
   date: {
     type: String,
-    default: null
+    default: ''
   },
   activities: {
     type: Array,
     default: () => []
+  },
+  isToday: {
+    type: Boolean,
+    default: false
+  },
+  userEmployeeId: {
+    type: [Number, String],
+    default: null
   }
 });
 
-const emit = defineEmits(['close', 'view-details', 'add']);
+defineEmits(['close', 'view-details', 'add']);
 
-// Computed property to check if the selected date is today
-const isToday = computed(() => {
-  if (!props.date) return false;
+// Helper functions
+const formatDate = (dateString) => {
+  if (!dateString) return '';
   
-  const selectedDate = new Date(props.date);
-  const today = new Date();
-  
-  // Reset hours to 0 for proper date comparison
-  selectedDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-  
-  return selectedDate.getTime() === today.getTime();
-});
-
-// Helper methods
-function formatDate(dateString) {
   const date = new Date(dateString);
   
-  // Indonesian month names
+  // Definisi nama bulan dalam bahasa Indonesia
   const monthNames = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
   
-  return `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-}
+  // Definisi nama hari dalam bahasa Indonesia
+  const dayNames = [
+    'Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'
+  ];
+  
+  return `${dayNames[date.getDay()]}, ${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+};
 
-function getActivityStatusClass(state, type = 'other') {
-  // Status class takes precedence
-  switch(state) {
+const getStatusClass = (status) => {
+  switch (status) {
     case 'done':
       return 'bg-green-100 text-green-800';
     case 'not_done':
       return 'bg-red-100 text-red-800';
-    default: // planned
-      // Fall back to type-based coloring
-      return getActivityTypeColorClass(type);
+    default:
+      return 'bg-yellow-100 text-yellow-800';
   }
-}
+};
 
-function getActivityTypeColorClass(type) {
-  if (!type) return 'bg-gray-100 text-gray-800';
-  
-  const colorMap = {
-    'meeting': 'bg-blue-100 text-blue-800',
-    'training': 'bg-green-100 text-green-800',
-    'support': 'bg-pink-100 text-pink-800',
-    'admin': 'bg-indigo-100 text-indigo-800',
-    'other': 'bg-gray-100 text-gray-800'
-  };
-  
-  return colorMap[type.toLowerCase()] || 'bg-gray-100 text-gray-800';
-}
+const getStatusText = (status) => {
+  switch (status) {
+    case 'done':
+      return 'Selesai';
+    case 'not_done':
+      return 'Tidak Selesai';
+    default:
+      return 'Direncanakan';
+  }
+};
+
+const getTypeClass = (type) => {
+  switch (type) {
+    case 'meeting':
+      return 'bg-blue-100 text-blue-800';
+    case 'training':
+      return 'bg-green-100 text-green-800';
+    case 'support':
+      return 'bg-pink-100 text-pink-800';
+    case 'admin':
+      return 'bg-indigo-100 text-indigo-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getTypeText = (type) => {
+  switch (type) {
+    case 'meeting':
+      return 'Meeting';
+    case 'training':
+      return 'Training';
+    case 'support':
+      return 'Support';
+    case 'admin':
+      return 'Administrasi';
+    default:
+      return 'Lainnya';
+  }
+};
 </script>
