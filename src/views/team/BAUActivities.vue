@@ -13,7 +13,7 @@
         <div class="md:flex md:items-center md:justify-between">
           <div class="flex-1 min-w-0">
             <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate">
-              Aktivitas BAU Tim
+              Aktivitas Tim
             </h1>
           </div>
           <div class="flex space-x-3">

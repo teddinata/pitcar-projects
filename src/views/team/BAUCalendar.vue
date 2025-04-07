@@ -14,7 +14,7 @@
         <div class="md:flex md:items-center md:justify-between">
           <div class="flex-1 min-w-0">
             <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-              Kalender BAU Tim
+              Kalender Tim
             </h1>
           </div>
           <div class="mt-4 flex md:mt-0 md:ml-4 space-x-2">
@@ -45,8 +45,26 @@
     <!-- Filter Controls -->
     <div class="bg-white border-b border-gray-200">
       <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <div class="flex flex-wrap items-center gap-4">
-          <!-- Department Filter -->
+        <!-- Filter Controls Heading with Toggle -->
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-700">Filter Kalender</h3>
+          <div class="flex items-center space-x-2">
+            <button
+              @click="showAdvancedFilters = !showAdvancedFilters"
+              class="text-sm text-gray-600 hover:text-red-600 flex items-center"
+            >
+              <span v-if="showAdvancedFilters">Sembunyikan Filter Lanjutan</span>
+              <span v-else>Tampilkan Filter Lanjutan</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor" :class="{'transform rotate-180': showAdvancedFilters}">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Primary Filters Row -->
+        <div class="flex flex-wrap items-center gap-4 mb-3">
+          <!-- Department Filter (Dropdown) -->
           <div class="w-full sm:w-auto">
             <label for="department-filter" class="block text-sm font-medium text-gray-700 mb-1">
               Departemen
@@ -130,6 +148,64 @@
                 Reset
               </button>
             </div>
+          </div>
+        </div>
+        
+        <!-- Advanced Filters (Collapsible) -->
+        <div v-if="showAdvancedFilters" class="mt-3 pt-3 border-t border-gray-200">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Filter Departemen Multi-Pilihan</h4>
+          
+          <!-- Department Tags -->
+          <div class="flex flex-wrap gap-2 mb-2">
+            <div 
+              v-for="dept in departments.filter(d => selectedDepartments.includes(d.id))" 
+              :key="`tag-${dept.id}`"
+              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"
+            >
+              {{ dept.name }}
+              <button 
+                @click="removeDepartment(dept.id)" 
+                class="ml-1 text-red-600 hover:text-red-900 focus:outline-none"
+              >
+                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+            </div>
+            <button 
+              v-if="selectedDepartments.length > 0" 
+              @click="clearSelectedDepartments" 
+              class="text-xs text-gray-500 hover:text-red-600"
+            >
+              Hapus semua
+            </button>
+          </div>
+          
+          <!-- Department Checkboxes - Grid Layout for Better Appearance -->
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 bg-gray-50 p-3 rounded-md border border-gray-200 max-h-40 overflow-y-auto">
+            <div v-for="dept in departments" :key="`check-${dept.id}`" class="flex items-center">
+              <input
+                type="checkbox"
+                :id="`dept-${dept.id}`"
+                :value="dept.id"
+                v-model="selectedDepartments"
+                @change="applyDepartmentFilters"
+                class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+              />
+              <label :for="`dept-${dept.id}`" class="ml-2 block text-sm text-gray-700 truncate">
+                {{ dept.name }}
+              </label>
+            </div>
+          </div>
+          
+          <!-- Apply Filter Button -->
+          <div class="mt-3 flex justify-end">
+            <button 
+              @click="applyDepartmentFilters" 
+              class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Terapkan Filter
+            </button>
           </div>
         </div>
       </div>
@@ -438,6 +514,9 @@ const projects = ref([]);
 const departments = ref([]);
 const employees = ref([]);
 const teamView = ref(true);
+// State untuk checkbox departemen
+const showAdvancedFilters = ref(false);
+const selectedDepartments = ref([]);
 
 // Get current user info
 // const userEmployeeId = computed(() => userStore.employeeId || null);
@@ -538,6 +617,43 @@ const canVerify = computed(() => {
   // Can verify if same day (H) or next day (H+1)
   return diffDays <= 1;
 });
+
+// Metode untuk menerapkan filter departemen
+const applyDepartmentFilters = () => {
+  // Reset filter departemen dropdown jika menggunakan checkbox
+  if (selectedDepartments.value.length > 0) {
+    filters.value.department_id = '';
+  }
+  
+  // Simpan nilai departemen yang dipilih untuk digunakan dalam filter
+  filters.value.selected_departments = selectedDepartments.value;
+  
+  // Jalankan pencarian dengan filter baru
+  fetchActivities();
+};
+
+// Metode untuk menghapus departemen dari pilihan
+const removeDepartment = (deptId) => {
+  selectedDepartments.value = selectedDepartments.value.filter(id => id !== deptId);
+  applyDepartmentFilters();
+};
+
+// Metode untuk menghapus semua departemen yang dipilih
+const clearSelectedDepartments = () => {
+  selectedDepartments.value = [];
+  applyDepartmentFilters();
+};
+
+// Perluas metode clearFilters yang sudah ada untuk juga menghapus departemen yang dipilih
+const clearFilters = () => {
+  filters.value = {
+    department_id: '',
+    project_id: '',
+    creator_id: ''
+  };
+  selectedDepartments.value = [];
+  fetchActivities();
+};
 
 const calendarTitle = computed(() => {
   if (viewMode.value === 'week') {
@@ -642,15 +758,6 @@ const batchCalculatedHours = computed(() => {
 // Methods
 // 1. Filter Methods
 const applyFilters = () => {
-  fetchActivities();
-};
-
-const clearFilters = () => {
-  filters.value = {
-    department_id: '',
-    project_id: '',
-    creator_id: ''
-  };
   fetchActivities();
 };
 
@@ -773,7 +880,27 @@ const fetchActivities = async () => {
       console.log('Calendar data received:', calendarData);
       
       // Apply department filter client-side if needed (since API doesn't support it directly)
-      if (filters.value.department_id) {
+      // Filter multiple departments (checkbox)
+      if (filters.value.selected_departments && filters.value.selected_departments.length > 0) {
+        // Filter activities based on multiple departments
+        calendarData = calendarData.map(day => {
+          if (!day.activities) return day;
+          
+          const filteredActivities = day.activities.filter(activity => {
+            if (!activity.project) return false;
+            return filters.value.selected_departments.includes(activity.project.department_id);
+          });
+          
+          return {
+            ...day,
+            activities: filteredActivities,
+            total_hours: filteredActivities.reduce((sum, act) => sum + (act.hours_spent || 0), 0)
+          };
+        });
+      }
+      // Atau kalau filter department sebelumnya mau dipertahankan:
+      // Filter single department (dropdown, yang existing)
+      else if (filters.value.department_id) {
         // Filter activities based on department of their project
         calendarData = calendarData.map(day => {
           if (!day.activities) return day;
