@@ -29,7 +29,7 @@
             </button>
             <button
               @click="showCreateModal = true"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
               :disabled="loading"
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
@@ -325,14 +325,17 @@
             </div>
 
             <!-- Activities for this day -->
+            <!-- Activities for this day in the Monthly View -->
             <div class="space-y-1">
               <div 
                 v-for="activity in day.activities.slice(0, 2)" 
                 :key="activity.id"
-                class="px-2 py-1 text-xs rounded truncate cursor-pointer transition-colors duration-200 relative"
+                class="px-2 py-1 text-xs rounded truncate cursor-pointer transition-colors duration-200 relative border-l-2"
                 :class="[
                   getActivityStatusClass(activity.state, activity.activity_type),
-                  activity.creator?.id === userEmployeeId ? 'border-l-2 border-red-500' : ''
+                  getDepartmentColors(activity.creator?.department_id).border,
+                  getDepartmentColors(activity.creator?.department_id).bg,
+                  activity.creator?.id === userEmployeeId ? 'border-l-4' : 'border-l-2'
                 ]"
                 @click="viewActivityDetails(activity)"
               >
@@ -380,35 +383,58 @@
           @activity-click="viewActivityDetails"
           @time-slot-click="handleTimeSlotClick"
           @refresh="fetchActivities"
+          ref="weekViewRef"
         />
       </div>
       
-      <!-- Legend for team view -->
+      <!-- Updated department legend with both border and background color -->
+      <div class="mt-6 bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-medium text-gray-900 mb-2">Legenda Departemen</h3>
+        <div class="flex flex-wrap gap-4">
+          <div v-for="dept in departments" :key="dept.id" class="flex items-center">
+            <div class="w-4 h-4 rounded mr-2" 
+                :class="[getDepartmentColors(dept.id).border, getDepartmentColors(dept.id).bg]"></div>
+            <span class="text-xs text-gray-700">{{ dept.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Also update the activity type legend if needed -->
       <div v-if="teamView" class="mt-6 bg-white p-4 rounded-lg shadow">
         <h3 class="text-sm font-medium text-gray-900 mb-2">Legenda</h3>
         <div class="flex flex-wrap gap-4">
           <div class="flex items-center">
-            <div class="w-4 h-4 rounded border-l-2 border-red-500 bg-blue-100 mr-2"></div>
+            <div class="w-4 h-4 rounded border-l-4 border-red-500 mr-2"></div>
             <span class="text-xs text-gray-700">Aktivitas Saya</span>
           </div>
           <div class="flex items-center">
-            <div class="w-4 h-4 rounded bg-blue-100 mr-2"></div>
+            <div class="w-4 h-4 rounded text-blue-800 mr-2 flex items-center justify-center">
+              <span class="text-xxs">A</span>
+            </div>
             <span class="text-xs text-gray-700">Meeting</span>
           </div>
           <div class="flex items-center">
-            <div class="w-4 h-4 rounded bg-green-100 mr-2"></div>
+            <div class="w-4 h-4 rounded text-green-800 mr-2 flex items-center justify-center">
+              <span class="text-xxs">A</span>
+            </div>
             <span class="text-xs text-gray-700">Training</span>
           </div>
           <div class="flex items-center">
-            <div class="w-4 h-4 rounded bg-pink-100 mr-2"></div>
+            <div class="w-4 h-4 rounded text-pink-800 mr-2 flex items-center justify-center">
+              <span class="text-xxs">A</span>
+            </div>
             <span class="text-xs text-gray-700">Support</span>
           </div>
           <div class="flex items-center">
-            <div class="w-4 h-4 rounded bg-indigo-100 mr-2"></div>
+            <div class="w-4 h-4 rounded text-indigo-800 mr-2 flex items-center justify-center">
+              <span class="text-xxs">A</span>
+            </div>
             <span class="text-xs text-gray-700">Admin</span>
           </div>
           <div class="flex items-center">
-            <div class="w-4 h-4 rounded bg-gray-100 mr-2"></div>
+            <div class="w-4 h-4 rounded text-gray-800 mr-2 flex items-center justify-center">
+              <span class="text-xxs">A</span>
+            </div>
             <span class="text-xs text-gray-700">Lainnya</span>
           </div>
         </div>
@@ -547,7 +573,7 @@ const formData = ref({
   name: '',
   activity_type: 'meeting',
   date: '',
-  time_start: '09:00',
+  time_start: '08:00',
   time_end: '10:00',
   hours_spent: 1,
   project_id: '',
@@ -563,7 +589,7 @@ const batchFormData = ref({
   activity_type: 'meeting',
   date_from: '',
   date_to: '',
-  time_start: '09:00',
+  time_start: '08:00',
   time_end: '10:00',
   hours_spent: 1.0,
   project_id: '',
@@ -653,6 +679,61 @@ const clearFilters = () => {
   };
   selectedDepartments.value = [];
   fetchActivities();
+};
+
+
+// Add or modify this function in your component
+const getDepartmentColors = (departmentId) => {
+  // Mapping of department IDs to colors (border and background)
+  const departmentColors = {
+    1: { border: 'border-red-500', bg: 'bg-red-50' },
+    2: { border: 'border-blue-500', bg: 'bg-blue-50' },
+    3: { border: 'border-green-500', bg: 'bg-green-50' },
+    4: { border: 'border-yellow-500', bg: 'bg-yellow-50' },
+    5: { border: 'border-purple-500', bg: 'bg-purple-50' },
+    6: { border: 'border-pink-500', bg: 'bg-pink-50' },
+    7: { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+    8: { border: 'border-orange-500', bg: 'bg-orange-50' },
+    9: { border: 'border-cyan-500', bg: 'bg-cyan-50' }, // Marketing department
+    10: { border: 'border-lime-500', bg: 'bg-lime-50' },
+    11: { border: 'border-teal-500', bg: 'bg-teal-50' },
+    12: { border: 'border-emerald-500', bg: 'bg-emerald-50' }, // IT Division
+    // Add more departments as needed
+  };
+  
+  return departmentColors[departmentId] || { border: 'border-gray-300', bg: 'bg-gray-50' };
+};
+// Update existing functions
+const getActivityStatusClass = (state, type = 'other') => {
+  // Status class takes precedence for text color only
+  switch(state) {
+    case 'done':
+      return 'text-green-800';
+    case 'not_done':
+      return 'text-red-800';
+    default: // planned
+      // Fall back to type-based text coloring
+      return getActivityTypeTextClass(type);
+  }
+};
+
+const getActivityTypeTextClass = (type) => {
+  if (!type) return 'text-gray-800';
+  
+  const colorMap = {
+    'meeting': 'text-blue-800',
+    'training': 'text-green-800',
+    'support': 'text-pink-800',
+    'admin': 'text-indigo-800',
+    'other': 'text-gray-800'
+  };
+  
+  return colorMap[type.toLowerCase()] || 'text-gray-800';
+};
+
+// Keep for backwards compatibility
+const getDepartmentBorderColor = (departmentId) => {
+  return getDepartmentColors(departmentId).border;
 };
 
 const calendarTitle = computed(() => {
@@ -848,6 +929,14 @@ const fetchActivities = async () => {
     const dateFromStr = formatDateYYYYMMDD(dateFrom);
     const dateToStr = formatDateYYYYMMDD(dateTo);
     
+    // Debugging: Log nilai filter yang akan digunakan
+    console.log('Filter values:', {
+      department_id: filters.value.department_id,
+      project_id: filters.value.project_id,
+      creator_id: filters.value.creator_id,
+      selectedDepartments: selectedDepartments.value
+    });
+    
     // Prepare API parameters with filters
     const params = {
       operation: 'get',
@@ -861,8 +950,45 @@ const fetchActivities = async () => {
       params.creator_id = parseInt(filters.value.creator_id);
     }
     
-    if (filters.value.project_id) {
+    // STRATEGI FILTER PROJECT VS DEPARTMENT
+    // Jika ada filter departemen
+    if (filters.value.department_id) {
+      // Cari semua project dari departemen ini
+      const departmentId = parseInt(filters.value.department_id);
+      const departmentProjects = projects.value.filter(
+        p => p.department?.id === departmentId
+      );
+      
+      console.log(`Found ${departmentProjects.length} projects for department ${departmentId}`);
+      
+      if (departmentProjects.length > 0) {
+        // Jika ada filter project dan project tersebut ada dalam departemen
+        if (filters.value.project_id) {
+          const projectId = parseInt(filters.value.project_id);
+          const isValidProject = departmentProjects.some(p => p.id === projectId);
+          
+          if (isValidProject) {
+            params.project_id = projectId;
+          } else {
+            // Project tidak dalam departemen, reset filter
+            filters.value.project_id = '';
+            // Gunakan semua project dari departemen untuk filter di client
+          }
+        }
+        // Jika tidak ada filter project, kita akan filter hasil nanti
+      }
+    } else if (filters.value.project_id) {
+      // Jika hanya ada filter project
       params.project_id = parseInt(filters.value.project_id);
+    }
+    
+    // Jika menggunakan multi-select departemen dan ada departemen yang dipilih
+    if (selectedDepartments.value.length > 0) {
+      // Untuk saat ini, kita tidak mengirim parameter ini ke backend
+      // Kita akan melakukan filter di client side
+      params.selected_departments = selectedDepartments.value;
+      
+      console.log(`Using ${selectedDepartments.value.length} selected departments for client-side filtering`);
     }
     
     console.log('Fetching BAU calendar with params:', params);
@@ -877,46 +1003,74 @@ const fetchActivities = async () => {
     if (response.data.result?.status === 'success') {
       let calendarData = response.data.result.data;
       
-      console.log('Calendar data received:', calendarData);
+      console.log('Raw calendar data received:', calendarData);
       
-      // Apply department filter client-side if needed (since API doesn't support it directly)
-      // Filter multiple departments (checkbox)
-      if (filters.value.selected_departments && filters.value.selected_departments.length > 0) {
-        // Filter activities based on multiple departments
+      // Pastikan semua aktivitas memiliki informasi departemen yang valid
+      calendarData.forEach(day => {
+        if (!day.activities) return;
+        
+        day.activities = day.activities.map(activity => {
+          // Jika ada project tapi tidak ada department_id
+          if (activity.project && !activity.project.department_id) {
+            // Cari project dari list projects
+            const project = projects.value.find(p => p.id === activity.project.id);
+            if (project && project.department) {
+              activity.project.department_id = project.department.id;
+              activity.project.department_name = project.department.name;
+            }
+          }
+          return activity;
+        });
+      });
+      
+      // CLIENT-SIDE FILTERING
+      
+      // 1. Filter berdasarkan departemen dropdown (jika tidak menggunakan filter project)
+      if (filters.value.department_id && !filters.value.project_id) {
+        const departmentId = parseInt(filters.value.department_id);
+        console.log(`Filtering by department ID ${departmentId}`);
+        
         calendarData = calendarData.map(day => {
           if (!day.activities) return day;
           
           const filteredActivities = day.activities.filter(activity => {
-            if (!activity.project) return false;
-            return filters.value.selected_departments.includes(activity.project.department_id);
+            const hasDepartment = activity.project && activity.project.department_id === departmentId;
+            return hasDepartment;
           });
           
           return {
             ...day,
             activities: filteredActivities,
-            total_hours: filteredActivities.reduce((sum, act) => sum + (act.hours_spent || 0), 0)
+            total_hours: filteredActivities.reduce((sum, act) => sum + (act.hours_spent || 0), 0),
+            hasActivities: filteredActivities.length > 0,
+            status: determineStatusFromActivities(filteredActivities)
           };
         });
       }
-      // Atau kalau filter department sebelumnya mau dipertahankan:
-      // Filter single department (dropdown, yang existing)
-      else if (filters.value.department_id) {
-        // Filter activities based on department of their project
+      
+      // 2. Filter berdasarkan multiple departments (checkbox)
+      else if (selectedDepartments.value.length > 0) {
+        console.log(`Filtering by ${selectedDepartments.value.length} selected departments`);
+        
         calendarData = calendarData.map(day => {
           if (!day.activities) return day;
           
           const filteredActivities = day.activities.filter(activity => {
-            if (!activity.project) return false;
-            return activity.project.department_id === parseInt(filters.value.department_id);
+            if (!activity.project || !activity.project.department_id) return false;
+            return selectedDepartments.value.includes(activity.project.department_id);
           });
           
           return {
             ...day,
             activities: filteredActivities,
-            total_hours: filteredActivities.reduce((sum, act) => sum + (act.hours_spent || 0), 0)
+            total_hours: filteredActivities.reduce((sum, act) => sum + (act.hours_spent || 0), 0),
+            hasActivities: filteredActivities.length > 0,
+            status: determineStatusFromActivities(filteredActivities)
           };
         });
       }
+      
+      console.log('Filtered calendar data:', calendarData);
       
       // Perbaikan: Pastikan setiap aktivitas memiliki informasi waktu yang valid
       calendarData.forEach(day => {
@@ -954,8 +1108,6 @@ const fetchActivities = async () => {
               end: endTime,
               duration: activity.hours_spent || 1
             };
-            
-            console.log(`Added missing time data for activity ${activity.id}:`, activity.time);
           }
           
           return activity;
@@ -976,11 +1128,10 @@ const fetchActivities = async () => {
         };
       });
       
+      console.log('Final activities by date:', activitiesByDate);
+      
       // Update calendar displays with API data
       updateCalendarWithData(activitiesByDate);
-      
-      // For debugging
-      console.log('Processed activity data for calendar:', activitiesByDate);
     } else {
       showToast({
         message: response.data.result?.message || 'Gagal memuat data kalender',
@@ -1013,6 +1164,9 @@ const fetchProjects = async () => {
 
     if (response.data.result?.status === 'success') {
       projects.value = response.data.result.data || [];
+
+      // Verifikasi apakah project memiliki informasi department
+      const projectsWithDept = projects.value.filter(p => p.department && p.department.id);
     }
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -1716,19 +1870,6 @@ const formatDateYYYYMMDD = (date) => {
   return `${year}-${month}-${day}`;
 };
 
-const getActivityStatusClass = (state, type = 'other') => {
-  // Status class takes precedence
-  switch(state) {
-    case 'done':
-      return 'bg-green-100 text-green-800';
-    case 'not_done':
-      return 'bg-red-100 text-red-800';
-    default: // planned
-      // Fall back to type-based coloring
-      return getActivityTypeColorClass(type);
-  }
-};
-
 const getActivityTypeColorClass = (type) => {
   if (!type) return 'bg-gray-100 text-gray-800';
   
@@ -1790,6 +1931,8 @@ onMounted(() => {
   fetchDepartments();
   fetchEmployees();
   fetchActivities();
+
+  
 });
 
 </script>

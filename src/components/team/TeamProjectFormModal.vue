@@ -10,7 +10,7 @@
       
       <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full">
         <!-- Header with Gradient -->
-        <div class="relative bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+        <div class="relative bg-gradient-to-r from-rose-600 to-rose-500 px-6 py-4">
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-medium text-white">{{ isEditing ? 'Edit Project' : 'Create New Project' }}</h3>
             <button @click="$emit('close')" class="text-white hover:text-gray-200 focus:outline-none">
@@ -253,7 +253,7 @@
           <button
             type="button"
             @click="submitForm"
-            class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             :disabled="loading || !formData.department_id"
           >
             <span v-if="loading" class="mr-2">

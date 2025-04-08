@@ -51,7 +51,7 @@
             <!-- Create task button - more prominence -->
             <button
               @click="showTaskModal = true; isEditingTask = false; resetTaskForm()"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
             >
               <PlusIcon class="h-4 w-4 mr-1.5" />
               Create New Task
@@ -980,7 +980,7 @@
                   </button>
                   <button
                     type="button"
-                    class="px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    class="px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     @click="submitTask"
                   >
                     {{ isEditingTask ? 'Update Task' : 'Create Task' }}

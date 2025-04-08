@@ -19,7 +19,7 @@
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
       <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
         <!-- Header with Gradient -->
-        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-4">
+        <div class="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-lg font-medium text-white flex items-center">
@@ -351,7 +351,7 @@
               <button
                 type="submit"
                 :disabled="loading || !isFormValid"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-rose-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
               >
                 <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
                 <span v-if="isEditMode">Update Task</span>

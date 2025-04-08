@@ -20,7 +20,7 @@
           </router-link>
           <button
             @click="openAddTimeModal"
-            class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600"
+            class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-gradient-to-r from-rose-600 to-rose-500"
           >
             <ClockIcon class="h-4 w-4 mr-1" />
             Log Time
@@ -81,7 +81,7 @@
         <div class="mt-4 flex justify-end">
           <button
             @click="applyFilters"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-rose-600 to-rose-500"
           >
             <FilterIcon class="h-4 w-4 mr-1" />
             Apply Filters
@@ -176,7 +176,7 @@
           <div class="mt-6">
             <button
               @click="openAddTimeModal"
-              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600"
+              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-rose-600 to-rose-500"
             >
               <PlusIcon class="h-4 w-4 mr-1" />
               Add Time Entry

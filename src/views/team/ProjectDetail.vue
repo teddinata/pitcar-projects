@@ -1,6 +1,7 @@
 <!-- src/views/dashboard/TeamProjectDetail.vue -->
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50/50">
+    <!-- Toast notification component -->
     <Toast
       v-model:show="toast.show"
       :message="toast.message"
@@ -8,178 +9,269 @@
       :duration="toast.duration"
     />
 
-    <!-- Header -->
-    <div class="bg-white shadow">
-      <div class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
-          <div class="flex items-center space-x-3">
-            <button @click="router.back()" class="p-2 hover:bg-gray-100 rounded-lg">
-              <ArrowLeft class="w-5 h-5 text-gray-500" />
+    <!-- Header with simplified design -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <!-- Left side: Back button and project name -->
+          <div class="flex items-center gap-3">
+            <button @click="router.back()" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition">
+              <ArrowLeft class="w-5 h-5" />
             </button>
             <div>
-              <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">{{ project?.name }}</h1>
+              <h1 class="text-xl font-semibold text-gray-900">{{ project?.name }}</h1>
               <p class="text-sm text-gray-500">{{ project?.code }}</p>
             </div>
           </div>
 
-          <div class="flex items-center space-x-3">
+          <!-- Right side: Status and actions -->
+          <div class="flex items-center gap-3 flex-wrap">
+            <!-- Status badge with soft colors -->
             <div
-              class="px-3 py-1 text-sm font-semibold rounded-full"
+              class="px-3 py-1 text-sm font-medium rounded-full"
               :class="{
-                'bg-yellow-100 text-yellow-800': project?.state === 'in_progress',
-                'bg-green-100 text-green-800': project?.state === 'completed',
-                'bg-gray-100 text-gray-800': project?.state === 'draft',
-                'bg-purple-100 text-purple-800': project?.state === 'planning',
-                'bg-orange-100 text-orange-800': project?.state === 'on_hold',
-                'bg-red-100 text-red-800': project?.state === 'cancelled'
+                'bg-amber-50 text-amber-700 border border-amber-200': project?.state === 'in_progress',
+                'bg-emerald-50 text-emerald-700 border border-emerald-200': project?.state === 'completed',
+                'bg-slate-50 text-slate-700 border border-slate-200': project?.state === 'draft',
+                'bg-rose-50 text-rose-700 border border-rose-200': project?.state === 'planning',
+                'bg-orange-50 text-orange-700 border border-orange-200': project?.state === 'on_hold',
+                'bg-rose-50 text-rose-700 border border-rose-200': project?.state === 'cancelled'
               }"
             >
               {{ formatState(project?.state) }}
             </div>
+            
+            <!-- Action buttons with more subtle styling -->
             <button
               @click="showEditModal = true"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition"
             >
-              <Pencil class="w-4 h-4 mr-2" />
-              Edit Project
+              <Pencil class="w-4 h-4 mr-1.5" />
+              Edit
             </button>
             <button
               @click="confirmDelete"
-              class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+              class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-700 bg-white border border-rose-300 hover:bg-rose-50 transition"
             >
-              <Trash2 class="w-4 h-4 mr-2" />
-              Delete Project
+              <Trash2 class="w-4 h-4 mr-1.5" />
+              Delete
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </header>
 
-    <!-- Main Content -->
-    <main class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Column -->
-         <div class="lg:col-span-1 space-y-6">
-          <!-- Project Description Card with Modern Design -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <!-- Card Header with Gradient Background -->
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <FileText class="w-5 h-5 mr-2" />
+    <!-- Main Content with 3-column responsive layout -->
+    <main class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <!-- Added tabs for mobile view -->
+      <div class="md:hidden mb-4">
+        <div class="flex overflow-x-auto gap-1 pb-1 scrollbar-hide">
+          <button 
+            @click="activeTab = 'overview'" 
+            class="px-4 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+            :class="activeTab === 'overview' ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-gray-600'"
+          >
+            Overview
+          </button>
+          <button 
+            @click="activeTab = 'tasks'" 
+            class="px-4 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+            :class="activeTab === 'tasks' ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-gray-600'"
+          >
+            Tasks
+          </button>
+          <button 
+            @click="activeTab = 'files'" 
+            class="px-4 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+            :class="activeTab === 'files' ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-gray-600'"
+          >
+            Files
+          </button>
+          <button 
+            @click="activeTab = 'activities'" 
+            class="px-4 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+            :class="activeTab === 'activities' ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-gray-600'"
+          >
+            Activities
+          </button>
+          <button 
+            @click="activeTab = 'communication'" 
+            class="px-4 py-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors"
+            :class="activeTab === 'communication' ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-gray-600'"
+          >
+            Communication
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop layout with 3 columns -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Left Column (Overview) - Only visible in desktop or when overview tab is active -->
+        <!-- Left Column (Overview) Content -->
+        <div v-if="activeTab === 'overview' || !isMobile" class="space-y-6">
+          <!-- Project Overview Card -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <FileText class="w-5 h-5 mr-2 text-indigo-500" />
                 Project Overview
               </h2>
-              <!-- Project Priority Badge -->
-              <div class="flex items-center px-2.5 py-1 rounded-lg text-xs font-medium text-white border border-white">
-                <Flag class="w-3.5 h-3.5 mr-1.5" />
-                {{ formatProjectPriority(project?.priority) }} Priority
-              </div>
             </div>
             
-            <!-- Content Section -->
-            <div class="p-6">
-              <!-- Description Section with Collapsible Content -->
-              <div class="space-y-4">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <AlignLeft class="w-4 h-4 mr-1 text-red-500" />
-                    Description
-                  </h3>
-                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                    <div v-if="project?.description" class="prose prose-sm max-w-none text-gray-700" v-html="project?.description"></div>
-                    <div v-else class="text-sm text-gray-500 italic flex items-center justify-center py-4">
-                      <Info class="w-4 h-4 mr-1" />
-                      No description provided
-                    </div>
+            <div class="p-5 space-y-5">
+              <!-- Description -->
+              <div>
+                <h3 class="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                  <AlignLeft class="w-4 h-4 mr-1.5 text-indigo-500" />
+                  Description
+                </h3>
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <div v-if="project?.description" class="prose prose-sm max-w-none text-gray-600" v-html="project?.description"></div>
+                  <div v-else class="text-sm text-gray-400 italic flex items-center justify-center py-4">
+                    <Info class="w-4 h-4 mr-1" />
+                    No description provided
                   </div>
                 </div>
-          
-                <!-- Key Project Highlights -->
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                    <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Department</h4>
-                    <div class="flex items-center">
-                      <Users class="w-4 h-4 text-red-500 mr-2" />
-                      <span class="text-sm font-medium text-gray-800">{{ project?.department?.name || 'Not Assigned' }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                    <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Project Type</h4>
-                    <div class="flex items-center">
-                      <Hash class="w-4 h-4 text-indigo-500" />
-                      <!-- <span class="text-sm font-medium text-gray-800">{{ project?.project_type || 'N/A' }}</span> -->
-                      <span 
-                        v-if="project?.project_type" 
-                        class="ml-2 px-2 py-0.5 text-md font-medium rounded-full uppercase"
-                        :class="{
-                          'bg-gray-100 text-gray-700': project.project_type === 'general' || project.project_type === 'umum',
-                          'bg-blue-100 text-blue-700': project.project_type === 'creation' || project.project_type === 'pembuatan',
-                          'bg-purple-100 text-purple-700': project.project_type === 'development' || project.project_type === 'pengembangan',
-                          'bg-green-100 text-green-700': project.project_type === 'training' || project.project_type === 'pelatihan',
-                          'bg-orange-100 text-orange-700': project.project_type === 'weekly' || project.project_type === 'mingguan',
-                          'bg-indigo-100 text-indigo-700': project.project_type === 'monthly' || project.project_type === 'bulanan',
-                          'bg-gray-100 text-gray-700': !['general', 'umum', 'creation', 'pembuatan', 'development', 'pengembangan', 'training', 'pelatihan', 'weekly', 'mingguan', 'monthly', 'bulanan'].includes(project.project_type)
-                        }"
-                      >
-                        {{ project.project_type }}
-                      </span>
-                    </div>
+              </div>
+              
+              <!-- Key Details -->
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Department -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Department</h4>
+                  <div class="flex items-center">
+                    <Users class="w-4 h-4 text-indigo-500 mr-2" />
+                    <span class="text-sm font-medium text-gray-700">{{ project?.department?.name || 'Not Assigned' }}</span>
                   </div>
                 </div>
                 
-                <!-- Project Status & Priority Card -->
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 mt-4">
-                  <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Project Status</h4>
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center">
-                      <div 
-                        class="w-2.5 h-2.5 rounded-full mr-2"
-                        :class="{
-                          'bg-yellow-500': project?.state === 'in_progress',
-                          'bg-green-500': project?.state === 'completed',
-                          'bg-gray-500': project?.state === 'draft',
-                          'bg-purple-500': project?.state === 'planning',
-                          'bg-orange-500': project?.state === 'on_hold',
-                          'bg-red-500': project?.state === 'cancelled'
-                        }"
-                      ></div>
-                      <span class="text-sm font-medium text-gray-800">{{ formatState(project?.state) }}</span>
-                    </div>
-                    
-                    <div 
-                      class="px-2.5 py-1 rounded-md text-xs font-medium"
+                <!-- Project Type -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Project Type</h4>
+                  <div class="flex items-center">
+                    <Hash class="w-4 h-4 text-indigo-500 mr-2" />
+                    <span 
+                      v-if="project?.project_type" 
+                      class="px-2 py-0.5 text-sm font-medium rounded-full uppercase"
                       :class="{
-                        'bg-blue-50 text-blue-700 border border-blue-100': project?.priority === '0',
-                        'bg-green-50 text-green-700 border border-green-100': project?.priority === '1',
-                        'bg-orange-50 text-orange-700 border border-orange-100': project?.priority === '2',
-                        'bg-red-50 text-red-700 border border-red-100': project?.priority === '3'
+                        'bg-gray-100 text-gray-700': project.project_type === 'general' || project.project_type === 'umum',
+                        'bg-blue-50 text-blue-700': project.project_type === 'creation' || project.project_type === 'pembuatan',
+                        'bg-rose-50 text-rose-700': project.project_type === 'development' || project.project_type === 'pengembangan',
+                        'bg-green-50 text-green-700': project.project_type === 'training' || project.project_type === 'pelatihan',
+                        'bg-amber-50 text-amber-700': project.project_type === 'weekly' || project.project_type === 'mingguan',
+                        'bg-purple-50 text-purple-700': project.project_type === 'monthly' || project.project_type === 'bulanan',
+                        'bg-gray-100 text-gray-700': !['general', 'umum', 'creation', 'pembuatan', 'development', 'pengembangan', 'training', 'pelatihan', 'weekly', 'mingguan', 'monthly', 'bulanan'].includes(project.project_type)
                       }"
                     >
-                      <div class="flex items-center">
-                        <Flag class="w-3 h-3 mr-1" />
-                        {{ formatProjectPriority(project?.priority) }}
-                      </div>
+                      {{ project.project_type }}
+                    </span>
+                    <span v-else class="text-sm text-gray-500">N/A</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Project Status -->
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Project Status</h4>
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                  <!-- Status Indicator -->
+                  <div class="flex items-center">
+                    <div 
+                      class="w-2.5 h-2.5 rounded-full mr-2"
+                      :class="{
+                        'bg-amber-500': project?.state === 'in_progress',
+                        'bg-emerald-500': project?.state === 'completed',
+                        'bg-gray-400': project?.state === 'draft',
+                        'bg-rose-500': project?.state === 'planning',
+                        'bg-orange-500': project?.state === 'on_hold',
+                        'bg-rose-500': project?.state === 'cancelled'
+                      }"
+                    ></div>
+                    <span class="text-sm font-medium text-gray-700">{{ formatState(project?.state) }}</span>
+                  </div>
+                  
+                  <!-- Priority Badge -->
+                  <div 
+                    class="px-2.5 py-1 rounded-md text-xs font-medium"
+                    :class="{
+                      'bg-slate-50 text-slate-700 border border-slate-200': project?.priority === '0',
+                      'bg-emerald-50 text-emerald-700 border border-emerald-200': project?.priority === '1',
+                      'bg-amber-50 text-amber-700 border border-amber-200': project?.priority === '2',
+                      'bg-rose-50 text-rose-700 border border-rose-200': project?.priority === '3'
+                    }"
+                  >
+                    <div class="flex items-center">
+                      <Flag class="w-3 h-3 mr-1" />
+                      {{ formatProjectPriority(project?.priority) }} Priority
                     </div>
                   </div>
                 </div>
               </div>
-            </div>          
+            </div>
           </div>
 
-          <!-- Letakkan setelah Project Description Card atau di tempat yang sesuai -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <!-- Header with Gradient Background -->
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <Paperclip class="w-5 h-5 mr-2" />
+          <!-- Project Progress Card -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <BarChart2 class="w-5 h-5 mr-2 text-indigo-500" />
+                Progress Overview
+              </h2>
+            </div>
+            
+            <div class="p-5 space-y-4">
+              <!-- Overall Progress -->
+              <div>
+                <div class="flex justify-between mb-2">
+                  <span class="text-sm text-gray-600">Overall Progress</span>
+                  <span class="text-sm font-medium text-gray-800">{{ project?.progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                  <div
+                    class="h-2 rounded-full bg-rose-500"
+                    :style="{ width: `${project?.progress}%` }"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Completion Stats -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="flex items-center space-x-2 text-gray-600 mb-1.5">
+                    <CheckSquare class="w-4 h-4 text-indigo-500" />
+                    <span class="text-xs font-medium">Tasks Completed</span>
+                  </div>
+                  <div class="text-sm font-medium text-gray-800">
+                    {{ completedTasks }}/{{ totalTasks }}
+                  </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="flex items-center space-x-2 text-gray-600 mb-1.5">
+                    <Clock class="w-4 h-4 text-indigo-500" />
+                    <span class="text-xs font-medium">Time Tracked</span>
+                  </div>
+                  <div class="text-sm font-medium text-gray-800">
+                    {{ project?.actual_hours || 0 }}/{{ project?.planned_hours || 0 }} hours
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Project Files Section - Visible on files tab or desktop -->
+          <div v-if="activeTab === 'files' || !isMobile" class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <Paperclip class="w-5 h-5 mr-2 text-indigo-500" />
                 Project Files
               </h2>
               <button
                 @click="handleFileUpload"
-                class="inline-flex items-center px-3 py-1.5 border border-white rounded-lg text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-purple-600"
+                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
               >
                 <UploadCloud class="w-4 h-4 mr-1.5" />
-                Upload File
+                Upload
               </button>
               <input
                 ref="fileInputRef"
@@ -189,25 +281,24 @@
               />
             </div>
 
-            <!-- Content Section -->
-            <div class="p-4">
+            <div class="p-5">
               <!-- Loading state -->
-              <div v-if="loadingAttachments" class="flex justify-center py-6">
-                <div class="animate-spin rounded-full h-6 w-6 border-2 border-red-600 border-t-transparent"></div>
+              <div v-if="loadingAttachments" class="flex justify-center py-4">
+                <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
               </div>
 
               <!-- Empty state -->
-              <div v-else-if="!projectAttachments.length" class="text-center py-8">
+              <div v-else-if="!projectAttachments.length" class="text-center py-6">
                 <div class="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200">
-                  <UploadCloud class="mx-auto h-12 w-12 text-gray-400" />
-                  <h3 class="mt-2 text-sm font-medium text-gray-900">No files uploaded</h3>
-                  <p class="mt-1 text-sm text-gray-500">Upload files to this project by clicking the button above.</p>
-                  <div class="mt-6">
+                  <UploadCloud class="mx-auto h-10 w-10 text-gray-300" />
+                  <h3 class="mt-2 text-sm font-medium text-gray-700">No files uploaded</h3>
+                  <p class="mt-1 text-sm text-gray-500">Upload files to this project</p>
+                  <div class="mt-4">
                     <button
                       @click="handleFileUpload"
-                      class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
                     >
-                      <UploadCloud class="w-4 h-4 mr-2" />
+                      <UploadCloud class="w-4 h-4 mr-1.5" />
                       Upload File
                     </button>
                   </div>
@@ -215,14 +306,14 @@
               </div>
 
               <!-- Attachment List -->
-              <div v-else class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              <div v-else class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 <div
                   v-for="file in projectAttachments" 
                   :key="file.id"
                   class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
                 >
                   <!-- File icon and details -->
-                  <div class="flex items-center">
+                  <div class="flex items-center overflow-hidden">
                     <!-- Icon based on file type -->
                     <div class="flex-shrink-0 mr-3 p-2 rounded-lg" :class="getFileIconClass(file.mimetype)">
                       <FileText v-if="!file.is_image" class="h-5 w-5" :class="getFileIconColor(file.mimetype)" />
@@ -230,8 +321,8 @@
                     </div>
                     
                     <!-- File details -->
-                    <div>
-                      <div class="text-sm font-medium text-gray-900 truncate max-w-[250px]">{{ file.name }}</div>
+                    <div class="min-w-0">
+                      <div class="text-sm font-medium text-gray-700 truncate max-w-[200px]">{{ file.name }}</div>
                       <div class="text-xs text-gray-500 flex">
                         <span>{{ formatFileSize(file.size) }}</span>
                         <span class="mx-1">•</span>
@@ -241,12 +332,12 @@
                   </div>
                   
                   <!-- Action buttons -->
-                  <div class="flex space-x-2">
+                  <div class="flex shrink-0 space-x-1">
                     <!-- Preview button - show only for files that can be previewed -->
                     <button
                       v-if="canPreviewFile(file)"
                       @click="openFilePreview(file)"
-                      class="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                      class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                       title="Preview"
                     >
                       <Eye class="h-4 w-4" />
@@ -254,7 +345,7 @@
                     
                     <button
                       @click="downloadFile(file)"
-                      class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                      class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                       title="Download"
                     >
                       <Download class="h-4 w-4" />
@@ -262,7 +353,7 @@
                     
                     <button
                       @click="confirmDeleteFile(file)"
-                      class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                      class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                       title="Delete"
                     >
                       <Trash2 class="h-4 w-4" />
@@ -272,249 +363,244 @@
               </div>
             </div>
           </div>
-          
-          <!-- BAU Activities -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <ClipboardList class="w-5 h-5 mr-2" />
-                Aktivitas Harian
+
+          <!-- Daily Activities Section - Visible on activities tab or desktop -->
+          <div v-if="activeTab === 'activities' || !isMobile" class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <ClipboardList class="w-5 h-5 mr-2 text-indigo-500" />
+                Daily Activities
               </h2>
               <button
                 @click="showCreateBAUModal = true"
-                class="inline-flex items-center px-3 py-1.5 border border-white rounded-lg text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-purple-600"
+                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
               >
-                <Plus class="w-3 h-3 mr-1" />
-                Catat Aktivitas
+                <Plus class="w-4 h-4 mr-1.5" />
+                Add Activity
               </button>
             </div>
             
-            <div class="space-y-3 p-4 max-h-64 overflow-y-auto">
-              <div
-                v-for="activity in project?.bau_activities"
-                :key="activity.id"
-                class="bg-gray-50 rounded-lg p-3"
-              >
-                <div class="flex justify-between">
-                  <div class="font-medium text-sm">{{ activity.name }}</div>
-                  <div class="text-xs font-medium rounded-full px-2 py-0.5"
-                    :class="{
-                      'bg-green-100 text-green-800': activity.state === 'done',
-                      'bg-gray-100 text-gray-800': activity.state === 'planned',
-                      'bg-red-100 text-red-800': activity.state === 'not_done'
-                    }"
-                  >
-                    {{ formatBAUState(activity.state) }}
+            <div class="p-5">
+              <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <div
+                  v-for="activity in project?.bau_activities"
+                  :key="activity.id"
+                  class="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                >
+                  <div class="flex justify-between">
+                    <div class="font-medium text-sm text-gray-700">{{ activity.name }}</div>
+                    <div 
+                      class="text-xs font-medium px-2 py-0.5 rounded-full"
+                      :class="{
+                        'bg-emerald-50 text-emerald-700 border border-emerald-100': activity.state === 'done',
+                        'bg-gray-50 text-gray-700 border border-gray-100': activity.state === 'planned',
+                        'bg-rose-50 text-rose-700 border border-rose-100': activity.state === 'not_done'
+                      }"
+                    >
+                      {{ formatBAUState(activity.state) }}
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1 flex justify-between">
+                    <span>{{ formatDate(activity.date) }}</span>
+                    <span>{{ activity.hours_spent }} hours</span>
                   </div>
                 </div>
-                <div class="text-xs text-gray-500 mt-1 flex justify-between">
-                  <span>{{ formatDate(activity.date) }}</span>
-                  <span>{{ activity.hours_spent }} hours</span>
+                
+                <div v-if="!project?.bau_activities || project.bau_activities.length === 0" class="text-center py-6">
+                  <ClipboardList class="mx-auto h-8 w-8 text-gray-300" />
+                  <p class="mt-1 text-sm text-gray-500">No daily activities recorded</p>
+                  <button
+                    @click="showCreateBAUModal = true"
+                    class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100transition"
+                  >
+                    <Plus class="w-3 h-3 mr-1.5" />
+                    Add Activity
+                  </button>
                 </div>
-              </div>
-              
-              <div v-if="!project?.bau_activities || project.bau_activities.length === 0" class="text-center py-4">
-                <p class="text-sm text-gray-500">Tidak ada aktivitas harian tercatat</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Center Column -->
-        <div class="lg:col-span-1 space-y-6">
-          <!-- Project Progress -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <BarChart2 class="w-5 h-5 mr-2" />
-                Progress Overview
-              </h2>
-            </div>
-            <div class="space-y-4 p-4">
-              <div>
-                <div class="flex justify-between mb-2">
-                  <span class="text-gray-600">Overall Progress</span>
-                  <span class="font-medium">{{ project?.progress }}%</span>
-                </div>
-                <div class="w-full bg-gray-100 rounded-full h-2.5">
-                  <div
-                    class="h-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
-                    :style="{ width: `${project?.progress}%` }"
-                  ></div>
-                </div>
-              </div>
-
-              <!-- Task Completion Stats -->
-              <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <div class="flex items-center space-x-2 text-gray-600 mb-2">
-                    <CheckSquare class="w-4 h-4" />
-                    <span>Tasks Completed</span>
-                  </div>
-                  <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Progress</span>
-                    <span class="font-medium">
-                      {{ completedTasks }}/{{ totalTasks }}
-                    </span>
-                  </div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-4">
-                  <div class="flex items-center space-x-2 text-gray-600 mb-2">
-                    <Clock class="w-4 h-4" />
-                    <span>Time Tracked</span>
-                  </div>
-                  <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Hours</span>
-                    <span class="font-medium">
-                      {{ project?.actual_hours || 0 }}/{{ project?.planned_hours || 0 }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tasks Section -->
-          <!-- Tasks Section with Modern Design -->
-          <div class="bg-white rounded-xl shadow-sm h-[650px] overflow-hidden">
-            <!-- Header with Action Button -->
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <CheckSquare class="w-5 h-5 mr-2" />
-                Tasks
+        <!-- Center Column (Tasks) - Only visible in desktop or when tasks tab is active -->
+        <!-- Center Column (Tasks) Content -->
+        <div v-if="activeTab === 'tasks' || !isMobile" class="space-y-6">
+          <!-- Tasks Card -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <CheckSquare class="w-5 h-5 mr-2 text-indigo-500" />
+                Project Tasks
               </h2>
               <button
                 @click="showCreateTaskModal = true"
-                class="inline-flex items-center px-3 py-1.5 border border-white rounded-lg text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-purple-600"
+                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
               >
                 <Plus class="w-4 h-4 mr-1.5" />
                 Add Task
               </button>
             </div>
-            <div class="p-4">
-              <div class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                <!-- Task Card - ubah warna hover ke indigo/purple -->
+            
+            <div class="p-5">
+              <!-- Task filters (optional enhancement) -->
+              <div class="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                <button 
+                  @click="taskFilter = 'all'" 
+                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
+                  :class="taskFilter === 'all' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
+                >
+                  All Tasks
+                </button>
+                <button 
+                  @click="taskFilter = 'in_progress'" 
+                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
+                  :class="taskFilter === 'in_progress' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
+                >
+                  In Progress
+                </button>
+                <button 
+                  @click="taskFilter = 'planned'" 
+                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
+                  :class="taskFilter === 'planned' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
+                >
+                  Planned
+                </button>
+                <button 
+                  @click="taskFilter = 'done'" 
+                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
+                  :class="taskFilter === 'done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
+                >
+                  Completed
+                </button>
+              </div>
+              
+              <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                <!-- Task Cards -->
                 <div
-                  v-for="task in project?.tasks"
+                  v-for="task in filteredTasks"
                   :key="task.id"
-                  class="border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer group"
+                  class="border border-gray-200 rounded-lg hover:border-rose-300 hover:shadow-sm transition-all duration-200 overflow-hidden cursor-pointer group"
                   @click="showTaskDetail(task)"
                 >
-                  <!-- Task Header with Status and Priority -->
-                  <div class="flex items-start justify-between px-4 pt-4 pb-2">
-                    <div class="flex-1">
-                      <h3 class="font-medium text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">{{ task.name }}</h3>
-                      <div class="mt-1 flex items-center flex-wrap gap-2 text-sm text-gray-500">
-                        <span v-if="task.type?.name" class="flex items-center">
-                          <Bookmark class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                          {{ task.type?.name }}
-                        </span>
-                        <span class="flex items-center">
-                          <Calendar class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                          {{ formatDate(task.dates?.planned_end) }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                      <!-- Priority Badge -->
-                      <div
-                        class="flex items-center px-2 py-1 rounded-md text-xs font-medium"
-                        :class="{
-                          'bg-blue-50 text-blue-600 border border-blue-200': task.priority === '0',
-                          'bg-green-50 text-green-600 border border-green-200': task.priority === '1',
-                          'bg-orange-50 text-orange-600 border border-orange-200': task.priority === '2',
-                          'bg-red-50 text-red-600 border border-red-200': task.priority === '3'
-                        }"
-                      >
-                        <span v-if="task.priority === '0'" class="mr-1.5"><Flag class="w-3 h-3" /></span>
-                        <span v-if="task.priority === '1'" class="mr-1.5"><Flag class="w-3 h-3" /></span>
-                        <span v-if="task.priority === '2'" class="mr-1.5"><Flag class="w-3 h-3" /></span>
-                        <span v-if="task.priority === '3'" class="mr-1.5"><Flag class="w-3 h-3" /></span>
-                        {{ formatPriority(task.priority) }}
+                  <!-- Task Header -->
+                  <div class="px-4 pt-4 pb-2">
+                    <div class="flex items-start justify-between gap-2">
+                      <!-- Task Name and Basic Info -->
+                      <div class="min-w-0">
+                        <h3 class="font-medium text-gray-800 truncate group-hover:text-rose-600 transition">
+                          {{ task.name }}
+                        </h3>
+                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                          <span v-if="task.type?.name" class="flex items-center">
+                            <Bookmark class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                            {{ task.type?.name }}
+                          </span>
+                          <span class="flex items-center">
+                            <Calendar class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                            {{ formatDate(task.dates?.planned_end) }}
+                          </span>
+                        </div>
                       </div>
                       
                       <!-- Status Badge -->
                       <div
-                        class="px-2.5 py-1 text-xs font-medium rounded-md"
+                        class="shrink-0 px-2 py-1 text-xs font-medium rounded-md border"
                         :class="{
-                          'bg-yellow-50 text-yellow-700 border border-yellow-200': task.state === 'in_progress',
-                          'bg-green-50 text-green-700 border border-green-200': task.state === 'done',
-                          'bg-gray-50 text-gray-700 border border-gray-200': task.state === 'draft',
-                          'bg-purple-50 text-purple-700 border border-purple-200': task.state === 'planned',
-                          'bg-blue-50 text-blue-700 border border-blue-200': task.state === 'review'
+                          'bg-amber-50 text-amber-700 border-amber-200': task.state === 'in_progress',
+                          'bg-emerald-50 text-emerald-700 border-emerald-200': task.state === 'done',
+                          'bg-gray-50 text-gray-600 border-gray-200': task.state === 'draft',
+                          'bg-rose-50 text-rose-700 border-rose-200': task.state === 'planned',
+                          'bg-blue-50 text-blue-700 border-blue-200': task.state === 'review'
                         }"
                       >
                         {{ formatState(task.state) }}
                       </div>
                     </div>
                   </div>
-
-                  <!-- Divider -->
-                  <div class="w-full border-t border-gray-100 my-2"></div>
-
-                  <!-- Task Footer with Progress and Assigned -->
-                  <div class="px-4 pb-4">
-                    <!-- Assigned To -->
-                    <div class="mb-3">
-                      <div class="flex items-center mb-1">
-                        <Users class="w-3.5 h-3.5 text-gray-400 mr-1.5" />
-                        <span class="text-xs text-gray-500">Assigned to</span>
+                  <!-- Continuing the Tasks Section from previous part -->
+                  
+                  <!-- Task Content -->
+                  <div class="px-4 py-3 border-t border-gray-100">
+                    <!-- Priority Badge and Assignees -->
+                    <div class="flex justify-between">
+                      <!-- Priority Badge -->
+                      <div
+                        class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border"
+                        :class="{
+                          'bg-blue-50 text-blue-700 border-blue-200': task.priority === '0',
+                          'bg-emerald-50 text-emerald-700 border-emerald-200': task.priority === '1',
+                          'bg-amber-50 text-amber-700 border-amber-200': task.priority === '2',
+                          'bg-rose-50 text-rose-700 border-rose-200': task.priority === '3'
+                        }"
+                      >
+                        <Flag class="w-3 h-3 mr-1" />
+                        {{ formatPriority(task.priority) }}
                       </div>
-                      <div class="flex flex-wrap gap-1.5">
-                        <div 
-                          v-for="person in task.assigned_to" 
-                          :key="person.id"
-                          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200"
-                        >
-                          {{ person.name }}
-                        </div>
-                        <div v-if="!task.assigned_to || task.assigned_to.length === 0" class="text-xs text-gray-500 italic">
+                      
+                      <!-- Assigned Users -->
+                      <div class="flex -space-x-2 overflow-hidden">
+                        <template v-if="task.assigned_to && task.assigned_to.length">
+                          <div 
+                            v-for="(person, index) in task.assigned_to.slice(0, 3)" 
+                            :key="person.id"
+                            class="inline-flex h-6 w-6 rounded-full ring-2 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
+                            :title="person.name"
+                          >
+                            {{ getInitials(person.name) }}
+                          </div>
+                          <div 
+                            v-if="task.assigned_to.length > 3" 
+                            class="inline-flex h-6 w-6 rounded-full ring-2 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
+                            :title="`${task.assigned_to.length - 3} more`"
+                          >
+                            +{{ task.assigned_to.length - 3 }}
+                          </div>
+                        </template>
+                        <div v-else class="text-xs text-gray-500 py-1">
                           Not assigned
                         </div>
                       </div>
                     </div>
-
+                    
                     <!-- Task Progress -->
-                    <div>
-                      <div class="flex justify-between text-xs mb-1.5">
-                        <span class="text-gray-500 flex items-center">
-                          <Activity class="w-3.5 h-3.5 mr-1.5" />
-                          Progress
-                        </span>
-                        <span class="font-medium">{{ task.progress }}%</span>
+                    <div class="mt-3">
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-500">Progress</span>
+                        <span class="font-medium text-gray-700">{{ task.progress }}%</span>
                       </div>
-                      <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                      <div class="w-full bg-gray-100 rounded-full h-1.5">
                         <div
                           class="h-1.5 rounded-full"
                           :class="{
-                            'bg-purple-500': task.progress < 30,
-                            'bg-indigo-500': task.progress >= 30 && task.progress < 70,
-                            'bg-blue-500': task.progress >= 70
+                            'bg-rose-500': task.progress < 30,
+                            'bg-amber-500': task.progress >= 30 && task.progress < 70,
+                            'bg-emerald-500': task.progress >= 70
                           }"
                           :style="{ width: `${task.progress}%` }"
                         ></div>
                       </div>
                     </div>
                     
-                     <!-- Hover Indicator -->
-                    <div class="mt-2 text-xs text-center text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <!-- View Details Indicator -->
+                    <div class="mt-2 text-xs text-center text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">
                       Click to view details
                     </div>
                   </div>
                 </div>
                 
-                <!-- Empty State -->
-                <!-- Empty State - ubah warna tombol -->
-                <div v-if="!project?.tasks || project.tasks.length === 0" class="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                <!-- Empty State for Tasks -->
+                <div v-if="!filteredTasks.length" class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                   <CheckSquare class="mx-auto h-10 w-10 text-gray-300" />
-                  <h3 class="mt-2 text-sm font-medium text-gray-900">No tasks</h3>
-                  <p class="mt-1 text-sm text-gray-500">Get started by creating your first task</p>
-                  <div class="mt-6">
+                  <h3 class="mt-2 text-sm font-medium text-gray-700">No tasks found</h3>
+                  <p class="mt-1 text-sm text-gray-500">
+                    {{ project?.tasks && project.tasks.length ? 'No tasks match the current filter' : 'Get started by creating your first task' }}
+                  </p>
+                  <div class="mt-4">
                     <button
                       @click="showCreateTaskModal = true"
-                      class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
                     >
-                      <Plus class="w-4 h-4 mr-2" />
+                      <Plus class="w-4 h-4 mr-1.5" />
                       Add Task
                     </button>
                   </div>
@@ -522,33 +608,118 @@
               </div>
             </div>
           </div>
+          
+          <!-- Meetings Card -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <CalendarClock class="w-5 h-5 mr-2 text-indigo-500" />
+                Meetings
+              </h2>
+              <button
+                @click="showCreateMeetingModal = true"
+                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
+              >
+                <Plus class="w-4 h-4 mr-1.5" />
+                Schedule
+              </button>
+            </div>
+
+            <div class="p-5">
+              <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <div
+                  v-for="meeting in project?.meetings"
+                  :key="meeting.id"
+                  class="border border-gray-200 rounded-lg hover:border-rose-300 hover:shadow-sm p-3 transition-all duration-200"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <!-- Meeting Title and Details -->
+                    <div class="min-w-0">
+                      <h3 class="font-medium text-gray-800">{{ meeting.name }}</h3>
+                      <div class="mt-1 text-xs text-gray-500">
+                        {{ formatDateTime(meeting.dates?.start) }} - {{ formatTime(meeting.dates?.end) }}
+                      </div>
+                      <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                        <div class="flex items-center">
+                          <User class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                          <span>{{ meeting.organizer?.name || 'No organizer' }}</span>
+                        </div>
+                        
+                        <div v-if="meeting.location" class="flex items-center">
+                          <MapPin class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                          <span>{{ meeting.location }}</span>
+                        </div>
+                        
+                        <div v-if="meeting.virtual_location" class="flex items-center">
+                          <Video class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                          <span class="truncate max-w-[150px]">{{ meeting.virtual_location }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Meeting Status -->
+                    <div
+                      class="shrink-0 px-2 py-1 text-xs font-medium rounded-full border"
+                      :class="{
+                        'bg-amber-50 text-amber-700 border-amber-200': meeting.state === 'in_progress',
+                        'bg-emerald-50 text-emerald-700 border-emerald-200': meeting.state === 'done',
+                        'bg-gray-50 text-gray-600 border-gray-200': meeting.state === 'planned',
+                        'bg-rose-50 text-rose-700 border-rose-200': meeting.state === 'cancelled'
+                      }"
+                    >
+                      {{ formatState(meeting.state) }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Empty State for Meetings -->
+                <div v-if="!project?.meetings || project.meetings.length === 0" class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                  <CalendarIcon class="mx-auto h-8 w-8 text-gray-300" />
+                  <p class="mt-1 text-sm text-gray-500">No meetings scheduled</p>
+                  <button
+                    @click="showCreateMeetingModal = true"
+                    class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100transition"
+                  >
+                    <Plus class="w-3 h-3 mr-1.5" />
+                    Schedule Meeting
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="lg:col-span-1 space-y-6">
-          <!-- Project Group Chat -->
-          <!-- Modifikasi untuk Team Chat dengan Attachment dan Emoji -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden h-[600px] flex flex-col">
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <MessageSquare class="w-5 h-5 mr-2" />
+        <!-- Right Column (Communication) - Only visible in desktop or when communication tab is active -->
+        <!-- Right Column (Communication) Content -->
+        <div v-if="activeTab === 'communication' || !isMobile" class="space-y-6">
+          <!-- Team Chat Card -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-[600px]">
+            <div class="border-b border-gray-100 px-5 py-4">
+              <h2 class="text-lg font-medium text-gray-800 flex items-center">
+                <MessageSquare class="w-5 h-5 mr-2 text-indigo-500" />
                 Team Chat
               </h2>
             </div>
+            
             <div class="flex-1 flex flex-col overflow-hidden">
-              <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div v-if="project?.group_id" class="space-y-4">
+                  <!-- Chat Messages -->
                   <div v-for="message in groupMessages" :key="message.id" class="flex gap-3">
-                    <div class="h-8 w-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center">
-                      <span class="text-sm font-medium text-gray-600">
+                    <!-- Avatar -->
+                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center">
+                      <span class="text-sm font-medium text-rose-600">
                         {{ getInitials(message.author?.name) }}
                       </span>
                     </div>
-                    <div class="flex-1">
-                      <div class="flex items-baseline">
-                        <span class="text-sm font-medium text-gray-900">{{ message.author?.name }}</span>
-                        <span class="ml-2 text-xs text-gray-500">{{ formatDateTime(message.date) }}</span>
+                    
+                    <!-- Message Content -->
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline flex-wrap gap-x-2">
+                        <span class="text-sm font-medium text-gray-800">{{ message.author?.name }}</span>
+                        <span class="text-xs text-gray-500">{{ formatDateTime(message.date) }}</span>
                       </div>
-                      <div class="mt-1 text-sm text-gray-700" v-html="formatMessageContent(message.content)"></div>
+                      <div class="mt-1 text-sm text-gray-700 break-words" v-html="formatMessageContent(message.content)"></div>
                       
                       <!-- Message Attachments -->
                       <div v-if="message.attachments && message.attachments.length" class="mt-2 space-y-2">
@@ -568,7 +739,7 @@
                           
                           <!-- File details -->
                           <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-900 truncate">{{ attachment.name }}</p>
+                            <p class="text-xs font-medium text-gray-700 truncate">{{ attachment.name }}</p>
                             <p class="text-xs text-gray-500">{{ formatFileSize(attachment.size) }}</p>
                           </div>
                           
@@ -577,14 +748,14 @@
                             <button
                               v-if="canPreviewFile(attachment)"
                               @click.stop="openFilePreview(attachment)"
-                              class="p-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                              class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                               title="Preview"
                             >
                               <Eye class="h-3.5 w-3.5" />
                             </button>
                             <button
                               @click.stop="downloadFile(attachment)"
-                              class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                              class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                               title="Download"
                             >
                               <Download class="h-3.5 w-3.5" />
@@ -595,25 +766,31 @@
                     </div>
                   </div>
                   
+                  <!-- Loading Messages Indicator -->
                   <div v-if="loadingMessages" class="flex justify-center my-4">
                     <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
                   </div>
                   
-                  <div v-if="groupMessages.length === 0 && !loadingMessages" class="text-center py-4">
-                    <MessageSquare class="mx-auto h-8 w-8 text-gray-300" />
-                    <p class="mt-1 text-sm text-gray-500">No messages yet</p>
+                  <!-- Empty State for Messages -->
+                  <div v-if="groupMessages.length === 0 && !loadingMessages" class="text-center py-12">
+                    <MessageSquare class="mx-auto h-10 w-10 text-gray-300" />
+                    <p class="mt-2 text-sm text-gray-500">No messages yet</p>
+                    <p class="text-xs text-gray-400">Send a message to start the conversation</p>
                   </div>
                 </div>
-                <div v-else class="text-center py-4">
-                  <MessageSquare class="mx-auto h-8 w-8 text-gray-300" />
-                  <p class="mt-1 text-sm text-gray-500">No group created for this project</p>
+                
+                <!-- No Group Created State -->
+                <div v-else class="text-center py-16">
+                  <MessageSquare class="mx-auto h-12 w-12 text-gray-300" />
+                  <p class="mt-2 text-sm text-gray-700">No chat group available</p>
+                  <p class="mt-1 text-xs text-gray-500">A group needs to be created for this project first</p>
                 </div>
               </div>
               
-              <!-- Message Input with Attachment and Emoji -->
+              <!-- Message Input -->
               <div v-if="project?.group_id" class="p-4 border-t bg-white">
                 <!-- File Preview Area (when file is selected) -->
-                <div v-if="chatAttachment" class="mb-2 p-2 bg-indigo-50 rounded-lg flex items-center justify-between">
+                <div v-if="chatAttachment" class="mb-2 p-2 bg-rose-50 rounded-lg flex items-center justify-between">
                   <div class="flex items-center">
                     <div 
                       class="flex-shrink-0 mr-2 p-1.5 rounded-lg" 
@@ -622,11 +799,11 @@
                       <FileText v-if="!chatAttachment.isImage" class="h-3.5 w-3.5" :class="getFileIconColor(chatAttachment.type)" />
                       <Image v-else class="h-3.5 w-3.5 text-blue-500" />
                     </div>
-                    <div class="text-xs font-medium text-gray-900 truncate max-w-xs">{{ chatAttachment.name }}</div>
+                    <div class="text-xs font-medium text-gray-700 truncate max-w-xs">{{ chatAttachment.name }}</div>
                   </div>
                   <button 
                     @click="removeChatAttachment" 
-                    class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                    class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                   >
                     <X class="h-3.5 w-3.5" />
                   </button>
@@ -634,7 +811,6 @@
                 
                 <div class="flex flex-col">
                   <!-- Main Input Area -->
-                  <!-- Perbaiki positioning emoji picker dengan absolute positioning -->
                   <div class="flex items-end relative">
                     <div class="flex-grow">
                       <TeamMentionInput 
@@ -643,6 +819,7 @@
                         :members="allProjectMembers"
                         placeholder="Type a message... (use @ to mention)"
                         @submit="sendMessage"
+                        class="w-full"
                       />
                     </div>
                     
@@ -651,7 +828,7 @@
                       <!-- File Upload Button -->
                       <button 
                         @click="handleChatFileUpload" 
-                        class="mr-2 p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
+                        class="mr-1 p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition"
                         title="Attach file"
                       >
                         <Paperclip class="h-5 w-5" />
@@ -665,17 +842,17 @@
                         class="hidden"
                       />
                       
-                      <!-- Emoji Button - Tambahkan position relative -->
+                      <!-- Emoji Button -->
                       <div class="relative">
                         <button 
                           @click.stop="toggleEmojiPicker" 
-                          class="emoji-button mr-2 p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
+                          class="emoji-button mr-1 p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition"
                           title="Add emoji"
                         >
                           <Smile class="h-5 w-5" />
                         </button>
                         
-                        <!-- Emoji Picker - Ganti dengan absolute positioning -->
+                        <!-- Emoji Picker -->
                         <div 
                           v-if="showEmojiPicker" 
                           class="emoji-picker absolute bottom-full right-0 mb-2 z-50 bg-white shadow-lg rounded-lg border border-gray-200"
@@ -688,307 +865,244 @@
                       <!-- Send Button -->
                       <button 
                         @click="sendMessage" 
-                        class="inline-flex items-center justify-center p-2 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        class="p-2 rounded-full text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
                         :disabled="!newMessage.trim() && !chatAttachment"
-                        :class="{ 'opacity-50 cursor-not-allowed': !newMessage.trim() && !chatAttachment }"
+                        :class="{ 'opacity-60 cursor-not-allowed': !newMessage.trim() && !chatAttachment }"
                       >
                         <Send class="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                  
-                  <!-- Emoji Picker -->
-                  <!-- <div v-if="showEmojiPicker" class="absolute bottom-16 right-16 bg-white shadow-lg rounded-lg border border-gray-200 z-10">
-                    <EmojiPicker @select="addEmoji" />
-                  </div> -->
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Meetings Section -->
-          <div class="bg-white rounded-xl shadow-sm overflow-hidden flex flex-col">
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-white flex items-center">
-                <CalendarClock class="w-5 h-5 mr-2" />
-                Meetings
-              </h2>
-              <button
-                @click="showCreateMeetingModal = true"
-                class="inline-flex items-center px-3 py-1.5 border border-white rounded-lg text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-purple-600"
-              >
-                <Plus class="w-4 h-4 mr-1.5" />
-                Schedule Meeting
-              </button>
-            </div>
-
-            <div class="space-y-4 p-4 max-h-[300px] overflow-y-auto">
-              <div
-                v-for="meeting in project?.meetings"
-                :key="meeting.id"
-                class="border rounded-lg p-4 hover:shadow-sm transition-shadow"
-              >
-                <div class="flex items-start justify-between">
-                  <div>
-                    <h3 class="font-medium text-gray-900">{{ meeting.name }}</h3>
-                    <div class="mt-1 flex items-center space-x-4 text-sm text-gray-500">
-                      <span>
-                        {{ formatDateTime(meeting.dates?.start) }} - {{ formatTime(meeting.dates?.end) }}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    class="px-2.5 py-1 text-xs font-medium rounded-full"
-                    :class="{
-                      'bg-yellow-100 text-yellow-800': meeting.state === 'in_progress',
-                      'bg-green-100 text-green-800': meeting.state === 'done',
-                      'bg-gray-100 text-gray-800': meeting.state === 'planned',
-                      'bg-red-100 text-red-800': meeting.state === 'cancelled'
-                    }"
-                  >
-                    {{ formatState(meeting.state) }}
-                  </div>
-                </div>
-                
-                <div class="mt-2 text-sm text-gray-600">
-                  <div class="flex items-center space-x-2">
-                    <User class="w-4 h-4" />
-                    <span>Organizer: {{ meeting.organizer?.name }}</span>
-                  </div>
-                  <div v-if="meeting.location" class="flex items-center space-x-2 mt-1">
-                    <MapPin class="w-4 h-4" />
-                    <span>{{ meeting.location }}</span>
-                  </div>
-                  <div v-if="meeting.virtual_location" class="flex items-center space-x-2 mt-1">
-                    <Video class="w-4 h-4" />
-                    <span>{{ meeting.virtual_location }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="!project?.meetings || project.meetings.length === 0" class="text-center py-6">
-                <CalendarIcon class="mx-auto h-8 w-8 text-gray-300" />
-                <p class="mt-1 text-sm text-gray-500">No meetings scheduled yet</p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
 
-    <Teleport to="body">
-
-      <!-- Popup detail -->
-      <!-- Task Detail Modal with Modern Design -->
-      <div 
-        v-if="showTaskDetailModal && selectedTask" 
-        class="fixed inset-0 z-50 overflow-y-auto"
-        aria-labelledby="modal-title" 
-        role="dialog" 
-        aria-modal="true"
+      <!-- Task Detail Modal -->
+      <Teleport to="body">
+        <div 
+          v-if="showTaskDetailModal && selectedTask" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
         >
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <!-- Background overlay -->
-          <div 
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
-            aria-hidden="true"
-            @click="showTaskDetailModal = false"
-          ></div>
+          <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="showTaskDetailModal = false"
+            ></div>
 
-          <!-- Modal panel -->
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full">
-            <!-- Header with Gradient -->
-            <div class="relative bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xl font-medium text-white">Task Details</h3>
-                <button @click="showTaskDetailModal = false" class="text-white hover:text-gray-200 focus:outline-none">
-                  <span class="sr-only">Close</span>
-                  <X class="h-5 w-5" />
-                </button>
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full">
+              <!-- Header -->
+              <div class="border-b border-gray-100 px-6 py-4 bg-gray-50">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-medium text-gray-800">Task Details</h3>
+                  <button 
+                    @click="showTaskDetailModal = false" 
+                    class="text-gray-500 hover:text-gray-700 focus:outline-none transition"
+                  >
+                    <X class="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            <!-- Task Title Section -->
-            <div class="px-6 pt-5 pb-4 border-b border-gray-100">
-              <h2 class="text-xl font-semibold text-gray-900">{{ selectedTask.name }}</h2>
               
-              <!-- Status and Priority Badges -->
-              <div class="flex flex-wrap gap-2 mt-3">
-                <!-- Status Badge -->
-                <div 
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                  :class="{
-                    'bg-yellow-100 text-yellow-800': selectedTask.state === 'in_progress',
-                    'bg-green-100 text-green-800': selectedTask.state === 'done',
-                    'bg-gray-100 text-gray-800': selectedTask.state === 'draft',
-                    'bg-purple-100 text-purple-800': selectedTask.state === 'planned',
-                    'bg-blue-100 text-blue-800': selectedTask.state === 'review'
-                  }"
-                >
-                  <div class="w-2 h-2 rounded-full mr-2"
+              <!-- Task Title Section -->
+              <div class="px-6 pt-5 pb-4 border-b border-gray-100">
+                <h2 class="text-xl font-semibold text-gray-800">{{ selectedTask.name }}</h2>
+                
+                <!-- Status and Priority Badges -->
+                <div class="flex flex-wrap gap-2 mt-3">
+                  <!-- Status Badge -->
+                  <div 
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                     :class="{
-                      'bg-yellow-500': selectedTask.state === 'in_progress',
-                      'bg-green-500': selectedTask.state === 'done',
-                      'bg-gray-500': selectedTask.state === 'draft',
-                      'bg-purple-500': selectedTask.state === 'planned',
-                      'bg-blue-500': selectedTask.state === 'review'
+                      'bg-amber-50 text-amber-700': selectedTask.state === 'in_progress',
+                      'bg-emerald-50 text-emerald-700': selectedTask.state === 'done',
+                      'bg-gray-50 text-gray-600': selectedTask.state === 'draft',
+                      'bg-rose-50 text-rose-700': selectedTask.state === 'planned',
+                      'bg-blue-50 text-blue-700': selectedTask.state === 'review'
                     }"
-                  ></div>
-                  {{ formatState(selectedTask.state) }}
-                </div>
-                
-                <!-- Priority Badge -->
-                <div 
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                  :class="{
-                    'bg-blue-100 text-blue-800': selectedTask.priority === '0',
-                    'bg-green-100 text-green-800': selectedTask.priority === '1',
-                    'bg-orange-100 text-orange-800': selectedTask.priority === '2',
-                    'bg-red-100 text-red-800': selectedTask.priority === '3'
-                  }"
-                >
-                  <Flag class="w-3.5 h-3.5 mr-1.5" />
-                  {{ formatPriority(selectedTask.priority) }} Priority
-                </div>
-                
-                <!-- Task Type Badge (if available) -->
-                <div v-if="selectedTask.type?.name" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 text-sm font-medium">
-                  <Bookmark class="w-3.5 h-3.5 mr-1.5" />
-                  {{ selectedTask.type.name }}
+                  >
+                    <div class="w-2 h-2 rounded-full mr-2"
+                      :class="{
+                        'bg-amber-500': selectedTask.state === 'in_progress',
+                        'bg-emerald-500': selectedTask.state === 'done',
+                        'bg-gray-400': selectedTask.state === 'draft',
+                        'bg-rose-500': selectedTask.state === 'planned',
+                        'bg-blue-500': selectedTask.state === 'review'
+                      }"
+                    ></div>
+                    {{ formatState(selectedTask.state) }}
+                  </div>
+                  
+                  <!-- Priority Badge -->
+                  <div 
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    :class="{
+                      'bg-blue-50 text-blue-700': selectedTask.priority === '0',
+                      'bg-emerald-50 text-emerald-700': selectedTask.priority === '1',
+                      'bg-amber-50 text-amber-700': selectedTask.priority === '2',
+                      'bg-rose-50 text-rose-700': selectedTask.priority === '3'
+                    }"
+                  >
+                    <Flag class="w-3.5 h-3.5 mr-1.5" />
+                    {{ formatPriority(selectedTask.priority) }} Priority
+                  </div>
+                  
+                  <!-- Task Type Badge (if available) -->
+                  <div v-if="selectedTask.type?.name" class="inline-flex items-center px-3 py-1 rounded-full bg-gray-50 text-gray-600 text-sm font-medium">
+                    <Bookmark class="w-3.5 h-3.5 mr-1.5" />
+                    {{ selectedTask.type.name }}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <!-- Task Details Content - Two Column Layout -->
-            <div class="px-6 py-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Left Column: Task Information -->
-                <div class="space-y-5">
-
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                    <div class="flex items-center justify-between mb-3">
-                      <h4 class="text-sm font-medium text-gray-700 flex items-center">
-                        <Paperclip class="w-4 h-4 mr-1.5 text-red-500" />
-                        Attachments
+              
+              <!-- Task Details Content - Two Column Layout -->
+              <div class="px-6 py-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <!-- Left Column: Task Information -->
+                  <div class="space-y-5">
+                    <!-- Description -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-2 flex items-center">
+                        <AlignLeft class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Description
                       </h4>
-                      <button
-                        @click="showTaskAttachmentUpload = true"
-                        class="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-gradient-to-r from-purple-500 to bg-indigo-600 focus:outline-none"
-                      >
-                        <UploadCloud class="w-3 h-3 mr-1" />
-                        Upload
-                      </button>
+                      <div class="prose prose-sm max-w-none text-gray-600" v-html="selectedTask.description || 'No description provided'"></div>
                     </div>
                     
-                    <!-- Loading state -->
-                    <div v-if="loadingTaskAttachments" class="flex justify-center py-4">
-                      <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
-                    </div>
-                    
-                    <!-- Empty state -->
-                    <div v-else-if="!taskAttachments.length" class="text-center py-2">
-                      <p class="text-xs text-gray-500 italic">No files attached</p>
-                    </div>
-                    
-                    <!-- Attachment List -->
-                    <div v-else class="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
-                      <div
-                        v-for="file in taskAttachments" 
-                        :key="file.id"
-                        class="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
-                      >
-                        <!-- File icon and details -->
-                        <div class="flex items-center">
-                          <!-- Icon based on file type -->
-                          <div class="flex-shrink-0 mr-2 p-1.5 rounded-lg" :class="getFileIconClass(file.mimetype)">
-                            <FileText v-if="!file.is_image" class="h-3.5 w-3.5" :class="getFileIconColor(file.mimetype)" />
-                            <Image v-else class="h-3.5 w-3.5 text-blue-500" />
-                          </div>
-                          
-                          <!-- File details -->
-                          <div>
-                            <div class="text-xs font-medium text-gray-900 truncate max-w-[180px]">{{ file.name }}</div>
-                            <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
-                          </div>
-                        </div>
-                        
-                        <!-- Action buttons -->
-                        <div class="flex space-x-1">
-                          <!-- Preview button -->
-                          <button
-                            v-if="canPreviewFile(file)"
-                            @click="openFilePreview(file)"
-                            class="p-1 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
-                            title="Preview"
-                          >
-                            <Eye class="h-3.5 w-3.5" />
-                          </button>
-                          
-                          <button
-                            @click="downloadFile(file)"
-                            class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                            title="Download"
-                          >
-                            <Download class="h-3.5 w-3.5" />
-                          </button>
-                          
-                          <button
-                            @click="confirmDeleteTaskFile(file)"
-                            class="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                            title="Delete"
-                          >
-                            <Trash2 class="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Timeline -->
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                      <Calendar class="w-4 h-4 mr-1.5 text-red-500" />
-                      Timeline
-                    </h4>
-                    <div class="grid grid-cols-2 gap-4">
-                      <div>
-                        <div class="text-xs text-gray-500 mb-1">Start Date</div>
-                        <div class="text-sm font-medium">
-                          {{ formatDateTime(selectedTask.dates?.planned_start) || 'Not set' }}
-                        </div>
-                      </div>
-                      <div>
-                        <div class="text-xs text-gray-500 mb-1">Due Date</div>
-                        <div 
-                          class="text-sm font-medium"
-                          :class="{'text-red-600': isOverdue(selectedTask.dates?.planned_end)}"
+                    <!-- Attachments -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-medium text-gray-600 flex items-center">
+                          <Paperclip class="w-4 h-4 mr-1.5 text-indigo-500" />
+                          Attachments
+                        </h4>
+                        <button
+                          @click="showTaskAttachmentUpload = true"
+                          class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-md transition"
                         >
+                          <UploadCloud class="w-3 h-3 mr-1" />
+                          Upload
+                        </button>
+                      </div>
+                      
+                      <!-- Loading state -->
+                      <div v-if="loadingTaskAttachments" class="flex justify-center py-3">
+                        <div class="animate-spin rounded-full h-4 w-4 border-2 border-indigo-600 border-t-transparent"></div>
+                      </div>
+                      
+                      <!-- Empty state -->
+                      <div v-else-if="!taskAttachments.length" class="text-center py-2">
+                        <p class="text-xs text-gray-500 italic">No files attached</p>
+                      </div>
+                      
+                      <!-- Attachment List -->
+                      <div v-else class="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div
+                          v-for="file in taskAttachments" 
+                          :key="file.id"
+                          class="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+                        >
+                          <!-- File icon and details -->
+                          <div class="flex items-center overflow-hidden">
+                            <!-- Icon based on file type -->
+                            <div class="flex-shrink-0 mr-2 p-1.5 rounded-lg" :class="getFileIconClass(file.mimetype)">
+                              <FileText v-if="!file.is_image" class="h-3.5 w-3.5" :class="getFileIconColor(file.mimetype)" />
+                              <Image v-else class="h-3.5 w-3.5 text-blue-500" />
+                            </div>
+                            
+                            <!-- File details -->
+                            <div>
+                              <div class="text-xs font-medium text-gray-700 truncate max-w-[180px]">{{ file.name }}</div>
+                              <div class="text-xs text-gray-500">{{ formatFileSize(file.size) }}</div>
+                            </div>
+                          </div>
+                          
+                          <!-- Action buttons -->
+                          <div class="flex space-x-1">
+                            <!-- Preview button -->
+                            <button
+                              v-if="canPreviewFile(file)"
+                              @click="openFilePreview(file)"
+                              class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                              title="Preview"
+                            >
+                              <Eye class="h-3.5 w-3.5" />
+                            </button>
+                            
+                            <button
+                              @click="downloadFile(file)"
+                              class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                              title="Download"
+                            >
+                              <Download class="h-3.5 w-3.5" />
+                            </button>
+                            
+                            <button
+                              @click="confirmDeleteTaskFile(file)"
+                              class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                              title="Delete"
+                            >
+                              <Trash2 class="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Timeline -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <Calendar class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Timeline
+                      </h4>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <div class="text-xs text-gray-500 mb-1">Start Date</div>
+                          <div class="text-sm font-medium text-gray-700">
+                            {{ formatDateTime(selectedTask.dates?.planned_start) || 'Not set' }}
+                          </div>
+                        </div>
+                        <div>
+                          <div class="text-xs text-gray-500 mb-1">Due Date</div>
+                          <div 
+                            class="text-sm font-medium"
+                            :class="{'text-rose-600': isOverdue(selectedTask.dates?.planned_end), 'text-gray-700': !isOverdue(selectedTask.dates?.planned_end)}"
+                          >
                           {{ formatDateTime(selectedTask.dates?.planned_end) || 'Not set' }}
-                          <span v-if="isOverdue(selectedTask.dates?.planned_end)" class="text-xs ml-1.5 font-normal text-red-500">(Overdue)</span>
+                          <span v-if="isOverdue(selectedTask.dates?.planned_end)" class="text-xs ml-1.5 font-normal text-rose-500">(Overdue)</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Progress -->
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                      <Activity class="w-4 h-4 mr-1.5 text-red-500" />
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                      <Activity class="w-4 h-4 mr-1.5 text-indigo-500" />
                       Progress
                     </h4>
                     <div class="mb-2 flex justify-between items-center">
-                      <div class="text-sm font-medium">Completion: {{ selectedTask.progress }}%</div>
+                      <div class="text-sm font-medium text-gray-700">Completion: {{ selectedTask.progress }}%</div>
                       <div class="text-xs text-gray-500">
                         {{ selectedTask.hours?.actual || 0 }}/{{ selectedTask.hours?.planned || 0 }} hours
                       </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        class="h-2.5 rounded-full transition-all duration-300"
+                        class="h-2 rounded-full transition-all duration-300"
                         :class="{
-                          'bg-red-500': selectedTask.progress < 30,
-                          'bg-orange-500': selectedTask.progress >= 30 && selectedTask.progress < 70,
-                          'bg-green-500': selectedTask.progress >= 70
+                          'bg-rose-500': selectedTask.progress < 30,
+                          'bg-amber-500': selectedTask.progress >= 30 && selectedTask.progress < 70,
+                          'bg-emerald-500': selectedTask.progress >= 70
                         }"
                         :style="{ width: `${selectedTask.progress}%` }"
                       ></div>
@@ -996,43 +1110,34 @@
                   </div>
                   
                   <!-- Assigned Team Members -->
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                      <Users class="w-4 h-4 mr-1.5 text-red-500" />
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                      <Users class="w-4 h-4 mr-1.5 text-indigo-500" />
                       Assigned Team Members
                     </h4>
                     <div class="space-y-2">
                       <div v-for="person in selectedTask.assigned_to" :key="person.id" class="flex items-center">
-                        <div class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                          <span class="text-sm font-medium text-red-600">
+                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                          <span class="text-sm font-medium text-rose-600">
                             {{ getInitials(person.name) }}
                           </span>
                         </div>
-                        <span class="ml-3 text-sm">{{ person.name }}</span>
+                        <span class="ml-3 text-sm text-gray-600">{{ person.name }}</span>
                       </div>
                       <div v-if="!selectedTask.assigned_to || selectedTask.assigned_to.length === 0" class="text-sm text-gray-500 italic">
                         No team members assigned
                       </div>
                     </div>
                   </div>
-                  
-                  <!-- Description -->
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                    <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                      <AlignLeft class="w-4 h-4 mr-1.5 text-red-500" />
-                      Description
-                    </h4>
-                    <div class="prose prose-sm max-w-none text-gray-700" v-html="selectedTask.description || 'No description provided'"></div>
-                  </div>
                 </div>
 
-                <!-- Right Column: Checklist & Timesheet side by side -->
+                <!-- Right Column: Checklist & Timesheet -->
                 <div class="space-y-5">
                   <!-- Checklist Section -->
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                     <div class="flex items-center justify-between mb-3">
-                      <h4 class="text-sm font-medium text-gray-700 flex items-center">
-                        <CheckSquare class="w-4 h-4 mr-1.5 text-red-500" />
+                      <h4 class="text-sm font-medium text-gray-600 flex items-center">
+                        <CheckSquare class="w-4 h-4 mr-1.5 text-indigo-500" />
                         Checklist
                       </h4>
                       <div class="text-xs text-gray-600">
@@ -1042,7 +1147,7 @@
                     
                     <div class="mb-3 w-full bg-gray-200 rounded-full h-1.5">
                       <div 
-                        class="bg-green-500 h-1.5 rounded-full" 
+                        class="bg-emerald-500 h-1.5 rounded-full" 
                         :style="{ width: `${selectedTask.checklist_progress || 0}%` }"
                       ></div>
                     </div>
@@ -1055,10 +1160,10 @@
                   </div>
                   
                   <!-- Timesheet Section -->
-                  <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                  <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                     <div class="flex items-center justify-between mb-3">
-                      <h4 class="text-sm font-medium text-gray-700 flex items-center">
-                        <Clock class="w-4 h-4 mr-1.5 text-red-500" />
+                      <h4 class="text-sm font-medium text-gray-600 flex items-center">
+                        <Clock class="w-4 h-4 mr-1.5 text-indigo-500" />
                         Time Tracking
                       </h4>
                     </div>
@@ -1076,13 +1181,13 @@
             <div class="bg-gray-50 px-6 py-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
               <button
                 @click="showTaskDetailModal = false"
-                class="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
               >
                 Close
               </button>
               <button
                 @click="editSelectedTask()"
-                class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
               >
                 <Edit class="w-4 h-4 mr-1.5 inline-block" />
                 Edit Task
@@ -1091,391 +1196,394 @@
           </div>
         </div>
       </div>
+      </Teleport>
 
-      <!-- Edit Project Modal -->
-      <TeamProjectFormModal
-        v-if="showEditModal"
-        :show="showEditModal"
-        :project="project"
-        :departments="departments"
-        @close="showEditModal = false"
-        @submit="handleProjectUpdate"
-      />
-
-      <!-- Create Task Modal -->
-      <TeamTaskFormModal
-        v-if="showCreateTaskModal"
-        :show="showCreateTaskModal"
-        :project-id="projectId"
-        @close="showCreateTaskModal = false"
-        @submit="handleTaskCreate"
-      />
-
-      <!-- Edit Task Modal -->
-      <TeamTaskFormModal
-        v-if="showEditTaskModal"
-        :show="showEditTaskModal"
-        :project-id="projectId"
-        :task-data="selectedTask"
-        @close="showEditTaskModal = false"
-        @submit="handleTaskUpdate"
-      />
+      <Teleport to="body">
+        <!-- Edit Project Modal -->
+        <TeamProjectFormModal
+          v-if="showEditModal"
+          :show="showEditModal"
+          :project="project"
+          :departments="departments"
+          @close="showEditModal = false"
+          @submit="handleProjectUpdate"
+        />
       
-      <!-- Create Meeting Modal -->
-      <TeamMeetingFormModal
-        v-if="showCreateMeetingModal"
-        :show="showCreateMeetingModal"
-        :project-id="projectId"
-        @close="showCreateMeetingModal = false"
-        @submit="handleMeetingCreate"
-      />
+        <!-- Create Task Modal -->
+        <TeamTaskFormModal
+          v-if="showCreateTaskModal"
+          :show="showCreateTaskModal"
+          :project-id="projectId"
+          @close="showCreateTaskModal = false"
+          @submit="handleTaskCreate"
+        />
       
-      <!-- Create BAU Activity Modal -->
-      <TeamBAUFormModal
-        v-if="showCreateBAUModal"
-        :show="showCreateBAUModal"
-        :project-id="projectId"
-        @close="showCreateBAUModal = false"
-        @submit="handleBAUCreate"
-      />
-
-      <!-- Delete Confirmation Dialog -->
-      <div 
-        v-if="showDeleteConfirm" 
-        class="fixed inset-0 z-50 overflow-y-auto"
-        aria-labelledby="modal-title" 
-        role="dialog" 
-        aria-modal="true"
-      >
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <!-- Background overlay -->
-          <div 
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-            aria-hidden="true"
-            @click="showDeleteConfirm = false"
-          ></div>
-
-          <!-- Modal panel -->
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <Trash2 class="h-6 w-6 text-red-600" />
-                </div>
-                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                    Delete Project
-                  </h3>
-                  <div class="mt-2">
-                    <p class="text-sm text-gray-500">
-                      Are you sure you want to delete "{{ project?.name }}"?
-                      <span v-if="project?.tasks?.length > 0" class="block text-red-600 mt-1">
-                        This project has {{ project?.tasks.length }} task(s). Deleting it will also remove all associated tasks.
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                @click="handleDelete()"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Delete
-              </button>
-              <button
-                @click="showDeleteConfirm = false"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Delete File Confirmation Dialog -->
-      <div 
-        v-if="showDeleteFileConfirm" 
-        class="fixed inset-0 z-50 overflow-y-auto"
-        aria-labelledby="modal-title" 
-        role="dialog" 
-        aria-modal="true"
-        >
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <!-- Background overlay -->
-          <div 
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-            aria-hidden="true"
-            @click="showDeleteFileConfirm = false"
-          ></div>
-
-          <!-- Modal panel -->
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <Trash2 class="h-6 w-6 text-red-600" />
-                </div>
-                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                    Delete File
-                  </h3>
-                  <div class="mt-2">
-                    <p class="text-sm text-gray-500">
-                      Are you sure you want to delete "{{ currentFileToDelete?.name }}"? This action cannot be undone.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                @click="deleteFile()"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Delete
-              </button>
-              <button
-                @click="showDeleteFileConfirm = false"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- File Preview Modal -->
-      <div 
-        v-if="showPreviewModal && previewFile" 
-        class="fixed inset-0 z-50 overflow-y-auto"
-        aria-labelledby="modal-title" 
-        role="dialog" 
-        aria-modal="true"
-        >
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <!-- Background overlay -->
-          <div 
-            class="fixed inset-0 bg-gray-900 bg-opacity-90 transition-opacity backdrop-blur-sm" 
-            aria-hidden="true"
-            @click="closePreview"
-          ></div>
-
-          <!-- Modal panel -->
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          <div class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle max-w-4xl w-full p-0">
-            <!-- Header -->
-            <div class="bg-gray-100 px-4 py-3 flex items-center justify-between border-b">
-              <h3 class="text-lg font-medium text-gray-900 truncate max-w-lg">
-                {{ previewFile.name }}
-              </h3>
-              <div class="flex space-x-2">
-                <button
-                  @click="downloadFile(previewFile)"
-                  class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                  title="Download"
-                >
-                  <Download class="h-4 w-4" />
-                </button>
-                <button
-                  @click="closePreview"
-                  class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg"
-                  title="Close"
-                >
-                  <X class="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            
-            <!-- Preview Content -->
-            <div class="bg-white p-0 max-h-[80vh] overflow-auto">
-              <!-- Show loading indicator while preview is loading -->
-              <div v-if="previewLoading" class="flex justify-center items-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-4 border-red-600 border-t-transparent"></div>
-              </div>
-              
-              <!-- Image preview -->
-              <div v-else-if="isImageFile(previewFile)" class="flex justify-center p-4">
-                <img 
-                  :src="getSecurePreviewUrl(previewFile.url)" 
-                  :alt="previewFile.name" 
-                  class="max-w-full max-h-[70vh] object-contain"
-                  @load="previewLoading = false"
-                />
-              </div>
-              
-              <!-- PDF preview -->
-              <div v-else-if="isPdfFile(previewFile)" class="h-[70vh]">
-                <iframe 
-                  :src="getSecurePreviewUrl(previewFile.url)" 
-                  frameborder="0" 
-                  class="w-full h-full"
-                  @load="previewLoading = false"
-                ></iframe>
-              </div>
-              
-              <!-- Text preview -->
-              <div v-else-if="isTextFile(previewFile)" class="p-4 bg-gray-50">
-                <div class="bg-white p-6 rounded border border-gray-200 max-h-[70vh] overflow-auto">
-                  <pre class="whitespace-pre-wrap text-sm font-mono text-gray-800">{{ previewContent }}</pre>
-                </div>
-              </div>
-              
-              <!-- Unsupported preview -->
-              <div v-else class="text-center p-12">
-                <FileText class="mx-auto h-16 w-16 text-gray-400" />
-                <h3 class="mt-4 text-lg font-medium text-gray-900">Preview not available</h3>
-                <p class="mt-2 text-gray-500">This file type cannot be previewed. Click the download button to view it.</p>
-                <button
-                  @click="downloadFile(previewFile)"
-                  class="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600"
-                >
-                  <Download class="w-4 h-4 mr-2" />
-                  Download File
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Task Attachment Upload Modal -->
-      <div 
-        v-if="showTaskAttachmentUpload && selectedTask" 
-        class="fixed inset-0 z-50 overflow-y-auto"
-        aria-labelledby="modal-title" 
-        role="dialog" 
-        aria-modal="true"
-      >
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <!-- Background overlay -->
-          <div 
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-            aria-hidden="true"
-            @click="showTaskAttachmentUpload = false"
-          ></div>
-
-          <!-- Modal panel -->
-          <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-indigo-600 to bg-indigo-400 px-4 py-3 sm:px-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-md font-medium text-white">Upload File to Task</h3>
-                <button @click="showTaskAttachmentUpload = false" class="text-white hover:text-gray-200 focus:outline-none">
-                  <X class="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            
-            <!-- Body -->
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <!-- Upload Zone -->
-              <div 
-                class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-red-500 transition-colors cursor-pointer"
-                @click="handleTaskFileUpload"
-                @dragover.prevent
-                @drop.prevent="onTaskFileDrop"
-              >
-                <UploadCloud class="mx-auto h-12 w-12 text-gray-400" />
-                <p class="mt-2 text-sm text-gray-600">
-                  <span class="font-medium text-red-600 hover:text-red-500">
-                    Click to upload
-                  </span>
-                  or drag and drop
-                </p>
-                <p class="mt-1 text-xs text-gray-500">
-                  PDF, Word, Excel, images, or text files (max 20MB)
-                </p>
-              </div>
-              <input
-                ref="taskFileInputRef"
-                type="file"
-                @change="onTaskFileChange"
-                class="hidden"
-              />
-              
-              <!-- Upload Progress -->
-              <div v-if="uploadingTaskFile" class="mt-4">
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-red-600 h-2.5 rounded-full animate-pulse" style="width: 100%"></div>
-                </div>
-                <p class="text-sm text-gray-600 mt-2">Uploading file...</p>
-              </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                @click="showTaskAttachmentUpload = false"
-                class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    <!-- Delete Task File Confirmation Dialog -->
-    <div 
-      v-if="showDeleteTaskFileConfirm" 
-      class="fixed inset-0 z-50 overflow-y-auto"
-      aria-labelledby="modal-title" 
-      role="dialog" 
-      aria-modal="true"
-    >
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
+        <!-- Edit Task Modal -->
+        <TeamTaskFormModal
+          v-if="showEditTaskModal"
+          :show="showEditTaskModal"
+          :project-id="projectId"
+          :task-data="selectedTask"
+          @close="showEditTaskModal = false"
+          @submit="handleTaskUpdate"
+        />
+        
+        <!-- Create Meeting Modal -->
+        <TeamMeetingFormModal
+          v-if="showCreateMeetingModal"
+          :show="showCreateMeetingModal"
+          :project-id="projectId"
+          @close="showCreateMeetingModal = false"
+          @submit="handleMeetingCreate"
+        />
+        
+        <!-- Create BAU Activity Modal -->
+        <TeamBAUFormModal
+          v-if="showCreateBAUModal"
+          :show="showCreateBAUModal"
+          :project-id="projectId"
+          @close="showCreateBAUModal = false"
+          @submit="handleBAUCreate"
+        />
+      
+        <!-- Delete Confirmation Dialog -->
         <div 
-          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-          aria-hidden="true"
-          @click="showDeleteTaskFileConfirm = false"
-        ></div>
-
-        <!-- Modal panel -->
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <Trash2 class="h-6 w-6 text-red-600" />
+          v-if="showDeleteConfirm" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="showDeleteConfirm = false"
+            ></div>
+      
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                  <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-rose-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <Trash2 class="h-6 w-6 text-rose-600" />
+                  </div>
+                  <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                      Delete Project
+                    </h3>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500">
+                        Are you sure you want to delete "{{ project?.name }}"?
+                        <span v-if="project?.tasks?.length > 0" class="block text-rose-600 mt-1">
+                          This project has {{ project?.tasks.length }} task(s). Deleting it will also remove all associated tasks.
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                  Delete File
+              <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  @click="handleDelete()"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-600 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Delete
+                </button>
+                <button
+                  @click="showDeleteConfirm = false"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+        <!-- Delete File Confirmation Dialog -->
+        <div 
+          v-if="showDeleteFileConfirm" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="showDeleteFileConfirm = false"
+            ></div>
+      
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                  <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-rose-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <Trash2 class="h-6 w-6 text-rose-600" />
+                  </div>
+                  <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                      Delete File
+                    </h3>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500">
+                        Are you sure you want to delete "{{ currentFileToDelete?.name }}"? This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  @click="deleteFile()"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-600 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Delete
+                </button>
+                <button
+                  @click="showDeleteFileConfirm = false"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+        <!-- File Preview Modal -->
+        <div 
+          v-if="showPreviewModal && previewFile" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-900 bg-opacity-90 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="closePreview"
+            ></div>
+      
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle max-w-4xl w-full">
+              <!-- Header -->
+              <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <h3 class="text-lg font-medium text-gray-800 truncate max-w-lg">
+                  {{ previewFile.name }}
                 </h3>
-                <div class="mt-2">
-                  <p class="text-sm text-gray-500">
-                    Are you sure you want to delete "{{ currentTaskFileToDelete?.name }}"? This action cannot be undone.
+                <div class="flex space-x-2">
+                  <button
+                    @click="downloadFile(previewFile)"
+                    class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                    title="Download"
+                  >
+                    <Download class="h-4 w-4" />
+                  </button>
+                  <button
+                    @click="closePreview"
+                    class="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                    title="Close"
+                  >
+                    <X class="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Preview Content -->
+              <div class="bg-white p-0 max-h-[80vh] overflow-auto">
+                <!-- Loading indicator -->
+                <div v-if="previewLoading" class="flex justify-center items-center h-64">
+                  <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
+                </div>
+                
+                <!-- Image preview -->
+                <div v-else-if="isImageFile(previewFile)" class="flex justify-center p-4">
+                  <img 
+                    :src="getSecurePreviewUrl(previewFile.url)" 
+                    :alt="previewFile.name" 
+                    class="max-w-full max-h-[70vh] object-contain"
+                    @load="previewLoading = false"
+                  />
+                </div>
+                
+                <!-- PDF preview -->
+                <div v-else-if="isPdfFile(previewFile)" class="h-[70vh]">
+                  <iframe 
+                    :src="getSecurePreviewUrl(previewFile.url)" 
+                    frameborder="0" 
+                    class="w-full h-full"
+                    @load="previewLoading = false"
+                  ></iframe>
+                </div>
+                
+                <!-- Text preview -->
+                <div v-else-if="isTextFile(previewFile)" class="p-4 bg-gray-50">
+                  <div class="bg-white p-6 rounded border border-gray-200 max-h-[70vh] overflow-auto">
+                    <pre class="whitespace-pre-wrap text-sm font-mono text-gray-700">{{ previewContent }}</pre>
+                  </div>
+                </div>
+                
+                <!-- Unsupported preview -->
+                <div v-else class="text-center p-12">
+                  <FileText class="mx-auto h-16 w-16 text-gray-300" />
+                  <h3 class="mt-4 text-lg font-medium text-gray-800">Preview not available</h3>
+                  <p class="mt-2 text-gray-500">This file type cannot be previewed. Click the download button to view it.</p>
+                  <button
+                    @click="downloadFile(previewFile)"
+                    class="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-rose-600 hover:bg-rose-700 transition"
+                  >
+                    <Download class="w-4 h-4 mr-2" />
+                    Download File
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+        <!-- Task Attachment Upload Modal -->
+        <div 
+          v-if="showTaskAttachmentUpload && selectedTask" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="showTaskAttachmentUpload = false"
+            ></div>
+      
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <!-- Header -->
+              <div class="bg-rose-600 px-4 py-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-md font-medium text-white">Upload File to Task</h3>
+                  <button @click="showTaskAttachmentUpload = false" class="text-white hover:text-indigo-100 focus:outline-none transition">
+                    <X class="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Body -->
+              <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
+                <!-- Upload Zone -->
+                <div 
+                  class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-rose-500 transition-colors cursor-pointer"
+                  @click="handleTaskFileUpload"
+                  @dragover.prevent
+                  @drop.prevent="onTaskFileDrop"
+                >
+                  <UploadCloud class="mx-auto h-12 w-12 text-gray-300" />
+                  <p class="mt-2 text-sm text-gray-600">
+                    <span class="font-medium text-rose-600 hover:text-indigo-500 transition">
+                      Click to upload
+                    </span>
+                    or drag and drop
+                  </p>
+                  <p class="mt-1 text-xs text-gray-500">
+                    PDF, Word, Excel, images, or text files (max 20MB)
                   </p>
                 </div>
+                <input
+                  ref="taskFileInputRef"
+                  type="file"
+                  @change="onTaskFileChange"
+                  class="hidden"
+                />
+                
+                <!-- Upload Progress -->
+                <div v-if="uploadingTaskFile" class="mt-4">
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-rose-600 h-2 rounded-full animate-pulse" style="width: 100%"></div>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-2">Uploading file...</p>
+                </div>
+              </div>
+              
+              <!-- Footer -->
+              <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  @click="showTaskAttachmentUpload = false"
+                  class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto sm:text-sm transition"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              @click="deleteTaskFile()"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Delete
-            </button>
-            <button
+        </div>
+      
+        <!-- Delete Task File Confirmation Dialog -->
+        <div 
+          v-if="showDeleteTaskFileConfirm" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
               @click="showDeleteTaskFileConfirm = false"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Cancel
-            </button>
+            ></div>
+      
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                  <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-rose-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <Trash2 class="h-6 w-6 text-rose-600" />
+                  </div>
+                  <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                      Delete File
+                    </h3>
+                    <div class="mt-2">
+                      <p class="text-sm text-gray-500">
+                        Are you sure you want to delete "{{ currentTaskFileToDelete?.name }}"? This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  @click="deleteTaskFile()"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-600 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Delete
+                </button>
+                <button
+                  @click="showDeleteTaskFileConfirm = false"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    </Teleport>
+      </Teleport>
+    </main>
   </div>
 </template>
 
@@ -1565,6 +1673,18 @@ const uploadingTaskFile = ref(false)
 const showTaskAttachmentUpload = ref(false)
 const showDeleteTaskFileConfirm = ref(false)
 const currentTaskFileToDelete = ref(null)
+
+// Mobile navigation state
+const isMobile = ref(window.innerWidth < 768);
+const activeTab = ref('overview');
+const taskFilter = ref('all');
+
+
+const filteredTasks = computed(() => {
+  if (!project.value?.tasks) return [];
+  if (taskFilter.value === 'all') return project.value.tasks;
+  return project.value.tasks.filter(task => task.state === taskFilter.value);
+});
 
 // Tambahkan state berikut
 const chatFileInputRef = ref(null)

@@ -56,10 +56,12 @@
               <!-- Process activities to handle overlaps -->
               <template v-for="(activity, activityIndex) in processedActivities(day.activities)" :key="`activity-${activity.id}`">
                 <div 
-                  class="absolute rounded px-2 py-1 text-xs overflow-hidden cursor-pointer transition-colors"
+                  class="absolute rounded px-2 py-1 text-xs overflow-hidden cursor-pointer transition-colors border-l-2"
                   :class="[
                     getActivityStatusClass(activity.state, activity.activity_type),
-                    activity.creator?.id === userEmployeeId ? 'border-l-2 border-red-500' : '',
+                    getDepartmentColors(activity.creator?.department_id).bg,
+                    getDepartmentColors(activity.creator?.department_id).border,
+                    activity.creator?.id === userEmployeeId ? 'border-l-4' : 'border-l-2',
                     activity._meta && activity._meta.timeSlotCount > 2 ? 'hover:z-20' : ''
                   ]"
                   :style="getActivityStyle(activity, day.date, 
@@ -118,10 +120,32 @@ const props = defineProps({
 const emit = defineEmits(['activity-click', 'time-slot-click', 'refresh']);
 
 // State
-const hours = ref(Array.from({ length: 14 }, (_, i) => i + 7)); // 7 AM to 8 PM
+const hours = ref(Array.from({ length: 13 }, (_, i) => i + 7)); // 7 AM to 8 PM
 const currentTimePosition = ref(0);
 const showCurrentTimeIndicator = ref(false);
 const currentTimeInterval = ref(null);
+
+// Add the department color function
+const getDepartmentColors = (departmentId) => {
+  // Mapping of department IDs to colors (border and background)
+  const departmentColors = {
+    1: { border: 'border-red-500', bg: 'bg-red-50' },
+    2: { border: 'border-blue-500', bg: 'bg-blue-50' },
+    3: { border: 'border-green-500', bg: 'bg-green-50' },
+    4: { border: 'border-yellow-500', bg: 'bg-yellow-50' },
+    5: { border: 'border-purple-500', bg: 'bg-purple-50' },
+    6: { border: 'border-pink-500', bg: 'bg-pink-50' },
+    7: { border: 'border-indigo-500', bg: 'bg-indigo-50' },
+    8: { border: 'border-orange-500', bg: 'bg-orange-50' },
+    9: { border: 'border-cyan-500', bg: 'bg-cyan-50' }, // Marketing department
+    10: { border: 'border-lime-500', bg: 'bg-lime-50' },
+    11: { border: 'border-teal-500', bg: 'bg-teal-50' },
+    12: { border: 'border-emerald-500', bg: 'bg-emerald-50' }, // IT Division
+    // Add more departments as needed
+  };
+  
+  return departmentColors[departmentId] || { border: 'border-gray-300', bg: 'bg-gray-50' };
+};
 
 // Ensure we have data for all 7 days of the week
 const formattedWeekData = computed(() => {
@@ -338,69 +362,33 @@ const getActivityStyle = (activity, dayDate, index = 0, activitiesAtSameTime = 1
   }
 };
 
-
-const groupActivitiesByTimeSlot = (activities) => {
-  // Group activities by start time
-  const timeSlots = {};
-  
-  activities.forEach(activity => {
-    if (!activity.time || !activity.time.start) return;
-    
-    const startTime = activity.time.start;
-    if (!timeSlots[startTime]) {
-      timeSlots[startTime] = [];
-    }
-    
-    timeSlots[startTime].push(activity);
-  });
-  
-  // Add index and count information to each activity
-  const processedActivities = [];
-  
-  Object.keys(timeSlots).forEach(startTime => {
-    const activitiesInSlot = timeSlots[startTime];
-    const count = activitiesInSlot.length;
-    
-    activitiesInSlot.forEach((activity, index) => {
-      processedActivities.push({
-        ...activity,
-        _meta: {
-          timeSlotIndex: index,
-          timeSlotCount: count
-        }
-      });
-    });
-  });
-  
-  return processedActivities;
-};
-
-
+// Update getActivityStatusClass to only provide text color, not background
 const getActivityStatusClass = (state, type = 'other') => {
-  // Status class takes precedence
+  // Status class takes precedence but only for text color now
   switch(state) {
     case 'done':
-      return 'bg-green-100 text-green-800';
+      return 'text-green-800';
     case 'not_done':
-      return 'bg-red-100 text-red-800';
+      return 'text-red-800';
     default: // planned
       // Fall back to type-based coloring
-      return getActivityTypeColorClass(type);
+      return getActivityTypeTextClass(type);
   }
 };
 
-const getActivityTypeColorClass = (type) => {
-  if (!type) return 'bg-gray-100 text-gray-800';
+// New function to get just text color
+const getActivityTypeTextClass = (type) => {
+  if (!type) return 'text-gray-800';
   
   const colorMap = {
-    'meeting': 'bg-blue-100 text-blue-800',
-    'training': 'bg-green-100 text-green-800',
-    'support': 'bg-pink-100 text-pink-800',
-    'admin': 'bg-indigo-100 text-indigo-800',
-    'other': 'bg-gray-100 text-gray-800'
+    'meeting': 'text-blue-800',
+    'training': 'text-green-800',
+    'support': 'text-pink-800',
+    'admin': 'text-indigo-800',
+    'other': 'text-gray-800'
   };
   
-  return colorMap[type.toLowerCase()] || 'bg-gray-100 text-gray-800';
+  return colorMap[type.toLowerCase()] || 'text-gray-800';
 };
 
 const handleTimeSlotClick = (date, hour) => {

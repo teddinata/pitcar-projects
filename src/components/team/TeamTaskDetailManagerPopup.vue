@@ -29,7 +29,7 @@
           </div>
 
           <!-- Header with Gradient -->
-          <div class="relative bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+          <div class="relative bg-gradient-to-r from-rose-600 to-rose-500 px-6 py-4">
             <div class="flex items-center justify-between">
               <h3 class="text-xl font-medium text-white">Task Details</h3>
               <button @click="closeModal" class="text-white hover:text-gray-200 focus:outline-none">
@@ -105,7 +105,7 @@
                     </h4>
                     <button
                       @click="showTaskAttachmentUpload = true"
-                      class="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-gradient-to-r from-purple-500 to bg-indigo-600 focus:outline-none"
+                      class="inline-flex items-center px-2 py-1 border border-transparent rounded-md text-xs font-medium text-white bg-gradient-to-r from-rose-500 to bg-rose-600 focus:outline-none"
                     >
                       <UploadCloud class="w-3 h-3 mr-1" />
                       Upload
@@ -351,7 +351,7 @@
               </button>
               <button
                 @click="editTask"
-                class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
+                class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
               >
                 <Edit class="w-4 h-4 mr-1.5" />
                 Edit Task
@@ -585,7 +585,7 @@
               <p class="mt-2 text-gray-500">This file type cannot be previewed. Click the download button to view it.</p>
               <button
                 @click="downloadFile(previewFile)"
-                class="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-indigo-600"
+                class="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-rose-600 to-rose-500"
               >
                 <Download class="w-4 h-4 mr-2" />
                 Download File
