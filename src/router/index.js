@@ -272,6 +272,18 @@ const routes = [
       title: 'Team Dashboard'
     }
   },
+  {
+    path: '/team/notifications',
+    name: 'notifications',
+    component: () => import('@/views/team/Notifications.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/team/mentions',
+    name: 'Mentions',
+    component: () => import('@/views/team/Mentions.vue'),
+    meta: { requiresAuth: true }
+  },
 
   // Other Routes
   {
