@@ -363,7 +363,7 @@ const openNotification = (notification) => {
           break
         case 'view_group_chat':
           if (notification.data.group_id) {
-            router.push(`/team/chat/${notification.data.group_id}`)
+            router.push(`/team/project/${notification.data.group_id}`)
           }
           break
         default:
