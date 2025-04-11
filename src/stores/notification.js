@@ -16,6 +16,10 @@ export const useNotificationStore = defineStore('notification', () => {
   const categoryGroups = ref({})
   const availableCategories = ref([])
   const isInitialized = ref(false)
+  // Tambahkan state untuk melacak notifikasi terakhir yang dilihat
+  const lastCheckedTime = ref(new Date().getTime())
+  const newNotificationsReceived = ref(false)
+
   
   // Computed
   const hasUnread = computed(() => unreadCount.value > 0 || mentionUnreadCount.value > 0)
@@ -339,6 +343,44 @@ export const useNotificationStore = defineStore('notification', () => {
       return false
     }
   }
+
+  // Modifikasi fungsi checkNewNotifications
+  const checkNewNotifications = async () => {
+    const previousUnreadCount = unreadCount.value + mentionUnreadCount.value
+    
+    // Fetch unread counts
+    await Promise.all([
+      fetchUnreadCount(),
+      fetchMentionUnreadCount()
+    ])
+    
+    const currentUnreadCount = unreadCount.value + mentionUnreadCount.value
+    
+    // Jika ada notifikasi baru
+    if (currentUnreadCount > previousUnreadCount) {
+      // Tandai bahwa ada notifikasi baru untuk ditampilkan toast
+      newNotificationsReceived.value = true
+      
+      // Opsional: Fetch notifikasi terbaru untuk detail tambahan
+      const newNotifications = await fetchNotifications(5, true)
+      const newMentions = await fetchMentions(5)
+      
+      return {
+        hasNewNotifications: true,
+        newCount: currentUnreadCount - previousUnreadCount,
+        latestNotifications: [...newNotifications, ...newMentions]
+      }
+    }
+    
+    return { hasNewNotifications: false }
+  }
+
+  // Tambahkan fungsi untuk mereset flag notifikasi baru setelah toast ditampilkan
+  const resetNewNotificationsFlag = () => {
+    newNotificationsReceived.value = false
+    lastCheckedTime.value = new Date().getTime()
+  }
+
   
   const startPolling = () => {
     if (isPolling.value) return
@@ -382,6 +424,7 @@ export const useNotificationStore = defineStore('notification', () => {
     availableCategories,
     categoryGroups,
     isInitialized,
+    newNotificationsReceived,
     
     // Computed
     hasUnread,
@@ -401,6 +444,8 @@ export const useNotificationStore = defineStore('notification', () => {
     startPolling,
     stopPolling,
     setActiveCategory,
-    initialize
+    initialize,
+    checkNewNotifications,
+    resetNewNotificationsFlag
   }
 })
