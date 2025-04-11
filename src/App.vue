@@ -38,11 +38,11 @@ const checkForNewNotifications = async () => {
       newNotificationCount.value = currentUnreadCount - previousUnreadCount
       showToast.value = true
       
-      // Otomatis sembunyikan toast setelah 5 detik
+      // Otomatis sembunyikan toast setelah 60 detik
       if (toastTimeout.value) clearTimeout(toastTimeout.value)
       toastTimeout.value = setTimeout(() => {
         showToast.value = false
-      }, 5000)
+      }, 60000)
     }
   } catch (error) {
     console.error('Error checking for new notifications:', error)
