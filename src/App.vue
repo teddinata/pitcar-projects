@@ -125,21 +125,22 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
     <!-- Toast Notification -->
     <div 
       v-if="showToast" 
-      class="fixed bottom-4 right-4 z-50 bg-white border border-gray-200 shadow-lg rounded-lg max-w-sm"
-    >
+      class="fixed bottom-4 right-4 z-50 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg rounded-lg max-w-sm transform transition-all duration-300 ease-in-out"
+      style="box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3), 0 4px 6px -2px rgba(239, 68, 68, 0.1);"
+      >
       <div class="p-4 flex items-start">
-        <div class="flex-shrink-0 bg-red-100 rounded-full p-2 mr-3">
-          <Bell class="h-5 w-5 text-red-600" />
+        <div class="flex-shrink-0 bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm rounded-full p-2 mr-3">
+          <Bell class="h-5 w-5 text-white" />
         </div>
         <div class="flex-1">
-          <h3 class="text-sm font-medium text-gray-900">Notifikasi Baru</h3>
-          <p class="mt-1 text-sm text-gray-500">
+          <h3 class="text-sm font-medium text-white">Notifikasi Baru</h3>
+          <p class="mt-1 text-sm text-white text-opacity-90">
             Anda menerima {{ newNotificationCount }} notifikasi baru
           </p>
           <div class="mt-3">
             <button 
               @click="handleToastClick"
-              class="text-sm font-medium text-red-600 hover:text-red-500"
+              class="text-sm font-medium text-white bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors py-1 px-3 rounded-full"
             >
               Lihat notifikasi
             </button>
@@ -148,14 +149,23 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
         <div class="ml-4 flex-shrink-0 flex items-start">
           <button 
             @click="closeToast" 
-            class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none"
+            class="rounded-full p-1 hover:bg-white hover:bg-opacity-20 transition-colors focus:outline-none"
           >
             <span class="sr-only">Close</span>
-            <X class="h-4 w-4" />
+            <X class="h-4 w-4 text-white" />
           </button>
         </div>
       </div>
+
+      <!-- Progress bar animation -->
+      <div class="h-1 bg-white bg-opacity-20 rounded-b-lg overflow-hidden">
+        <div 
+          class="h-full bg-white bg-opacity-60 rounded-lg"
+          style="animation: toast-timer 5s linear forwards;"
+        ></div>
+      </div>
     </div>
+
     
     <!-- Conditional rendering of PWAUpdatePopUp component -->
     <!-- <PWAUpdatePopUp v-if="false" /> -->
@@ -166,3 +176,26 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
     <router-view></router-view>
   </div>
 </template>
+
+<style>
+@keyframes toast-timer {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Add a subtle entrance animation for the toast */
+.fixed {
+  animation: slide-in 0.3s ease-out forwards;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+</style>
