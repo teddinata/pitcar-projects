@@ -36,6 +36,58 @@
                 Timeline
               </button>
             </div>
+
+             <!-- Header Controls -->
+            <div class="flex items-center flex-wrap gap-2">
+              <!-- Sort Dropdown -->
+              <div class="relative inline-block">
+                <button 
+                  @click="sortDropdownOpen = !sortDropdownOpen" 
+                  class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none"
+                >
+                  <ArrowsUpDownIcon class="w-4 h-4 mr-2" />
+                  Sort: {{ getSortLabel() }}
+                  <span class="ml-1">
+                    <ArrowUpIcon v-if="sortOptions.order === 'asc'" class="w-4 h-4" />
+                    <ArrowDownIcon v-else class="w-4 h-4" />
+                  </span>
+                  <ChevronDownIcon class="w-4 h-4 ml-1" />
+                </button>
+                
+                <!-- Sort Menu -->
+                <div 
+                  v-if="sortDropdownOpen" 
+                  class="absolute right-0 z-10 mt-1 bg-white rounded-md shadow-lg w-48"
+                >
+                  <div class="py-1">
+                    <button
+                      v-for="option in sortFieldOptions"
+                      :key="option.value"
+                      @click="changeSort(option.value); sortDropdownOpen = false"
+                      class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center justify-between"
+                      :class="sortOptions.field === option.value ? 'font-medium bg-gray-50' : ''"
+                    >
+                      {{ option.label }}
+                      <span v-if="sortOptions.field === option.value">
+                        <ArrowUpIcon v-if="sortOptions.order === 'asc'" class="w-4 h-4 text-gray-600" />
+                        <ArrowDownIcon v-else class="w-4 h-4 text-gray-600" />
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Toggle Archived -->
+              <button
+                @click="toggleArchived"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none"
+                :class="{'bg-gray-100': showArchived}"
+              >
+                <ArchiveBoxIcon class="w-4 h-4 mr-2" />
+                {{ showArchived ? 'Hide Archived' : 'Show Archived' }}
+              </button>
+            </div>
+              
             
             <!-- Filter Button with Badge Indicators -->
             <button
@@ -166,6 +218,7 @@
           @click="viewProject(project.id)"
           @status-change="updateProjectStatus"
           @view-details="viewProject"
+          @toggle-archive="toggleProjectArchive"
           class="h-full cursor-pointer"
         />
       </div>
@@ -439,7 +492,12 @@ import {
   ViewColumnsIcon,
   ChartBarIcon, 
   CalendarIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowsUpDownIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  ChevronDownIcon,
+  ArchiveBoxIcon
 } from '@heroicons/vue/24/outline'
 import { 
   format, 
@@ -466,6 +524,7 @@ const departments = ref([])
 const showCreateModal = ref(false)
 const showFilterModal = ref(false)
 const selectedProject = ref(null)
+const sortDropdownOpen = ref(false);
 // State untuk pagination
 const pagination = ref({
   currentPage: 1,
@@ -609,7 +668,12 @@ const fetchProjects = async (isInitialLoad = false) => {
       params: {
         // Tambahkan parameter pagination
         page: pagination.value.currentPage,
-        limit: pagination.value.limit
+        limit: pagination.value.limit,
+        // Tambahkan parameter sorting
+        sort_field: sortOptions.value.field,
+        sort_order: sortOptions.value.order,
+        // Tambahkan parameter untuk menampilkan/menyembunyikan archived
+        include_archived: showArchived.value
       }
     };
     
@@ -941,6 +1005,115 @@ const closeTaskModal = () => {
 //     loading.value = false;
 //   }
 // };
+
+// Tambahkan state untuk sorting di bagian state declarations
+const sortOptions = ref({
+  field: 'priority', // Default sort by priority
+  order: 'desc'     // Default order descending (highest first)
+});
+
+// Tambahkan computed property untuk menentukan label sort yang aktif
+const activeSortLabel = computed(() => {
+  const fieldLabels = {
+    'priority': 'Priority',
+    'date_start': 'Start Date',
+    'date_end': 'End Date',
+    'state': 'Status',
+    'name': 'Name',
+    'progress': 'Progress'
+  };
+  
+  const orderLabels = {
+    'asc': 'Ascending',
+    'desc': 'Descending'
+  };
+  
+  return `${fieldLabels[sortOptions.value.field]} (${orderLabels[sortOptions.value.order]})`;
+});
+
+// Tambahkan constants dan functions ini di bagian script
+const sortFieldOptions = [
+  { value: 'priority', label: 'Priority' },
+  { value: 'date_start', label: 'Start Date' },
+  { value: 'date_end', label: 'End Date' },
+  { value: 'state', label: 'Status' },
+  { value: 'name', label: 'Name' },
+  { value: 'progress', label: 'Progress' }
+];
+
+// Fungsi untuk mendapatkan label sort yang aktif
+const getSortLabel = () => {
+  const option = sortFieldOptions.find(o => o.value === sortOptions.value.field);
+  return option ? option.label : 'Priority';
+};
+
+// Tambahkan fungsi untuk mengganti sort
+const changeSort = (field) => {
+  // Jika field sama, toggle order
+  if (field === sortOptions.value.field) {
+    sortOptions.value.order = sortOptions.value.order === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Jika field berbeda, set field dan default order
+    sortOptions.value.field = field;
+    // Default order berdasarkan field
+    if (field === 'name') {
+      sortOptions.value.order = 'asc'; // Nama biasanya A-Z
+    } else {
+      sortOptions.value.order = 'desc'; // Fields lain biasanya highest first
+    }
+  }
+  
+  // Refresh projects dengan sort baru
+  fetchProjects();
+};
+
+
+
+// Tambahkan state dan fungsi untuk archived projects
+const showArchived = ref(false);
+
+const toggleArchived = () => {
+  showArchived.value = !showArchived.value;
+  // Reset pagination
+  pagination.value.currentPage = 1;
+  // Fetch projects with updated archived setting
+  fetchProjects();
+};
+
+// Fungsi untuk archive/unarchive project
+const toggleProjectArchive = async (projectId, isActive) => {
+  try {
+    const response = await apiClient.post('/web/v2/team/projects/toggle_archive', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        project_id: projectId
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      const actionText = response.data.result.data.active ? 'activated' : 'archived';
+      showToast({
+        message: `Project ${actionText} successfully`,
+        type: 'success'
+      });
+      
+      // Refresh projects
+      fetchProjects();
+    } else {
+      showToast({
+        message: response.data.result?.message || 'Failed to update project status',
+        type: 'error'
+      });
+    }
+  } catch (error) {
+    console.error('Error toggling project archive:', error);
+    showToast({
+      message: error.message || 'Failed to update project status',
+      type: 'error'
+    });
+  }
+};
 
 onMounted(() => {
   const today = new Date();

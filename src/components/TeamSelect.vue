@@ -159,6 +159,15 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: 'Search team members...'
+  },
+  departmentId: {
+    type: [Number, null],
+    default: null
+  },
+  // Tambahkan properti baru untuk departmentIds
+  departmentIds: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -192,33 +201,68 @@ const filteredMembers = computed(() => {
   })
 })
 
+// Computed property untuk menentukan departemen yang digunakan
+const effectiveDepartmentIds = computed(() => {
+  // Prioritaskan departmentIds jika ada
+  if (props.departmentIds && props.departmentIds.length > 0) {
+    return props.departmentIds;
+  }
+  
+  // Fallback ke departmentId single jika ada
+  if (props.departmentId) {
+    return [props.departmentId];
+  }
+  
+  return [];
+})
+
 // Fetch team members
-const fetchMembers = async () => {
+// Fetch team members
+const fetchMembers = async (query = '') => {
   try {
-    loading.value = true
-    const response = await apiClient.post('/web/employees', {
-      jsonrpc: '2.0',
-      method: 'call',
-      params: {
-        department_id: 9,
-        limit: 100,
-        include_details: true, // Request additional details if needed
-        sort_by: 'name',
-        sort_order: 'asc'
-      }
-    })
+    // If no departments selected, show empty
+    if (effectiveDepartmentIds.value.length === 0 && !query) {
+      members.value = [];
+      return;
+    }
     
-    if (response.data.result?.status === 'success') {
-      members.value = response.data.result.data.rows
-      console.log('Fetched members:', members.value) // For debugging
-      initializeSelection()
+    loading.value = true;
+    
+    // Use the multi-dept endpoint instead of /web/employees
+    const response = await apiClient.post('/web/employees/multi-dept', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        department_ids: effectiveDepartmentIds.value, // Send as array
+        search: query, // Send search query
+        limit: 50 // Limit results count
+      }
+    });
+    
+    // Handle the response structure from multi-dept
+    if (response.data && response.data.result && 
+        response.data.result.status === 'success' && 
+        response.data.result.data && 
+        response.data.result.data.rows) {
+      
+      members.value = response.data.result.data.rows;
+      initializeSelection();
+    } else {
+      console.error('Unexpected response structure:', response.data);
     }
   } catch (error) {
-    console.error('Error fetching team members:', error)
+    console.error('Error fetching team members:', error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
+
+watch(() => effectiveDepartmentIds.value, (newVal, oldVal) => {
+  // Hanya fetch jika array berubah
+  if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+    fetchMembers();
+  }
+}, { deep: true });
 
 // Initialize selection based on modelValue
 const initializeSelection = () => {

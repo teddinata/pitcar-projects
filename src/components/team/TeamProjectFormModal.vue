@@ -63,7 +63,7 @@
                   />
                 </div>
 
-                <div>
+                <!-- <div>
                   <label for="department" class="block text-sm font-medium text-gray-700">
                     Department <span class="text-red-500">*</span>
                   </label>
@@ -78,7 +78,25 @@
                   <p v-if="formData.department_id && formData.team_ids.length > 0" class="mt-1 text-xs text-gray-500">
                     Changing department will reset team member selections
                   </p>
+                </div> -->
+
+                <div>
+                  <label for="department_ids" class="block text-sm font-medium text-gray-700">
+                    Departments <span class="text-red-500">*</span>
+                  </label>
+                  <SearchableMultiSelect
+                    id="department_ids"
+                    v-model="formData.department_ids"
+                    :options="departments"
+                    placeholder="Search and select departments"
+                    search-placeholder="Type to search departments..."
+                    :required="true"
+                  />
+                  <p v-if="formData.department_ids.length > 0 && formData.team_ids.length > 0" class="mt-1 text-xs text-gray-500">
+                    Changing departments will reset team member selections
+                  </p>
                 </div>
+                
 
                 <div>
                   <label for="project-type" class="block text-sm font-medium text-gray-700">
@@ -151,32 +169,32 @@
                   <TeamSelect
                     id="manager"
                     v-model="formData.project_manager_id"
-                    :department-id="formData.department_id ? parseInt(formData.department_id) : null"
+                    :department-ids="formData.department_ids"
                     :multiple="false"
-                    :disabled="!formData.department_id"
+                    :disabled="formData.department_ids.length === 0"
                     placeholder="Select Manager"
                     class="mt-1 block w-full"
                     required
                   />
-                  <p v-if="!formData.department_id" class="mt-1 text-xs text-orange-500">
-                    Please select a department first
+                  <p v-if="formData.department_ids.length === 0" class="mt-1 text-xs text-orange-500">
+                    Please select at least one department first
                   </p>
                 </div>
-
+            
                 <div>
                   <label class="block text-sm font-medium text-gray-700">
                     Team Members
                   </label>
                   <TeamSelect
                     v-model="formData.team_ids"
-                    :department-id="formData.department_id ? parseInt(formData.department_id) : null"
+                    :department-ids="formData.department_ids"
                     :multiple="true"
-                    :disabled="!formData.department_id"
+                    :disabled="formData.department_ids.length === 0"
                     placeholder="Select Team Members"
                     class="mt-1 block w-full"
                   />
-                  <p v-if="!formData.department_id" class="mt-1 text-xs text-orange-500">
-                    Please select a department first
+                  <p v-if="formData.department_ids.length === 0" class="mt-1 text-xs text-orange-500">
+                    Please select at least one department first
                   </p>
                 </div>
               </div>
@@ -254,7 +272,7 @@
             type="button"
             @click="submitForm"
             class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            :disabled="loading || !formData.department_id"
+            :disabled="loading"
           >
             <span v-if="loading" class="mr-2">
               <svg class="animate-spin h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -279,6 +297,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import apiClient from '@/config/api'
 import TeamSelect from '@/components/GeneralTeamSelect.vue' // Using the correct import path
 import SearchableSelect from '@/components/SearchableSelect.vue' // Using the correct import path
+import SearchableMultiSelect from '@/components/SearchableMultiSelect.vue'
 
 const props = defineProps({
   show: {
@@ -300,7 +319,7 @@ const error = ref(null)
 // Form data with default values
 const formData = ref({
   name: '',
-  department_id: '',
+  department_ids: [], // Ubah department_id menjadi department_ids (array)
   date_start: '',
   date_end: '',
   project_manager_id: '',
@@ -308,7 +327,7 @@ const formData = ref({
   description: '',
   state: 'draft',
   priority: '1',
-  project_type: 'general' // Default ke general sesuai model
+  project_type: 'general'
 })
 
 const isEditing = computed(() => {
@@ -369,9 +388,15 @@ const fetchDepartments = async () => {
 // Initialize form with project data if editing
 const initForm = () => {
   if (props.project) {
+    // Perhatikan department dihubungkan sesuai dengan struktur API
+    // Tangani department dari department_ids atau departement lama
+    const departmentIds = props.project.departments 
+      ? props.project.departments.map(d => d.id) 
+      : (props.project.department?.id ? [props.project.department.id] : []);
+      
     formData.value = {
       name: props.project.name || '',
-      department_id: props.project.department?.id || '',
+      department_ids: departmentIds,
       date_start: props.project.dates?.start || '',
       date_end: props.project.dates?.end || '',
       project_manager_id: props.project.team?.manager?.id || '',
@@ -385,7 +410,7 @@ const initForm = () => {
     // Reset to defaults if creating new
     formData.value = {
       name: '',
-      department_id: '',
+      department_ids: [],
       date_start: '',
       date_end: '',
       project_manager_id: '',
@@ -408,8 +433,8 @@ const validateForm = () => {
     return false
   }
   
-  if (!formData.value.department_id) {
-    error.value = 'Department is required'
+  if (!formData.value.department_ids || formData.value.department_ids.length === 0) {
+    error.value = 'At least one department is required'
     return false
   }
   
@@ -446,6 +471,7 @@ const validateForm = () => {
   return true
 }
 
+
 const submitForm = () => {
   if (!validateForm()) {
     return
@@ -454,21 +480,20 @@ const submitForm = () => {
   loading.value = true
   
   // Format data for API
-const submitData = {
-  name: formData.value.name.trim(),
-  department_id: parseInt(formData.value.department_id),
-  date_start: formData.value.date_start,
-  date_end: formData.value.date_end,
-  project_manager_id: parseInt(formData.value.project_manager_id),
-  team_ids: Array.isArray(formData.value.team_ids) 
-    ? formData.value.team_ids.map(id => parseInt(id)) 
-    : formData.value.team_ids ? [parseInt(formData.value.team_ids)] : [],
-  description: formData.value.description?.trim() || '',
-  state: formData.value.state,
-  priority: formData.value.priority,
-  project_type: formData.value.project_type,
-  // Don't include user_id in the payload as it's causing errors with notifications
-}
+  const submitData = {
+    name: formData.value.name.trim(),
+    department_ids: formData.value.department_ids.map(id => parseInt(id)), // Kirim sebagai array
+    date_start: formData.value.date_start,
+    date_end: formData.value.date_end,
+    project_manager_id: parseInt(formData.value.project_manager_id),
+    team_ids: Array.isArray(formData.value.team_ids) 
+      ? formData.value.team_ids.map(id => parseInt(id)) 
+      : formData.value.team_ids ? [parseInt(formData.value.team_ids)] : [],
+    description: formData.value.description?.trim() || '',
+    state: formData.value.state,
+    priority: formData.value.priority,
+    project_type: formData.value.project_type,
+  }
   
   // For editing, add project_id to the payload
   if (isEditing.value && props.project?.id) {
@@ -478,6 +503,62 @@ const submitData = {
   emit('submit', submitData)
   loading.value = false
 }
+
+// Tambahkan watch untuk formData.value.department_ids
+watch(() => formData.value.department_ids, (newDeptIds, oldDeptIds) => {
+  // Hanya reset jika departemen berubah signifikan 
+  // (bukan saat loading awal atau update kecil departemen)
+  const hasSignificantChange = () => {
+    // Jika dari kosong ke berisi atau sebaliknya
+    if (!oldDeptIds || oldDeptIds.length === 0 !== newDeptIds.length === 0) return true;
+    
+    // Jika jumlah departemen berubah drastis
+    if (Math.abs((oldDeptIds || []).length - (newDeptIds || []).length) > 1) return true;
+    
+    // Bandingkan isi array
+    const oldSet = new Set(oldDeptIds || []);
+    const newSet = new Set(newDeptIds || []);
+    const difference = [...newSet].filter(x => !oldSet.has(x)).length + 
+                     [...oldSet].filter(x => !newSet.has(x)).length;
+    
+    return difference > 1; // Jika ada lebih dari 1 perubahan, dianggap signifikan
+  };
+  
+  if (newDeptIds && hasSignificantChange()) {
+    // Jika departemen berubah signifikan, reset team dan manager
+    if (formData.value.project_manager_id || formData.value.team_ids.length > 0) {
+      formData.value.project_manager_id = '';
+      formData.value.team_ids = [];
+    }
+  }
+}, { deep: true });
+
+// Watch for department changes to reset team selections
+watch(() => formData.value.department_ids, (newDeptIds, oldDeptIds) => {
+  // Hanya reset jika departemen berubah signifikan 
+  // (bukan saat loading awal atau update kecil departemen)
+  const hasSignificantChange = () => {
+    // Jika dari kosong ke berisi atau sebaliknya
+    if (!oldDeptIds || !oldDeptIds.length !== !newDeptIds.length) return true;
+    
+    // Jika departemen utama berubah (anggap departemen pertama sebagai utama)
+    if (oldDeptIds[0] !== newDeptIds[0]) return true;
+    
+    // Jika jumlah departemen berubah drastis
+    if (Math.abs(oldDeptIds.length - newDeptIds.length) > 1) return true;
+    
+    return false;
+  };
+  
+  if (newDeptIds && hasSignificantChange()) {
+    // Jika departemen berubah signifikan, reset team dan manager
+    if (formData.value.project_manager_id || formData.value.team_ids.length > 0) {
+      formData.value.project_manager_id = '';
+      formData.value.team_ids = [];
+    }
+  }
+}, { deep: true })
+
 
 onMounted(() => {
   fetchDepartments()

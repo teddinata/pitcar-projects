@@ -2,13 +2,21 @@
 <template>
   <div 
     class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow transition-all duration-150 h-full flex flex-col"
+    :class="{
+      'border-dashed opacity-75': !project.active,
+      'border-l-4 border-l-red-500': project.priority === '3',
+      'border-l-4 border-l-orange-500': project.priority === '2'
+    }"
     @click="$emit('click')"
   >
     <!-- Card Header -->
     <div class="p-4 pb-3 flex-none">
       <div class="flex items-center justify-between mb-2">
-        <!-- Project Code -->
-        <div class="text-xs text-gray-500">{{ project.code }}</div>
+        <!-- Project Code with Archive Icon -->
+        <div class="text-xs text-gray-500 flex items-center">
+          <ArchiveBoxIcon v-if="!project.active" class="h-3.5 w-3.5 mr-1 text-gray-500" />
+          {{ project.code }}
+        </div>
         
         <div class="flex items-center space-x-2">
           <!-- Priority Badge -->
@@ -33,16 +41,20 @@
       <!-- Project Title -->
       <h3 class="text-base font-semibold text-gray-900 line-clamp-2 mb-2.5">{{ project.name }}</h3>
       
-      <!-- Department with Icon -->
-      <div 
-        class="inline-flex items-center py-1 px-2 rounded-md text-xs font-medium"
-        :class="getDepartmentClass(project.department.id)"
-      >
-        <component 
-          :is="getDepartmentIcon(project.department.name)" 
-          class="h-3.5 w-3.5 mr-1.5"
-        />
-        {{ project.department.name }}
+      <!-- Departments - Modified for multiple departments -->
+      <div class="flex flex-wrap gap-1.5">
+        <div 
+          v-for="dept in projectDepartments" 
+          :key="dept.id"
+          class="inline-flex items-center py-1 px-2 rounded-md text-xs font-medium"
+          :class="getDepartmentClass(dept.id)"
+        >
+          <component 
+            :is="getDepartmentIcon(dept.name)" 
+            class="h-3.5 w-3.5 mr-1.5"
+          />
+          {{ dept.name }}
+        </div>
       </div>
     </div>
 
@@ -57,7 +69,7 @@
         <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
           <div 
             class="h-1.5 rounded-full"
-            :class="getDepartmentProgressClass(project.department.id)"
+            :class="getProgressColorClass(project.progress)"
             :style="{ width: `${project.progress}%` }"
           ></div>
         </div>
@@ -93,7 +105,7 @@
           <div class="flex -space-x-2 mr-3">
             <div 
               class="h-6 w-6 rounded-full ring-2 ring-white flex items-center justify-center text-xs font-medium"
-              :class="getDepartmentAvatarClass(project.department.id)"
+              :class="getDepartmentAvatarClass(mainDepartmentId)"
             >
               {{ getInitials(project.team?.manager?.name) }}
             </div>
@@ -151,6 +163,16 @@
                   <EyeIcon class="h-3.5 w-3.5 mr-2 text-gray-500" />
                   View Details
                 </button>
+                
+                <!-- Add Toggle Archive Option -->
+                <button 
+                  class="w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 flex items-center"
+                  @click.stop="toggleArchive"
+                >
+                  <ArchiveBoxIcon v-if="project.active" class="h-3.5 w-3.5 mr-2 text-gray-500" />
+                  <ArchiveBoxArrowDownIcon v-else class="h-3.5 w-3.5 mr-2 text-gray-500" />
+                  {{ project.active ? 'Archive Project' : 'Unarchive Project' }}
+                </button>
               </div>
             </div>
           </div>
@@ -180,7 +202,9 @@ import {
   ShoppingCartIcon,
   BuildingOfficeIcon,
   DocumentTextIcon,
-  SparklesIcon
+  SparklesIcon,
+  ArchiveBoxIcon,
+  ArchiveBoxArrowDownIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -190,11 +214,34 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['click', 'status-change', 'view-details'])
+const emit = defineEmits(['click', 'status-change', 'view-details', 'toggle-archive'])
 
 // State variables
 const actionsMenuRef = ref(null)
 const showActionsMenu = ref(false)
+
+// Computed for departments - handle both old and new API formats
+const projectDepartments = computed(() => {
+  // New format with multiple departments
+  if (props.project.departments && Array.isArray(props.project.departments)) {
+    return props.project.departments;
+  }
+  
+  // Fallback to old format with single department
+  if (props.project.department) {
+    return [props.project.department];
+  }
+  
+  return [];
+})
+
+// Compute main department ID for styling
+const mainDepartmentId = computed(() => {
+  if (projectDepartments.value.length > 0) {
+    return projectDepartments.value[0].id;
+  }
+  return 1; // fallback
+})
 
 // Only show first 2 team members
 const displayMembers = computed(() => {
@@ -253,6 +300,13 @@ const getStatusDotClass = (state) => {
   return classes[state] || 'bg-gray-500'
 }
 
+// Progress bar color class
+const getProgressColorClass = (progress) => {
+  if (progress >= 75) return 'bg-green-500';
+  if (progress >= 25) return 'bg-yellow-500';
+  return 'bg-red-500';
+}
+
 // Department styling
 const getDepartmentClass = (departmentId) => {
   // Consistent text color with subtle background variations
@@ -275,7 +329,7 @@ const getDepartmentClass = (departmentId) => {
   return classes[index]
 }
 
-// Department progress bar class
+// Department progress bar class (not used anymore, using progress-based color instead)
 const getDepartmentProgressClass = (departmentId) => {
   const classes = [
     'bg-blue-500',
@@ -353,7 +407,7 @@ const formatPriority = (priority) => {
     '0': 'Low',
     '1': 'Medium',
     '2': 'High',
-    '3': 'Urgent'
+    '3': 'Critical'
   }
   return priorities[priority] || priority
 }
@@ -393,6 +447,12 @@ const changeStatus = (newStatus) => {
   if (newStatus !== props.project.state) {
     emit('status-change', props.project.id, newStatus)
   }
+  showActionsMenu.value = false
+}
+
+// Toggle archive status
+const toggleArchive = () => {
+  emit('toggle-archive', props.project.id)
   showActionsMenu.value = false
 }
 

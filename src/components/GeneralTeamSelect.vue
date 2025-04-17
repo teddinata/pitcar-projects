@@ -108,7 +108,10 @@
                 </div>
                 <div class="flex flex-col">
                   <span class="font-medium text-gray-900">{{ member.name }}</span>
-                  <span class="text-xs text-gray-500">{{ member.position?.name || 'Team Member' }}</span>
+                  <div class="flex items-center">
+                    <span class="text-xs text-gray-500">{{ member.position?.name || 'Team Member' }}</span>
+                    <span v-if="member.department" class="text-xs text-gray-400 ml-2">({{ member.department }})</span>
+                  </div>
                 </div>
               </div>
               <Check 
@@ -163,6 +166,11 @@ const props = defineProps({
   departmentId: {
     type: [Number, null],
     default: null
+  },
+  // Tambahkan properti baru untuk mendukung multiple departments
+  departmentIds: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -175,6 +183,21 @@ const searchQuery = ref('')
 const members = ref([])
 const selectedMembers = ref([])
 let searchTimeout = null
+
+// Computed untuk penentuan departmen yang digunakan
+const effectiveDepartmentIds = computed(() => {
+  // Prioritas departmentIds jika ada
+  if (props.departmentIds && props.departmentIds.length > 0) {
+    return props.departmentIds;
+  }
+  
+  // Fallback ke departmentId single jika ada
+  if (props.departmentId) {
+    return [props.departmentId];
+  }
+  
+  return [];
+})
 
 // Computed
 const inputPlaceholder = computed(() => {
@@ -208,35 +231,96 @@ watch(() => searchQuery.value, (newValue, oldValue) => {
   }
 }, { immediate: false })
 
-// Modifikasi fetchMembers untuk menerima query
+// Modifikasi fetchMembers untuk mendukung department_ids
+// Fetch team members
+// Modify fetchMembers to use multi-dept endpoint
+// Modify fetchMembers to use multi-dept endpoint with proper filtering
+// Tambahkan ini ke TeamSelect.vue
 const fetchMembers = async (query = '') => {
   try {
-    loading.value = true
-    const response = await apiClient.post('/web/employees', {
-      jsonrpc: '2.0',
-      method: 'call',
-      params: {
-        department_id: props.departmentId || null,
-        limit: 10, // Gunakan limit maksimum yang diizinkan
-        search: query, // Kirim query pencarian ke server
-        include_details: true,
-        sort_by: 'name',
-        sort_order: 'asc'
-      }
-    })
+    // Skip jika tidak ada department yang dipilih
+    if (effectiveDepartmentIds.value.length === 0) {
+      members.value = []; 
+      return;
+    }
     
-    if (response.data.result?.status === 'success') {
-      members.value = response.data.result.data.rows
-      // Pastikan selected members masih ada dalam hasil
-      initializeSelection()
+    loading.value = true;
+    
+    const response = await apiClient.post('/web/employees/multi-dept', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        department_ids: effectiveDepartmentIds.value,
+        search: query,
+        limit: 100 // Minta lebih banyak untuk difilter
+      }
+    });
+    
+    if (response.data?.result?.status === 'success' && 
+        response.data?.result?.data?.rows) {
+      
+      // Filter karyawan berdasarkan departemen di sisi client
+      const allEmployees = response.data.result.data.rows;
+      let filteredEmployees = allEmployees;
+      
+      // Jika ada departemen yang dipilih, filter berdasarkan department_id
+      if (effectiveDepartmentIds.value.length > 0) {
+        filteredEmployees = allEmployees.filter(employee => 
+          employee.department_id && 
+          effectiveDepartmentIds.value.includes(employee.department_id)
+        );
+        
+        console.log(`Memfilter dari ${allEmployees.length} menjadi ${filteredEmployees.length} karyawan`);
+      }
+      
+      members.value = filteredEmployees;
+      initializeSelection();
     }
   } catch (error) {
-    console.error('Error fetching team members:', error)
+    console.error('Error fetching team members:', error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
+// Also update fetchMissingMembers to use multi-dept
+const fetchMissingMembers = async (ids) => {
+  if (!ids || ids.length === 0) return;
+  
+  // Filter IDs that don't exist in members.value
+  const missingIds = Array.isArray(ids) 
+    ? ids.filter(id => !members.value.some(m => m.id === id))
+    : [ids].filter(id => !members.value.some(m => m.id === id));
+  
+  if (missingIds.length === 0) return;
+  
+  try {
+    loading.value = true;
+    const response = await apiClient.post('/web/employees/multi-dept', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        ids: missingIds
+      }
+    });
+    
+    if (response.data && response.data.result && 
+        response.data.result.status === 'success' && 
+        response.data.result.data && 
+        response.data.result.data.rows) {
+      
+      const missingMembers = response.data.result.data.rows;
+      // Add missing members to the list
+      members.value = [...members.value, ...missingMembers];
+      // Reinitialize selection with complete data
+      initializeSelection();
+    }
+  } catch (error) {
+    console.error('Error fetching missing members:', error);
+  } finally {
+    loading.value = false;
+  }
+};
 // Initialize selection based on modelValue
 const initializeSelection = () => {
   // Simpan selected members yang sudah ada
@@ -268,6 +352,7 @@ const initializeSelection = () => {
     selectedMembers.value = newSelectedMembers
   } else {
     // Untuk mode single select
+    // Untuk mode single select
     const currentId = props.modelValue
     
     // Cek apakah sudah ada di selected
@@ -283,41 +368,6 @@ const initializeSelection = () => {
 }
 
 // Tambahkan fungsi untuk mendapatkan detail member yang tidak ada dalam daftar
-const fetchMissingMembers = async (ids) => {
-  if (!ids || ids.length === 0) return
-  
-  // Filter IDs yang tidak ada dalam members.value
-  const missingIds = Array.isArray(ids) 
-    ? ids.filter(id => !members.value.some(m => m.id === id))
-    : [ids].filter(id => !members.value.some(m => m.id === id))
-  
-  if (missingIds.length === 0) return
-  
-  try {
-    loading.value = true
-    const response = await apiClient.post('/web/employees', {
-      jsonrpc: '2.0',
-      method: 'call',
-      params: {
-        ids: missingIds, // Tambahkan parameter ini di server untuk filter berdasarkan IDs
-        include_details: true,
-        limit: 50
-      }
-    })
-    
-    if (response.data.result?.status === 'success') {
-      const missingMembers = response.data.result.data.rows
-      // Tambahkan missing members ke daftar
-      members.value = [...members.value, ...missingMembers]
-      // Reinitialize selection dengan data lengkap
-      initializeSelection()
-    }
-  } catch (error) {
-    console.error('Error fetching missing members:', error)
-  } finally {
-    loading.value = false
-  }
-}
 
 
 // Check if member is selected
@@ -391,22 +441,36 @@ watch(() => props.modelValue, () => {
   initializeSelection()
 }, { deep: true })
 
-// Watch for department ID changes
-watch(() => props.departmentId, () => {
-  fetchMembers()
-})
+
+watch(() => effectiveDepartmentIds.value, (newVal, oldVal) => {
+  // Hanya fetch jika array berubah
+  if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+    fetchMembers();
+  }
+}, { deep: true });
+
+// Watch for department changes (both departmentId and departmentIds)
+watch(() => effectiveDepartmentIds.value, (newVal, oldVal) => {
+  // Cek apakah array berubah
+  const newValStr = JSON.stringify(newVal.sort());
+  const oldValStr = JSON.stringify(oldVal.sort());
+  
+  if (newValStr !== oldValStr) {
+    fetchMembers();
+  }
+}, { deep: true })
+
+
 
 // Initialize
 onMounted(() => {
   fetchMembers()
-  fetchMissingMembers(props.modelValue
-  )
+  fetchMissingMembers(props.modelValue)
 })
 
 watch(() => props.modelValue, () => {
   fetchMissingMembers(props.modelValue)
 }, { immediate: false })
-
 </script>
 
 <style scoped>
