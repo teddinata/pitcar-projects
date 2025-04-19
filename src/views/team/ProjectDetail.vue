@@ -135,38 +135,80 @@
               </div>
               
               <!-- Key Details -->
-              <div class="grid grid-cols-2 gap-4">
-                <!-- Department -->
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                  <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Department</h4>
+              <!-- <div class="grid grid-cols-2 gap-4"> -->
+               <!-- Department (Multiple) -->
+               <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <h4 class="text-xs font-medium text-gray-500 uppercase mb-3 flex items-center justify-between">
                   <div class="flex items-center">
-                    <Users class="w-4 h-4 text-indigo-500 mr-2" />
-                    <span class="text-sm font-medium text-gray-700">{{ project?.department?.name || 'Not Assigned' }}</span>
+                    <Users class="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
+                    Departments
+                  </div>
+                  <span v-if="project?.departments && project.departments.length > 3" 
+                        class="text-xs text-indigo-600 cursor-pointer hover:text-indigo-800"
+                        @click="toggleShowAllDepts">
+                    {{ showAllDepts ? 'Show less' : `+${project.departments.length - 3} more` }}
+                  </span>
+                </h4>
+                <div>
+                  <!-- Update the department items to use department ID for color consistency -->
+                  <div v-if="project?.departments && project.departments.length > 0">
+                    <!-- Compact view for many departments -->
+                    <div v-if="project.departments.length > 3 && !showAllDepts" class="flex flex-col space-y-2">
+                      <!-- Show first 3 departments -->
+                      <div v-for="dept in project.departments.slice(0, 3)" 
+                          :key="dept.id" 
+                          class="flex items-center px-3 py-2 rounded-md border transition-colors"
+                          :class="`bg-${getDeptColor(dept.id)}-50 text-${getDeptColor(dept.id)}-700 border-${getDeptColor(dept.id)}-200 hover:bg-${getDeptColor(dept.id)}-100`">
+                        <component :is="getDepartmentIcon(dept.name)" class="w-4 h-4 mr-2" :class="`text-${getDeptColor(dept.id)}-600`" />
+                        <span class="text-sm font-medium">{{ dept.name }}</span>
+                      </div>
+                      <!-- Department count indicator -->
+                      <div class="flex justify-center items-center py-2 bg-white rounded-md border border-dashed border-indigo-200 cursor-pointer hover:bg-indigo-50 transition-colors"
+                          @click="toggleShowAllDepts">
+                        <span class="text-xs font-medium text-indigo-600">
+                          +{{ project.departments.length - 3 }} more departments
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- Expanded view with all departments in a grid -->
+                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div v-for="dept in project.departments" 
+                          :key="dept.id" 
+                          class="flex items-center px-3 py-2 rounded-md border transition-colors"
+                          :class="`bg-${getDeptColor(dept.id)}-50 text-${getDeptColor(dept.id)}-700 border-${getDeptColor(dept.id)}-200 hover:bg-${getDeptColor(dept.id)}-100`">
+                        <component :is="getDepartmentIcon(dept.name)" class="w-4 h-4 mr-2" :class="`text-${getDeptColor(dept.id)}-600`" />
+                        <span class="text-sm font-medium truncate">{{ dept.name }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <!-- Project Type -->
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                  <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Project Type</h4>
-                  <div class="flex items-center">
-                    <Hash class="w-4 h-4 text-indigo-500 mr-2" />
-                    <span 
-                      v-if="project?.project_type" 
-                      class="px-2 py-0.5 text-sm font-medium rounded-full uppercase"
-                      :class="{
-                        'bg-gray-100 text-gray-700': project.project_type === 'general' || project.project_type === 'umum',
-                        'bg-blue-50 text-blue-700': project.project_type === 'creation' || project.project_type === 'pembuatan',
-                        'bg-rose-50 text-rose-700': project.project_type === 'development' || project.project_type === 'pengembangan',
-                        'bg-green-50 text-green-700': project.project_type === 'training' || project.project_type === 'pelatihan',
-                        'bg-amber-50 text-amber-700': project.project_type === 'weekly' || project.project_type === 'mingguan',
-                        'bg-purple-50 text-purple-700': project.project_type === 'monthly' || project.project_type === 'bulanan',
-                        'bg-gray-100 text-gray-700': !['general', 'umum', 'creation', 'pembuatan', 'development', 'pengembangan', 'training', 'pelatihan', 'weekly', 'mingguan', 'monthly', 'bulanan'].includes(project.project_type)
-                      }"
-                    >
-                      {{ project.project_type }}
-                    </span>
-                    <span v-else class="text-sm text-gray-500">N/A</span>
-                  </div>
+              </div>
+            <!-- </div> -->
+              
+              <!-- Project Type -->
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <h4 class="text-xs font-medium text-gray-500 uppercase mb-2 flex items-center">
+                  <Hash class="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
+                  Project Type
+                </h4>
+                <div class="flex items-center">
+                  <span 
+                    v-if="project?.project_type" 
+                    class="px-3 py-1.5 text-sm font-medium rounded-md uppercase flex items-center"
+                    :class="{
+                      'bg-gray-100 text-gray-700': project.project_type === 'general' || project.project_type === 'umum',
+                      'bg-blue-50 text-blue-700': project.project_type === 'creation' || project.project_type === 'pembuatan',
+                      'bg-rose-50 text-rose-700': project.project_type === 'development' || project.project_type === 'pengembangan',
+                      'bg-green-50 text-green-700': project.project_type === 'training' || project.project_type === 'pelatihan',
+                      'bg-amber-50 text-amber-700': project.project_type === 'weekly' || project.project_type === 'mingguan',
+                      'bg-purple-50 text-purple-700': project.project_type === 'monthly' || project.project_type === 'bulanan',
+                      'bg-gray-100 text-gray-700': !['general', 'umum', 'creation', 'pembuatan', 'development', 'pengembangan', 'training', 'pelatihan', 'weekly', 'mingguan', 'monthly', 'bulanan'].includes(project.project_type)
+                    }"
+                  >
+                    {{ project.project_type }}
+                  </span>
+                  <span v-else class="text-sm text-gray-500">N/A</span>
                 </div>
               </div>
               
@@ -202,7 +244,7 @@
                   >
                     <div class="flex items-center">
                       <Flag class="w-3 h-3 mr-1" />
-                      {{ formatProjectPriority(project?.priority) }} Priority
+                      {{ formatProjectPriority(project?.priority) }}
                     </div>
                   </div>
                 </div>
@@ -432,6 +474,7 @@
                 <CheckSquare class="w-5 h-5 mr-2 text-indigo-500" />
                 Project Tasks
               </h2>
+
               <button
                 @click="showCreateTaskModal = true"
                 class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
@@ -442,36 +485,118 @@
             </div>
             
             <div class="p-5">
-              <!-- Task filters (optional enhancement) -->
-              <div class="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                <button 
-                  @click="taskFilter = 'all'" 
-                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
-                  :class="taskFilter === 'all' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
-                >
-                  All Tasks
-                </button>
-                <button 
-                  @click="taskFilter = 'in_progress'" 
-                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
-                  :class="taskFilter === 'in_progress' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
-                >
-                  In Progress
-                </button>
-                <button 
-                  @click="taskFilter = 'planned'" 
-                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
-                  :class="taskFilter === 'planned' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
-                >
-                  Planned
-                </button>
-                <button 
-                  @click="taskFilter = 'done'" 
-                  class="px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition"
-                  :class="taskFilter === 'done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-gray-50 text-gray-600 border border-gray-200'"
-                >
-                  Completed
-                </button>
+              <!-- Task actions toolbar - Combines filters, archive options and selection tools -->
+              <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <!-- Left side: Task filters -->
+                  <div class="flex items-center gap-1 flex-wrap">
+                    <span class="text-xs font-medium text-gray-500 mr-1">Filter:</span>
+                    <div class="flex bg-white rounded-md border border-gray-200 p-0.5">
+                      <button 
+                        @click="taskFilter = 'all'" 
+                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                        :class="taskFilter === 'all' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                      >
+                        All
+                      </button>
+                      <button 
+                        @click="taskFilter = 'in_progress'" 
+                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                        :class="taskFilter === 'in_progress' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                      >
+                        In Progress
+                      </button>
+                      <button 
+                        @click="taskFilter = 'planned'" 
+                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                        :class="taskFilter === 'planned' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                      >
+                        Planned
+                      </button>
+                      <button 
+                        @click="taskFilter = 'done'" 
+                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                        :class="taskFilter === 'done' ? 'bg-emerald-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                      >
+                        Completed
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Right side: Archive options and Selection tools -->
+                  <div class="flex items-center gap-4">
+                    <!-- Archive options -->
+                    <div class="flex items-center gap-1">
+                      <input 
+                        id="show-archived-tasks" 
+                        type="checkbox" 
+                        v-model="showArchivedTasks"
+                        @change="fetchTasks"
+                        class="h-4 w-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500" 
+                      />
+                      <label for="show-archived-tasks" class="text-xs text-gray-700">
+                        Show archived
+                      </label>
+                    </div>
+                    
+                    <!-- Selection tools - Only show when tasks present -->
+                    <div v-if="filteredTasks.length > 0" class="flex items-center gap-1">
+                      <button
+                        @click="toggleAllTasks"
+                        class="text-xs text-gray-700 hover:text-rose-600 transition-colors flex items-center"
+                      >
+                        <span v-if="isAllTasksSelected">Deselect all</span>
+                        <span v-else>Select all</span>
+                      </button>
+                    </div>
+                    
+                    <!-- Sort dropdown -->
+                    <select 
+                      id="task-sort" 
+                      v-model="taskSort" 
+                      class="text-xs bg-white border border-gray-200 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500"
+                    >
+                      <option disabled value="">Sort by</option>
+                      <option value="priority_desc">Priority (High to Low)</option>
+                      <option value="priority_asc">Priority (Low to High)</option>
+                      <option value="name_asc">Name (A-Z)</option>
+                      <option value="name_desc">Name (Z-A)</option>
+                      <option value="date_desc">Due Date (Newest)</option>
+                      <option value="date_asc">Due Date (Oldest)</option>
+                      <option value="progress_desc">Progress (High to Low)</option>
+                      <option value="progress_asc">Progress (Low to High)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Selected tasks actions bar -->
+              <div v-if="selectedTaskIds.length > 0" class="bg-rose-50 p-3 rounded-lg mb-3 flex items-center justify-between">
+                <div class="text-sm text-rose-700 font-medium">
+                  {{ selectedTaskIds.length }} task(s) selected
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    @click="confirmMultiArchiveTasks(false)"
+                    class="px-3 py-1.5 text-xs font-medium bg-white text-rose-600 border border-rose-300 rounded-md hover:bg-rose-50 transition-colors"
+                  >
+                    <Archive class="w-3.5 h-3.5 mr-1.5 inline-block" />
+                    Archive Selected
+                  </button>
+                  <button
+                    @click="confirmMultiArchiveTasks(true)"
+                    class="px-3 py-1.5 text-xs font-medium bg-white text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors"
+                  >
+                    <RefreshCw class="w-3.5 h-3.5 mr-1.5 inline-block" />
+                    Unarchive Selected
+                  </button>
+                  <button
+                    @click="selectedTaskIds = []"
+                    class="px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
               
               <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
@@ -479,17 +604,53 @@
                 <div
                   v-for="task in filteredTasks"
                   :key="task.id"
-                  class="border border-gray-200 rounded-lg hover:border-rose-300 hover:shadow-sm transition-all duration-200 overflow-hidden cursor-pointer group"
-                  @click="showTaskDetail(task)"
+                  class="border rounded-lg transition-all duration-200 overflow-hidden group relative"
+                  :class="[
+                    selectedTaskIds.includes(task.id) 
+                      ? 'border-rose-500 bg-rose-50/30' 
+                      : 'border-gray-200 hover:border-rose-300 hover:shadow-sm'
+                  ]"
                 >
-                  <!-- Task Header -->
-                  <div class="px-4 pt-4 pb-2">
-                    <div class="flex items-start justify-between gap-2">
+                  <!-- Task Header with selection controls that don't overlap content -->
+                  <div class="px-4 pt-4 pb-2 flex items-start justify-between gap-2">
+                    <!-- Checkbox moved to left side of content, not overlapping -->
+                    <div class="flex items-start gap-3">
+                      <!-- Checkbox container -->
+                      <div 
+                        class="mt-0.5 flex-shrink-0"
+                        @click.stop
+                      >
+                        <div 
+                          class="h-5 w-5 rounded border transition-colors flex items-center justify-center cursor-pointer"
+                          :class="[
+                            selectedTaskIds.includes(task.id) 
+                              ? 'bg-rose-600 border-rose-600 hover:bg-rose-700 hover:border-rose-700' 
+                              : 'bg-white border-gray-300 hover:border-rose-400'
+                          ]"
+                          @click="toggleTaskSelection(task.id)"
+                        >
+                          <Check 
+                            v-if="selectedTaskIds.includes(task.id)" 
+                            class="h-3.5 w-3.5 text-white" 
+                          />
+                        </div>
+                      </div>
+                      
                       <!-- Task Name and Basic Info -->
-                      <div class="min-w-0">
-                        <h3 class="font-medium text-gray-800 truncate group-hover:text-rose-600 transition">
+                      <div class="min-w-0 cursor-pointer" @click="showTaskDetail(task)">
+                        <!-- Judul tugas yang diperbarui dengan tampilan yang lebih responsif -->
+                        <h3 class="font-medium text-gray-800 line-clamp-2 group-hover:text-rose-600 transition break-words">
                           {{ task.name }}
                         </h3>
+                        <!-- Tambahkan tooltip untuk nama lengkap saat judul dipotong -->
+                        <div v-if="task.name.length > 50" class="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-1 max-w-xs z-10 break-words">
+                          {{ task.name }}
+                        </div>
+                        <!-- Menampilkan indikator archived jika tugas di-archive -->
+                        <div v-if="task.active === false" class="inline-flex items-center text-xs text-gray-500 mt-1">
+                          <Archive class="w-3 h-3 mr-1" />
+                          <span>Diarsipkan</span>
+                        </div>
                         <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                           <span v-if="task.type?.name" class="flex items-center">
                             <Bookmark class="w-3.5 h-3.5 mr-1 text-gray-400" />
@@ -501,26 +662,26 @@
                           </span>
                         </div>
                       </div>
-                      
-                      <!-- Status Badge -->
-                      <div
-                        class="shrink-0 px-2 py-1 text-xs font-medium rounded-md border"
-                        :class="{
-                          'bg-amber-50 text-amber-700 border-amber-200': task.state === 'in_progress',
-                          'bg-emerald-50 text-emerald-700 border-emerald-200': task.state === 'done',
-                          'bg-gray-50 text-gray-600 border-gray-200': task.state === 'draft',
-                          'bg-rose-50 text-rose-700 border-rose-200': task.state === 'planned',
-                          'bg-blue-50 text-blue-700 border-blue-200': task.state === 'review'
-                        }"
-                      >
-                        {{ formatState(task.state) }}
-                      </div>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <div
+                      class="shrink-0 px-2 py-1 text-xs font-medium rounded-md border cursor-pointer"
+                      :class="{
+                        'bg-amber-50 text-amber-700 border-amber-200': task.state === 'in_progress',
+                        'bg-emerald-50 text-emerald-700 border-emerald-200': task.state === 'done',
+                        'bg-gray-50 text-gray-600 border-gray-200': task.state === 'draft',
+                        'bg-rose-50 text-rose-700 border-rose-200': task.state === 'planned',
+                        'bg-blue-50 text-blue-700 border-blue-200': task.state === 'review'
+                      }"
+                      @click="showTaskDetail(task)"
+                    >
+                      {{ formatState(task.state) }}
                     </div>
                   </div>
-                  <!-- Continuing the Tasks Section from previous part -->
                   
                   <!-- Task Content -->
-                  <div class="px-4 py-3 border-t border-gray-100">
+                  <div class="px-4 py-3 border-t border-gray-100 cursor-pointer" @click="showTaskDetail(task)">
                     <!-- Priority Badge and Assignees -->
                     <div class="flex justify-between">
                       <!-- Priority Badge -->
@@ -535,7 +696,7 @@
                       >
                         <Flag class="w-3 h-3 mr-1" />
                         {{ formatPriority(task.priority) }}
-                      </div>
+                      </div>                     
                       
                       <!-- Assigned Users -->
                       <div class="flex -space-x-2 overflow-hidden">
@@ -631,6 +792,7 @@
                   v-for="meeting in project?.meetings"
                   :key="meeting.id"
                   class="border border-gray-200 rounded-lg hover:border-rose-300 hover:shadow-sm p-3 transition-all duration-200"
+                  @click="showMeetingDetail(meeting)"
                 >
                   <div class="flex items-start justify-between gap-2">
                     <!-- Meeting Title and Details -->
@@ -657,17 +819,37 @@
                       </div>
                     </div>
                     
-                    <!-- Meeting Status -->
-                    <div
-                      class="shrink-0 px-2 py-1 text-xs font-medium rounded-full border"
-                      :class="{
-                        'bg-amber-50 text-amber-700 border-amber-200': meeting.state === 'in_progress',
-                        'bg-emerald-50 text-emerald-700 border-emerald-200': meeting.state === 'done',
-                        'bg-gray-50 text-gray-600 border-gray-200': meeting.state === 'planned',
-                        'bg-rose-50 text-rose-700 border-rose-200': meeting.state === 'cancelled'
-                      }"
-                    >
-                      {{ formatState(meeting.state) }}
+                    <!-- Meeting Status & Actions -->
+                    <div class="flex flex-col items-end gap-2">
+                      <div
+                        class="shrink-0 px-2 py-1 text-xs font-medium rounded-full border"
+                        :class="{
+                          'bg-amber-50 text-amber-700 border-amber-200': meeting.state === 'in_progress',
+                          'bg-emerald-50 text-emerald-700 border-emerald-200': meeting.state === 'done',
+                          'bg-gray-50 text-gray-600 border-gray-200': meeting.state === 'planned',
+                          'bg-rose-50 text-rose-700 border-rose-200': meeting.state === 'cancelled'
+                        }"
+                      >
+                        {{ formatState(meeting.state) }}
+                      </div>
+                      
+                      <!-- Action buttons (shown on hover) -->
+                      <div class="flex opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+                        <button
+                          @click.stop="editMeeting(meeting)"
+                          class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                          title="Edit"
+                        >
+                          <Edit class="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          @click.stop="confirmDeleteMeeting(meeting)"
+                          class="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition ml-1"
+                          title="Delete"
+                        >
+                          <Trash2 class="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -693,7 +875,7 @@
         <!-- Right Column (Communication) Content -->
         <div v-if="activeTab === 'communication' || !isMobile" class="space-y-6">
           <!-- Team Chat Card -->
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-[600px]">
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-[800px]">
             <div class="border-b border-gray-100 px-5 py-4">
               <h2 class="text-lg font-medium text-gray-800 flex items-center">
                 <MessageSquare class="w-5 h-5 mr-2 text-indigo-500" />
@@ -719,8 +901,25 @@
                         <span class="text-sm font-medium text-gray-800">{{ message.author?.name }}</span>
                         <span class="text-xs text-gray-500">{{ formatDateTime(message.date) }}</span>
                       </div>
-                      <div class="mt-1 text-sm text-gray-700 break-words" v-html="formatMessageContent(message.content)"></div>
-                      
+                      <!-- <div class="mt-1 text-sm text-gray-700 break-words" v-html="formatMessageContent(message.content)"></div> -->
+                      <!-- Replace the existing message content div with this -->
+                      <div class="mt-1 text-sm text-gray-700">
+                        <div v-if="message.content && message.content.length > 300" class="message-content">
+                          <div v-if="expandedMessages[message.id]">
+                            <div class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content)"></div>
+                            <button @click="toggleMessageExpand(message.id)" class="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1">
+                              Show less
+                            </button>
+                          </div>
+                          <div v-else>
+                            <div class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content.substring(0, 300) + '...')"></div>
+                            <button @click="toggleMessageExpand(message.id)" class="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1">
+                              Read more
+                            </button>
+                          </div>
+                        </div>
+                        <div v-else class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content)"></div>
+                      </div>
                       <!-- Message Attachments -->
                       <div v-if="message.attachments && message.attachments.length" class="mt-2 space-y-2">
                         <div 
@@ -788,7 +987,8 @@
               </div>
               
               <!-- Message Input -->
-              <div v-if="project?.group_id" class="p-4 border-t bg-white">
+              <!-- Message Input -->
+              <div v-if="project?.group_id" class="p-3 border-t bg-white">
                 <!-- File Preview Area (when file is selected) -->
                 <div v-if="chatAttachment" class="mb-2 p-2 bg-rose-50 rounded-lg flex items-center justify-between">
                   <div class="flex items-center">
@@ -809,69 +1009,66 @@
                   </button>
                 </div>
                 
-                <div class="flex flex-col">
-                  <!-- Main Input Area -->
-                  <div class="flex items-end relative">
-                    <div class="flex-grow">
-                      <TeamMentionInput 
-                        ref="mentionInputRef"
-                        v-model="newMessage" 
-                        :members="allProjectMembers"
-                        placeholder="Type a message... (use @ to mention)"
-                        @submit="sendMessage"
-                        class="w-full"
-                      />
+                <!-- Main Input Area with Improved Responsiveness -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <!-- TeamMentionInput -->
+                  <div class="flex-grow">
+                    <TeamMentionInput 
+                      ref="mentionInputRef"
+                      v-model="newMessage" 
+                      :members="allProjectMembers"
+                      placeholder="Type a message... (use @ to mention)"
+                      @submit="sendMessage"
+                      class="w-full"
+                    />
+                  </div>
+                  
+                  <!-- Action Buttons - Move below on mobile, to the side on larger screens -->
+                  <div class="flex sm:flex-col justify-end gap-1 sm:ml-2">
+                    <!-- File Upload Button -->
+                    <button 
+                      @click="handleChatFileUpload" 
+                      class="p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
+                      title="Attach file"
+                    >
+                      <Paperclip class="h-5 w-5" />
+                    </button>
+                    
+                    <!-- Hidden File Input -->
+                    <input
+                      ref="chatFileInputRef"
+                      type="file"
+                      @change="onChatFileChange"
+                      class="hidden"
+                    />
+                    
+                    <!-- Emoji Button -->
+                    <div class="relative">
+                      <button 
+                        @click.stop="toggleEmojiPicker" 
+                        class="emoji-button p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
+                        title="Add emoji"
+                      >
+                        <Smile class="h-5 w-5" />
+                      </button>
+                      
+                      <!-- Emoji Picker -->
+                      <div 
+                        v-if="showEmojiPicker" 
+                        class="emoji-picker absolute bottom-full right-0 mb-2 z-50 bg-white shadow-lg rounded-lg border border-gray-200"
+                        style="max-height: 350px; width: 300px;"
+                      >
+                        <EmojiPicker @select="addEmoji" />
+                      </div>
                     </div>
                     
-                    <!-- Action Buttons -->
-                    <div class="flex ml-2 mb-1 relative">
-                      <!-- File Upload Button -->
-                      <button 
-                        @click="handleChatFileUpload" 
-                        class="mr-1 p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition"
-                        title="Attach file"
+                    <!-- Send Button -->
+                    <button 
+                      @click="sendMessage" 
+                      class="p-2 rounded-full text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
                       >
-                        <Paperclip class="h-5 w-5" />
-                      </button>
-                      
-                      <!-- Hidden File Input -->
-                      <input
-                        ref="chatFileInputRef"
-                        type="file"
-                        @change="onChatFileChange"
-                        class="hidden"
-                      />
-                      
-                      <!-- Emoji Button -->
-                      <div class="relative">
-                        <button 
-                          @click.stop="toggleEmojiPicker" 
-                          class="emoji-button mr-1 p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-full transition"
-                          title="Add emoji"
-                        >
-                          <Smile class="h-5 w-5" />
-                        </button>
-                        
-                        <!-- Emoji Picker -->
-                        <div 
-                          v-if="showEmojiPicker" 
-                          class="emoji-picker absolute bottom-full right-0 mb-2 z-50 bg-white shadow-lg rounded-lg border border-gray-200"
-                          style="max-height: 350px; width: 300px;"
-                        >
-                          <EmojiPicker @select="addEmoji" />
-                        </div>
-                      </div>
-                      
-                      <!-- Send Button -->
-                      <button 
-                        @click="sendMessage" 
-                        class="p-2 rounded-full text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-                        :disabled="!newMessage.trim() && !chatAttachment"
-                        :class="{ 'opacity-60 cursor-not-allowed': !newMessage.trim() && !chatAttachment }"
-                      >
-                        <Send class="h-4 w-4" />
-                      </button>
-                    </div>
+                      <Send class="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -914,8 +1111,12 @@
               </div>
               
               <!-- Task Title Section -->
+              <!-- Task Title Section pada Modal Detail Tugas -->
               <div class="px-6 pt-5 pb-4 border-b border-gray-100">
-                <h2 class="text-xl font-semibold text-gray-800">{{ selectedTask.name }}</h2>
+                <!-- Judul task yang responsif ketika panjang -->
+                <h2 class="text-xl font-semibold text-gray-800 break-words leading-normal">
+                  {{ selectedTask.name }}
+                </h2>
                 
                 <!-- Status and Priority Badges -->
                 <div class="flex flex-wrap gap-2 mt-3">
@@ -1178,6 +1379,7 @@
             </div>
             
             <!-- Footer Actions -->
+            <!-- Pada footer action di TeamTaskDetailManagerPopup.vue -->
             <div class="bg-gray-50 px-6 py-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
               <button
                 @click="showTaskDetailModal = false"
@@ -1185,6 +1387,16 @@
               >
                 Close
               </button>
+              
+              <!-- Archive Button -->
+              <button
+                @click="confirmArchiveTask()"
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                >
+                <Archive class="w-4 h-4 mr-1.5 inline-block" />
+                {{ selectedTask.active !== false ? 'Archive Task' : 'Unarchive Task' }}
+              </button>
+              
               <button
                 @click="editSelectedTask()"
                 class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
@@ -1198,7 +1410,464 @@
       </div>
       </Teleport>
 
+      <!-- Meeting Detail Modal -->
       <Teleport to="body">
+        <div 
+          v-if="showMeetingDetailModal && selectedMeeting" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="showMeetingDetailModal = false"
+            ></div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+              <!-- Header -->
+              <div class="border-b border-gray-100 px-6 py-4 bg-gray-50">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-medium text-gray-800">Meeting Details</h3>
+                  <button 
+                    @click="showMeetingDetailModal = false" 
+                    class="text-gray-500 hover:text-gray-700 focus:outline-none transition"
+                  >
+                    <X class="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Meeting Title Section -->
+              <div class="px-6 pt-5 pb-4 border-b border-gray-100">
+                <h2 class="text-xl font-semibold text-gray-800">{{ selectedMeeting.name }}</h2>
+                
+                <!-- Status Badge -->
+                <div class="flex flex-wrap gap-2 mt-3">
+                  <div 
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    :class="{
+                      'bg-amber-50 text-amber-700': selectedMeeting.state === 'in_progress',
+                      'bg-emerald-50 text-emerald-700': selectedMeeting.state === 'done',
+                      'bg-gray-50 text-gray-600': selectedMeeting.state === 'planned',
+                      'bg-rose-50 text-rose-700': selectedMeeting.state === 'cancelled'
+                    }"
+                  >
+                    <div class="w-2 h-2 rounded-full mr-2"
+                      :class="{
+                        'bg-amber-500': selectedMeeting.state === 'in_progress',
+                        'bg-emerald-500': selectedMeeting.state === 'done',
+                        'bg-gray-400': selectedMeeting.state === 'planned',
+                        'bg-rose-500': selectedMeeting.state === 'cancelled'
+                      }"
+                    ></div>
+                    {{ formatState(selectedMeeting.state) }}
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Meeting Details Content -->
+              <div class="px-6 py-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <!-- Left Column: Meeting Information -->
+                  <div class="space-y-5">
+                    <!-- Time and Location -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <Calendar class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Date & Time
+                      </h4>
+                      <div class="space-y-3">
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-500">Start:</span>
+                          <span class="font-medium text-gray-700">{{ formatDateTime(selectedMeeting.dates?.start) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-500">End:</span>
+                          <span class="font-medium text-gray-700">{{ formatDateTime(selectedMeeting.dates?.end) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-500">Duration:</span>
+                          <span class="font-medium text-gray-700">{{ selectedMeeting.dates?.duration }} hours</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Location -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <MapPin class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Location
+                      </h4>
+                      <div class="space-y-3">
+                        <div v-if="selectedMeeting.location" class="text-sm text-gray-700">
+                          <span class="font-medium">Physical Location:</span>
+                          <p class="mt-1">{{ selectedMeeting.location }}</p>
+                        </div>
+                        <div v-if="selectedMeeting.virtual_location" class="text-sm text-gray-700">
+                          <span class="font-medium">Virtual Meeting Link:</span>
+                          <p class="mt-1 break-words text-blue-600 underline">
+                            <a :href="selectedMeeting.virtual_location" target="_blank" rel="noopener noreferrer">
+                              {{ selectedMeeting.virtual_location }}
+                            </a>
+                          </p>
+                        </div>
+                        <div v-if="!selectedMeeting.location && !selectedMeeting.virtual_location" class="text-sm text-gray-500 italic">
+                          No location specified
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Agenda -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <AlignLeft class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Agenda
+                      </h4>
+                      <div class="prose prose-sm max-w-none text-gray-600" v-html="selectedMeeting.agenda || 'No agenda provided'"></div>
+                    </div>
+                  </div>
+
+                  <!-- Right Column: Attendees & Action Items -->
+                  <div class="space-y-5">
+                    <!-- Organizer & Attendees -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <Users class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Organizer & Attendees
+                      </h4>
+                      
+                      <!-- Organizer -->
+                      <div class="mb-4">
+                        <div class="text-xs text-gray-500 mb-2">Organizer:</div>
+                        <div class="flex items-center">
+                          <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-medium text-rose-600">
+                              {{ getInitials(selectedMeeting.organizer?.name) }}
+                            </span>
+                          </div>
+                          <span class="ml-3 text-sm font-medium text-gray-700">{{ selectedMeeting.organizer?.name }}</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Attendees -->
+                      <div>
+                        <div class="text-xs text-gray-500 mb-2">Attendees:</div>
+                        <div class="space-y-2 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                          <div v-for="person in selectedMeeting.attendees" :key="person.id" class="flex items-center">
+                            <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                              <span class="text-sm font-medium text-rose-600">
+                                {{ getInitials(person.name) }}
+                              </span>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">{{ person.name }}</span>
+                          </div>
+                          <div v-if="!selectedMeeting.attendees || selectedMeeting.attendees.length === 0" class="text-sm text-gray-500 italic">
+                            No attendees specified
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Meeting Notes -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <h4 class="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                        <FileText class="w-4 h-4 mr-1.5 text-indigo-500" />
+                        Meeting Notes
+                      </h4>
+                      <div class="prose prose-sm max-w-none text-gray-600" v-html="selectedMeeting.notes || 'No meeting notes available'"></div>
+                    </div>
+                    
+                    <!-- Action Items -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-medium text-gray-600 flex items-center">
+                          <CheckSquare class="w-4 h-4 mr-1.5 text-indigo-500" />
+                          Action Items
+                        </h4>
+                        <button
+                          @click="showAddActionItemModal = true"
+                          class="inline-flex items-center px-2 py-1 text-xs font-medium text-rose-600 bg-rose-50 rounded-md hover:bg-rose-100 focus:outline-none transition"
+                        >
+                          <Plus class="w-3 h-3 mr-1.5" />
+                          Add Item
+                        </button>
+                      </div>
+                      
+                      <!-- Loading state -->
+                      <div v-if="loadingMeetingDetails" class="flex justify-center py-3">
+                        <div class="animate-spin rounded-full h-5 w-5 border-2 border-indigo-600 border-t-transparent"></div>
+                      </div>
+                      
+                      <!-- Action items list -->
+                      <div v-else-if="meetingActionItems.length > 0" class="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div 
+                          v-for="item in meetingActionItems" 
+                          :key="item.id"
+                          class="bg-white rounded-lg p-3 border border-gray-200"
+                        >
+                          <div class="flex items-start justify-between gap-2">
+                            <div>
+                              <h5 class="text-sm font-medium text-gray-700">{{ item.name }}</h5>
+                              <div class="flex items-center mt-1 text-xs text-gray-500">
+                                <User class="w-3.5 h-3.5 mr-1" />
+                                <span>{{ item.assigned_to?.name }}</span>
+                                <span v-if="item.due_date" class="ml-3 flex items-center">
+                                  <Calendar class="w-3.5 h-3.5 mr-1" />
+                                  <span>{{ formatDate(item.due_date) }}</span>
+                                </span>
+                              </div>
+                              <p v-if="item.notes" class="mt-2 text-xs text-gray-600">{{ item.notes }}</p>
+                            </div>
+                            
+                            <div 
+                              class="shrink-0 px-2 py-1 text-xs font-medium rounded-full border"
+                              :class="{
+                                'bg-blue-50 text-blue-700 border-blue-200': item.state === 'todo',
+                                'bg-amber-50 text-amber-700 border-amber-200': item.state === 'in_progress',
+                                'bg-emerald-50 text-emerald-700 border-emerald-200': item.state === 'done',
+                                'bg-gray-50 text-gray-600 border-gray-200': item.state === 'cancelled'
+                              }"
+                            >
+                              {{ formatActionItemState(item.state) }}
+                            </div>
+                          </div>
+                          
+                          <!-- Actions for each item -->
+                          <div class="mt-2 flex justify-end gap-2">
+                            <button
+                              @click="updateActionItemState(item.id, getNextState(item.state))"
+                              class="px-2 py-1 text-xs font-medium text-indigo-600 bg-indigo-50 rounded hover:bg-indigo-100 transition"
+                            >
+                              {{ getNextStateLabel(item.state) }}
+                            </button>
+                            <button
+                              @click="editActionItem(item)"
+                              class="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 rounded hover:bg-gray-100 transition"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Empty state -->
+                      <div v-else class="text-center py-4">
+                        <CheckSquare class="mx-auto h-8 w-8 text-gray-300" />
+                        <p class="mt-1 text-sm text-gray-500">No action items yet</p>
+                        <button
+                          @click="showAddActionItemModal = true"
+                          class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+                        >
+                          <Plus class="w-3 h-3 mr-1.5" />
+                          Add First Action Item
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Footer Actions -->
+              <div class="bg-gray-50 px-6 py-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
+                <button
+                  @click="showMeetingDetailModal = false"
+                  class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                >
+                  Close
+                </button>
+                
+                <button
+                  @click="confirmDeleteMeeting(selectedMeeting)"
+                  class="px-4 py-2 border border-rose-300 rounded-md shadow-sm text-sm font-medium text-rose-700 bg-white hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition"
+                >
+                  <Trash2 class="w-4 h-4 mr-1.5 inline-block" />
+                  Delete
+                </button>
+                
+                <button
+                  @click="editMeeting(selectedMeeting)"
+                  class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                >
+                  <Edit class="w-4 h-4 mr-1.5 inline-block" />
+                  Edit Meeting
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Meeting Modal -->
+        <TeamMeetingFormModal
+        v-if="showEditMeetingModal"
+        :show="showEditMeetingModal"
+        :project-id="projectId"
+        :meeting-data="selectedMeeting"
+        @close="showEditMeetingModal = false"
+        @submit="handleMeetingUpdate"
+        />
+      </Teleport>
+
+      <!-- Add/Edit Action Item Modal -->
+      <Teleport to="body">
+        <div 
+          v-if="showActionItemModal" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
+              aria-hidden="true"
+              @click="showActionItemModal = false"
+            ></div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                  <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                      {{ editingActionItem ? 'Edit Action Item' : 'Add Action Item' }}
+                    </h3>
+                    <div class="mt-4 space-y-4">
+                      <!-- Action Item Name -->
+                      <div>
+                        <label for="action-item-name" class="block text-sm font-medium text-gray-700">
+                          Action Item
+                        </label>
+                        <input
+                          id="action-item-name"
+                          v-model="actionItemForm.name"
+                          type="text"
+                          required
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          placeholder="Enter action item description"
+                        />
+                      </div>
+                      
+                      <!-- Assigned To -->
+                      <div>
+                        <label for="action-item-assignee" class="block text-sm font-medium text-gray-700">
+                          Assigned To
+                        </label>
+                        <select
+                          id="action-item-assignee"
+                          v-model="actionItemForm.assigned_to"
+                          required
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                          <option value="">Select assignee</option>
+                          <option 
+                            v-for="attendee in selectedMeeting.attendees" 
+                            :key="attendee.id" 
+                            :value="attendee.id"
+                          >
+                            {{ attendee.name }}
+                          </option>
+                        </select>
+                      </div>
+                      
+                      <!-- Due Date -->
+                      <div>
+                        <label for="action-item-due-date" class="block text-sm font-medium text-gray-700">
+                          Due Date
+                        </label>
+                        <input
+                          id="action-item-due-date"
+                          v-model="actionItemForm.due_date"
+                          type="date"
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </div>
+                      
+                      <!-- Status -->
+                      <div>
+                        <label for="action-item-status" class="block text-sm font-medium text-gray-700">
+                          Status
+                        </label>
+                        <select
+                          id="action-item-status"
+                          v-model="actionItemForm.state"
+                          required
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                          <option value="todo">To Do</option>
+                          <option value="in_progress">In Progress</option>
+                          <option value="done">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </div>
+                      
+                      <!-- Notes -->
+                      <div>
+                        <label for="action-item-notes" class="block text-sm font-medium text-gray-700">
+                          Notes
+                        </label>
+                        <textarea
+                          id="action-item-notes"
+                          v-model="actionItemForm.notes"
+                          rows="3"
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                          placeholder="Additional notes for this action item"
+                        ></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  @click="saveActionItem"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-600 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  {{ editingActionItem ? 'Update' : 'Save' }}
+                </button>
+                <button
+                  @click="showActionItemModal = false"
+                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+
+      <Teleport to="body">
+
+         <!-- Dialog konfirmasi archive task -->
+        <DeleteConfirmationModal
+        :show="showArchiveConfirm"
+        @close="showArchiveConfirm = false"
+        @confirm="executeArchiveTask"
+        :title="taskToArchive?.active ? 'Archive Task' : 'Unarchive Task'"
+        :message="`Are you sure you want to ${taskToArchive?.active ? 'archive' : 'unarchive'} task '${taskToArchive?.name}'?`"
+        confirmButtonText="Confirm"
+        cancelButtonText="Cancel"
+        />
+
+        <!-- Dialog konfirmasi multiple archive task -->
+        <DeleteConfirmationModal
+        :show="showMultiArchiveConfirm"
+        @close="showMultiArchiveConfirm = false"
+        @confirm="executeMultiArchiveTasks"
+        :title="multiArchiveActive ? 'Unarchive Tasks' : 'Archive Tasks'"
+        :message="`Are you sure you want to ${multiArchiveActive ? 'unarchive' : 'archive'} ${selectedTaskIds.length} selected tasks?`"
+        confirmButtonText="Confirm"
+        cancelButtonText="Cancel"
+        />
+
         <!-- Edit Project Modal -->
         <TeamProjectFormModal
           v-if="showEditModal"
@@ -1617,9 +2286,24 @@ import {
   CalendarClock,
   ClipboardList,
   Smile,
-  Hash
+  Hash,
+  Archive,
+  RefreshCw,
+  Check
 } from 'lucide-vue-next'
-import { CalendarIcon } from '@heroicons/vue/24/outline'
+import { CalendarIcon, UserIcon, 
+  BuildingOfficeIcon, 
+  PhoneIcon, 
+  CurrencyDollarIcon, 
+  CodeBracketIcon, 
+  ServerIcon, 
+  SparklesIcon, 
+  UserGroupIcon, 
+  MegaphoneIcon, 
+  WrenchIcon, 
+  ShoppingCartIcon, 
+  BeakerIcon, 
+  CogIcon  } from '@heroicons/vue/24/outline'
 import { useToast } from '@/composables/useToast'
 import apiClient from '@/config/api'
 import { debounce } from 'lodash';
@@ -1633,6 +2317,9 @@ import TeamMeetingFormModal from '@/components/team/TeamMeetingFormModal.vue'
 import TeamBAUFormModal from '@/components/team/TeamBAUFormModal.vue'
 import Toast from '@/components/Toast.vue'
 import EmojiPicker from '@/components/EmojiPicker.vue'
+import DeleteConfirmationModal from '@/components/modal/DeleteConfirmationModal.vue'
+import { QuillEditor } from '@vueup/vue-quill';
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
 
 const route = useRoute()
 const router = useRouter()
@@ -1680,17 +2367,191 @@ const activeTab = ref('overview');
 const taskFilter = ref('all');
 
 
-const filteredTasks = computed(() => {
-  if (!project.value?.tasks) return [];
-  if (taskFilter.value === 'all') return project.value.tasks;
-  return project.value.tasks.filter(task => task.state === taskFilter.value);
-});
+
+
+// const filteredTasks = computed(() => {
+//   if (!project.value?.tasks) return [];
+//   if (taskFilter.value === 'all') return project.value.tasks;
+//   return project.value.tasks.filter(task => task.state === taskFilter.value);
+// });
 
 // Tambahkan state berikut
 const chatFileInputRef = ref(null)
 const chatAttachment = ref(null)
 const uploadingChatAttachment = ref(false)
 const showEmojiPicker = ref(false)
+
+// Add this function to your methods or helper functions
+// Add to your ref declarations
+const expandedMessages = ref({});
+
+// Add this function to toggle message expansion
+const toggleMessageExpand = (messageId) => {
+  expandedMessages.value[messageId] = !expandedMessages.value[messageId];
+};
+
+// Update formatMessageContent function to preserve whitespace and line breaks
+const formatMessageContent = (content) => {
+  if (!content) return '';
+  
+  // Step 1: Convert mentions to styled spans
+  let formattedContent = content.replace(/@\[(\d+):([^\]]+)\]/g, (match, id, name) => {
+    return `<span class="inline-block bg-red-50 text-red-600 px-1 py-0.5 rounded">@${name}</span>`;
+  });
+  
+  // Step 2: Apply text formatting
+  // Bold: **text**
+  formattedContent = formattedContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italic: *text*
+  formattedContent = formattedContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Underline: __text__
+  formattedContent = formattedContent.replace(/__(.*?)__/g, '<u>$1</u>');
+  
+  // Step 3: Convert links
+  // [text](url) format
+  formattedContent = formattedContent.replace(
+    /\[(.*?)\]\((https?:\/\/[^\s)]+)\)/g, 
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>'
+  );
+  
+  // Plain URLs
+  formattedContent = formattedContent.replace(
+    /(?<!\]\()(https?:\/\/[^\s]+)/g, 
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>'
+  );
+  
+  // Step 5: Preserve line breaks (non-list lines only)
+  formattedContent = formattedContent.replace(/(?!<\/li>|<li>|<ol>|<\/ol>)\n/g, '<br>');
+  
+  return formattedContent;
+};
+
+// Add this function to your methods or helper functions
+const getDepartmentAvatarClass = (departmentId) => {
+  const classes = [
+    'bg-blue-100 text-blue-800',
+    'bg-purple-100 text-purple-800',
+    'bg-green-100 text-green-800',
+    'bg-pink-100 text-pink-800',
+    'bg-indigo-100 text-indigo-800',
+    'bg-teal-100 text-teal-800',
+    'bg-amber-100 text-amber-800',
+    'bg-rose-100 text-rose-800',
+    'bg-emerald-100 text-emerald-800',
+    'bg-cyan-100 text-cyan-800',
+    'bg-orange-100 text-orange-800',
+    'bg-lime-100 text-lime-800'
+  ]
+  
+  const index = (departmentId % classes.length)
+  return classes[index]
+}
+
+// Update the getDeptColor function to use the same color scheme
+const getDeptColor = (departmentId) => {
+  const colors = [
+    'blue',
+    'purple',
+    'green',
+    'pink',
+    'indigo',
+    'teal',
+    'amber',
+    'rose',
+    'emerald',
+    'cyan',
+    'orange',
+    'lime'
+  ]
+  
+  const index = (departmentId % colors.length)
+  return colors[index]
+}
+
+const getDepartmentIcon = (departmentName) => {
+  if (!departmentName) return UserIcon
+  
+  const name = departmentName.toLowerCase()
+  
+  if (name.includes('admin')) return BuildingOfficeIcon
+  if (name.includes('customer') || name.includes('support')) return PhoneIcon
+  if (name.includes('finance')) return CurrencyDollarIcon
+  if (name.includes('hr') || name.includes('human')) return UserIcon
+  if (name.includes('it') && name.includes('dev')) return CodeBracketIcon
+  if (name.includes('it')) return ServerIcon
+  if (name.includes('kaizen')) return SparklesIcon
+  if (name.includes('manage')) return UserGroupIcon
+  if (name.includes('market')) return MegaphoneIcon
+  if (name.includes('mechanic')) return WrenchIcon
+  if (name.includes('part')) return ShoppingCartIcon
+  if (name.includes('rnd') || name.includes('r&d') || name.includes('research')) return BeakerIcon
+  if (name.includes('sales')) return ShoppingCartIcon
+  
+  // Default icon
+  return CogIcon
+}
+
+// Add this to your ref declarations
+const taskSort = ref('priority_desc');
+
+// Update filteredTasks computed property to include sorting
+const filteredTasks = computed(() => {
+  if (!project.value?.tasks) return [];
+  
+  // First filter by active status if needed
+  let tasks = project.value.tasks;
+  if (!showArchivedTasks.value) {
+    tasks = tasks.filter(task => task.active !== false);
+  }
+  
+  // Then filter by state
+  if (taskFilter.value !== 'all') {
+    tasks = tasks.filter(task => task.state === taskFilter.value);
+  }
+  
+  // Then sort
+  const [field, direction] = taskSort.value.split('_');
+  
+  return [...tasks].sort((a, b) => {
+    // Existing sorting logic...
+    let compareA, compareB;
+    
+    // Determine what to compare based on the sort field
+    switch (field) {
+      case 'name':
+        compareA = a.name?.toLowerCase() || '';
+        compareB = b.name?.toLowerCase() || '';
+        break;
+      case 'priority':
+        compareA = parseInt(a.priority || '1');
+        compareB = parseInt(b.priority || '1');
+        break;
+      case 'date':
+        if (!a.dates?.planned_end) return direction === 'asc' ? 1 : -1;
+        if (!b.dates?.planned_end) return direction === 'asc' ? -1 : 1;
+        
+        compareA = new Date(a.dates.planned_end).getTime();
+        compareB = new Date(b.dates.planned_end).getTime();
+        break;
+      case 'progress':
+        compareA = a.progress || 0;
+        compareB = b.progress || 0;
+        break;
+      default:
+        compareA = a.name;
+        compareB = b.name;
+    }
+    
+    // Return comparison result based on direction
+    if (direction === 'asc') {
+      return compareA > compareB ? 1 : -1;
+    } else {
+      return compareA < compareB ? 1 : -1;
+    }
+  });
+});
 
 // Computed
 const totalTasks = computed(() => {
@@ -1753,10 +2614,10 @@ const handleTaskUpdate = async (data) => {
 
 const formatProjectPriority = (priority) => {
   const priorities = {
-    '0': 'Low',
-    '1': 'Medium',
-    '2': 'High',
-    '3': 'Critical'
+    '0': 'Low (P3)',
+    '1': 'Medium (P2)',
+    '2': 'High (P1)',
+    '3': 'Critical (P0)'
   }
   return priorities[priority] || 'Medium'
 }
@@ -1791,10 +2652,10 @@ const priorityColorMap = {
 
 const formatPriority = (priority) => {
   const priorities = {
-    '0': 'Low',
-    '1': 'Medium',
-    '2': 'High',
-    '3': 'Critical'
+    '0': 'Low (P3)',
+    '1': 'Medium (P2)',
+    '2': 'High (P1)',
+    '3': 'Critical (P0)'
   }
   return priorities[priority] || 'Medium'
 }
@@ -2012,15 +2873,15 @@ const toggleEmojiPicker = () => {
   showEmojiPicker.value = !showEmojiPicker.value
 }
 
-const addEmoji = (emoji) => {
-  newMessage.value += emoji
-  showEmojiPicker.value = false
+// const addEmoji = (emoji) => {
+//   newMessage.value += emoji
+//   showEmojiPicker.value = false
   
-  // Focus kembali ke input setelah tambah emoji
-  nextTick(() => {
-    mentionInputRef.value?.focus()
-  })
-}
+//   // Focus kembali ke input setelah tambah emoji
+//   nextTick(() => {
+//     mentionInputRef.value?.focus()
+//   })
+// }
 
 // Method untuk mengelola attachment pada chat
 const handleChatFileUpload = () => {
@@ -2083,20 +2944,51 @@ const removeChatAttachment = () => {
   chatAttachment.value = null
 }
 
+const editorContent = ref('');
+
+// Editor options
+const editorOptions = {
+  modules: {
+    toolbar: [
+      ['bold', 'italic', 'link'],
+      ['clean'] // remove formatting
+    ]
+  },
+  placeholder: 'Type a message...'
+};
+
+// Computed property to get plain text (for validation)
+const editorPlainText = computed(() => {
+  // Simple HTML to text conversion (for validation)
+  if (!editorContent.value) return '';
+  const div = document.createElement('div');
+  div.innerHTML = editorContent.value;
+  return div.textContent || div.innerText || '';
+});
+
+// Handle Enter key in editor
+const handleEditorEnter = (event) => {
+  if (!event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+};
+
 // Modifikasi sendMessage untuk mendukung attachment
+// Modify the sendMessage function in TeamProjectDetail.vue
 const sendMessage = async () => {
-  // Jika tidak ada pesan atau attachment, jangan kirim
+  // Only send if there's content or an attachment
   if (!newMessage.value.trim() && !chatAttachment.value) return
   
-  // Jika tidak ada group ID atau project ID, jangan kirim
+  // If no group ID or project ID, don't send
   if (!project.value?.group_id) return
   
   try {
     if (chatAttachment.value) {
-      // Jika ada attachment, upload file dulu
+      // If there's an attachment, upload the file first
       uploadingChatAttachment.value = true
       
-      // Create form data untuk upload file
+      // Create form data for file upload
       const formData = new FormData()
       formData.append('file', chatAttachment.value.file)
       
@@ -2107,28 +2999,28 @@ const sendMessage = async () => {
         }
       })
       
-      // Periksa hasil upload
+      // Check upload result
       if (!uploadResponse.data.status === 'success' || !uploadResponse.data.data.id) {
         throw new Error(uploadResponse.data.message || 'Failed to upload file')
       }
       
-      // Simpan ID attachment untuk dikirim dengan pesan
+      // Save attachment ID to be sent with the message
       const attachmentId = uploadResponse.data.data.id
       
-      // Kirim pesan dengan attachment
+      // Send message with attachment - Fixed to use newMessage.value instead of messageContent
       const response = await apiClient.post('/web/v2/team/chat/send', {
         jsonrpc: '2.0',
         id: new Date().getTime(),
         params: {
           group_id: project.value.group_id,
-          content: newMessage.value || `Shared a file: ${chatAttachment.value.name}`,
+          content: newMessage.value.trim() || `Shared a file: ${chatAttachment.value.name}`,
           message_type: 'regular',
           project_id: projectId.value,
           attachment_ids: [attachmentId],
           mentions: mentionInputRef.value ? mentionInputRef.value.extractMentions(newMessage.value).map(m => m.id) : []
         }
-      })
-      
+      });
+
       if (response.data.result?.status === 'success') {
         // Add the new message to the list
         groupMessages.value.unshift(response.data.result.data)
@@ -2143,7 +3035,7 @@ const sendMessage = async () => {
         throw new Error(response.data.result?.message || 'Failed to send message')
       }
     } else {
-      // Kirim pesan tanpa attachment (seperti implementasi sebelumnya)
+      // Send message without attachment - Fixed to use newMessage.value
       const response = await apiClient.post('/web/v2/team/chat/send', {
         jsonrpc: '2.0',
         id: new Date().getTime(),
@@ -2180,20 +3072,51 @@ const sendMessage = async () => {
   }
 }
 
+const extractMentionsFromEditor = () => {
+  // This is a placeholder - you'd need to implement logic to extract mentions
+  // based on how you set up the Mention extension
+  return [];
+};
 
-const formatMessageContent = (content) => {
-  if (!content) return ''
+// Add emoji to editor content instead of newMessage
+const addEmoji = (emoji) => {
+  // If there's a mention input ref, insert the emoji at the current cursor position
+  if (mentionInputRef.value && mentionInputRef.value.textareaRef) {
+    const textarea = mentionInputRef.value.textareaRef;
+    const cursorPos = textarea.selectionStart;
+    
+    // Get current text and insert emoji at cursor position
+    const currentText = mentionInputRef.value.text || '';
+    const newText = currentText.substring(0, cursorPos) + emoji + currentText.substring(cursorPos);
+    
+    // Update the text
+    mentionInputRef.value.text = newText;
+    
+    // Focus back on the textarea and position cursor after the emoji
+    nextTick(() => {
+      textarea.focus();
+      textarea.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+    });
+  }
   
-  // Ganti @[id:name] dengan span yang distyle khusus
-  let formattedContent = content.replace(/@\[(\d+):([^\]]+)\]/g, (match, id, name) => {
-    return `<span class="inline-block bg-red-50 text-red-600 px-1 py-0.5 rounded">@${name}</span>`
-  })
-  
-  // Konversi emoji characters untuk menjadi lebih dinamis
-  // Catatan: Emoji sudah proper di string, jadi tidak perlu konversi khusus
+  showEmojiPicker.value = false;
+};
 
-  return formattedContent
-}
+
+
+// const formatMessageContent = (content) => {
+//   if (!content) return ''
+  
+//   // Ganti @[id:name] dengan span yang distyle khusus
+//   let formattedContent = content.replace(/@\[(\d+):([^\]]+)\]/g, (match, id, name) => {
+//     return `<span class="inline-block bg-red-50 text-red-600 px-1 py-0.5 rounded">@${name}</span>`
+//   })
+  
+//   // Konversi emoji characters untuk menjadi lebih dinamis
+//   // Catatan: Emoji sudah proper di string, jadi tidak perlu konversi khusus
+
+//   return formattedContent
+// }
 
 const handleProjectUpdate = async (data) => {
   try {
@@ -2897,6 +3820,15 @@ const formatTime = (date) => {
   return format(new Date(date), 'HH:mm')
 }
 
+// Add these to your reactive variables
+const showAllDepts = ref(false);
+
+// Add this method
+const toggleShowAllDepts = () => {
+  showAllDepts.value = !showAllDepts.value;
+};
+
+
 // const isOverdue = (date) => {
 //   if (!date) return false
 //   return isPast(new Date(date)) && project.value?.state !== 'completed'
@@ -2931,12 +3863,493 @@ const handleClickOutside = (event) => {
   }
 }
 
+// ARCHIVED TASK
+// Add these to your script setup section
+const taskToArchive = ref(null);
+const showArchiveConfirm = ref(false);
+const selectedTaskIds = ref([]);
+const showMultiArchiveConfirm = ref(false);
+const multiArchiveActive = ref(false);
+// Add this to your ref declarations at the top of your script setup
+const showArchivedTasks = ref(false);
+// Function to confirm archiving a single task
+const confirmArchiveTask = () => {
+  if (!selectedTask.value) return;
+  
+  taskToArchive.value = selectedTask.value;
+  showArchiveConfirm.value = true;
+};
+
+// Function to execute the task archiving
+const executeArchiveTask = async () => {
+  try {
+    const response = await apiClient.post('/web/v2/team/tasks/toggle_archive', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        task_id: taskToArchive.value.id
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      // Get the new active state from the response
+      const isActive = response.data.result.data.active;
+      
+      showToast({
+        message: `Task ${isActive ? 'unarchived' : 'archived'} successfully`,
+        type: 'success'
+      });
+      
+      // Update task in selected task if it's the same one
+      if (selectedTask.value && selectedTask.value.id === taskToArchive.value.id) {
+        selectedTask.value.active = isActive;
+      }
+      
+      // Update the task in the project tasks array
+      if (project.value && project.value.tasks) {
+        const taskIndex = project.value.tasks.findIndex(t => t.id === taskToArchive.value.id);
+        if (taskIndex !== -1) {
+          project.value.tasks[taskIndex].active = isActive;
+        }
+      }
+      
+      // If we just archived a task and we're not showing archived tasks,
+      // close the detail modal
+      if (!isActive && !showArchivedTasks.value) {
+        showTaskDetailModal.value = false;
+      }
+      
+      // Refresh task list
+      fetchTasks();
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to archive task');
+    }
+  } catch (error) {
+    console.error('Error archiving task:', error);
+    showToast({
+      message: error.message || 'Failed to archive task',
+      type: 'error'
+    });
+  } finally {
+    showArchiveConfirm.value = false;
+  }
+};
+
+
+// Function for multi-task archive operations
+const confirmMultiArchiveTasks = (active = false) => {
+  if (!selectedTaskIds.value.length) {
+    showToast({
+      message: 'Please select tasks to archive/unarchive',
+      type: 'warning'
+    });
+    return;
+  }
+  
+  multiArchiveActive.value = active;
+  showMultiArchiveConfirm.value = true;
+};
+
+const executeMultiArchiveTasks = async () => {
+  try {
+    const response = await apiClient.post('/web/v2/team/tasks/toggle_archive_multiple', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        task_ids: selectedTaskIds.value,
+        active: multiArchiveActive.value
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      showToast({
+        message: `${response.data.result.data.processed_count} tasks ${multiArchiveActive.value ? 'unarchived' : 'archived'} successfully`,
+        type: 'success'
+      });
+      
+      // Clear selection
+      selectedTaskIds.value = [];
+      
+      // Refresh tasks
+      fetchTasks();
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to process tasks');
+    }
+  } catch (error) {
+    console.error('Error processing tasks:', error);
+    showToast({
+      message: error.message || 'Failed to process tasks',
+      type: 'error'
+    });
+  } finally {
+    showMultiArchiveConfirm.value = false;
+  }
+};
+
+// Add this function to your methods
+const toggleTaskSelection = (taskId) => {
+  const index = selectedTaskIds.value.indexOf(taskId);
+  if (index === -1) {
+    // Add to selection
+    selectedTaskIds.value.push(taskId);
+  } else {
+    // Remove from selection
+    selectedTaskIds.value.splice(index, 1);
+  }
+};
+
+// Function to fetch tasks with archive filter
+const fetchTasks = async () => {
+  try {
+    const response = await apiClient.post('/web/v2/team/tasks', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        operation: 'list',
+        project_id: projectId.value,
+        include_archived: showArchivedTasks.value
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      // Update project tasks
+      if (project.value) {
+        project.value.tasks = response.data.result.data;
+      }
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to fetch tasks');
+    }
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    showToast({
+      message: 'Failed to load tasks',
+      type: 'error'
+    });
+  }
+};
+
+// Add this computed property
+const isAllTasksSelected = computed(() => {
+  if (!filteredTasks.value.length) return false;
+  return filteredTasks.value.every(task => selectedTaskIds.value.includes(task.id));
+});
+
+// Add this method
+const toggleAllTasks = () => {
+  if (isAllTasksSelected.value) {
+    // Deselect all
+    selectedTaskIds.value = [];
+  } else {
+    // Select all filtered tasks
+    selectedTaskIds.value = filteredTasks.value.map(task => task.id);
+  }
+};
+
+watch(() => showArchivedTasks.value, () => {
+  fetchTasks();
+});
+
+// MEETING SECTION
+// Tambahkan state untuk edit meeting
+const showEditMeetingModal = ref(false);
+const selectedMeeting = ref(null);
+
+// Fungsi untuk membuka modal edit meeting
+const editMeeting = (meeting) => {
+  selectedMeeting.value = { ...meeting };
+  showEditMeetingModal.value = true;
+};
+
+// Fungsi untuk handle update meeting
+const handleMeetingUpdate = async (data) => {
+  try {
+    const response = await apiClient.post('/web/v2/team/meetings', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        operation: 'update',
+        meeting_id: selectedMeeting.value.id,
+        ...data
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      showToast({
+        message: 'Meeting updated successfully',
+        type: 'success'
+      });
+      showEditMeetingModal.value = false;
+      await fetchProjectDetail(); // Refresh project data
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to update meeting');
+    }
+  } catch (error) {
+    console.error('Error updating meeting:', error);
+    showToast({
+      message: error.message || 'Failed to update meeting',
+      type: 'error'
+    });
+  }
+};
+
+// Tambahkan state untuk detail meeting
+const showMeetingDetailModal = ref(false);
+const meetingActionItems = ref([]);
+const loadingMeetingDetails = ref(false);
+
+// Fungsi untuk melihat detail meeting
+const showMeetingDetail = async (meeting) => {
+  selectedMeeting.value = { ...meeting };
+  showMeetingDetailModal.value = true;
+  
+  // Fetch meeting action items
+  await fetchMeetingActionItems(meeting.id);
+};
+
+// Fungsi untuk mengambil action items dari meeting
+const fetchMeetingActionItems = async (meetingId) => {
+  loadingMeetingDetails.value = true;
+  try {
+    const response = await apiClient.post('/web/v2/team/meetings/actions', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        meeting_id: meetingId,
+        operation: 'list'
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      meetingActionItems.value = response.data.result.data || [];
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to fetch meeting actions');
+    }
+  } catch (error) {
+    console.error('Error fetching meeting actions:', error);
+    showToast({
+      message: 'Failed to load meeting action items',
+      type: 'error'
+    });
+    meetingActionItems.value = [];
+  } finally {
+    loadingMeetingDetails.value = false;
+  }
+};
+
+// Tambahkan state untuk konfirmasi delete meeting
+const showDeleteMeetingConfirm = ref(false);
+const meetingToDelete = ref(null);
+
+// Fungsi untuk konfirmasi penghapusan meeting
+const confirmDeleteMeeting = (meeting) => {
+  meetingToDelete.value = meeting;
+  showDeleteMeetingConfirm.value = true;
+};
+
+// Fungsi untuk menghapus meeting
+const deleteMeeting = async () => {
+  try {
+    const response = await apiClient.post('/web/v2/team/meetings', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        operation: 'delete',
+        meeting_id: meetingToDelete.value.id
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      showToast({
+        message: 'Meeting deleted successfully',
+        type: 'success'
+      });
+      showDeleteMeetingConfirm.value = false;
+      await fetchProjectDetail(); // Refresh project data
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to delete meeting');
+    }
+  } catch (error) {
+    console.error('Error deleting meeting:', error);
+    showToast({
+      message: error.message || 'Failed to delete meeting',
+      type: 'error'
+    });
+  } finally {
+    showDeleteMeetingConfirm.value = false;
+    meetingToDelete.value = null;
+  }
+};
+
+// Format untuk state action item
+const formatActionItemState = (state) => {
+  const states = {
+    todo: 'To Do',
+    in_progress: 'In Progress',
+    done: 'Completed',
+    cancelled: 'Cancelled'
+  };
+  return states[state] || state;
+};
+
+// Mendapatkan state berikutnya untuk action item
+const getNextState = (currentState) => {
+  const stateFlow = {
+    todo: 'in_progress',
+    in_progress: 'done',
+    done: 'todo',
+    cancelled: 'todo'
+  };
+  return stateFlow[currentState] || 'todo';
+};
+
+// Label untuk tombol next state
+const getNextStateLabel = (currentState) => {
+  const labels = {
+    todo: 'Start',
+    in_progress: 'Complete',
+    done: 'Reopen',
+    cancelled: 'Reopen'
+  };
+  return labels[currentState] || 'Update';
+};
+
+// Update status action item
+const updateActionItemState = async (actionItemId, newState) => {
+  try {
+    const response = await apiClient.post('/web/v2/team/meetings/actions', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        operation: 'update',
+        action_id: actionItemId,
+        state: newState
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      showToast({
+        message: 'Action item updated successfully',
+        type: 'success'
+      });
+      
+      // Refresh action items
+      await fetchMeetingActionItems(selectedMeeting.value.id);
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to update action item');
+    }
+  } catch (error) {
+    console.error('Error updating action item:', error);
+    showToast({
+      message: error.message || 'Failed to update action item',
+      type: 'error'
+    });
+  }
+};
+
+// State untuk action item
+const showActionItemModal = ref(false);
+const editingActionItem = ref(null);
+const actionItemForm = ref({
+  name: '',
+  assigned_to: '',
+  due_date: '',
+  state: 'todo',
+  notes: ''
+});
+
+// Fungsi untuk menampilkan modal tambah action item
+const showAddActionItemModal = () => {
+  // Reset form
+  actionItemForm.value = {
+    name: '',
+    assigned_to: '',
+    due_date: '',
+    state: 'todo',
+    notes: ''
+  };
+  editingActionItem.value = null;
+  showActionItemModal.value = true;
+};
+
+// Fungsi untuk menampilkan modal edit action item
+const editActionItem = (item) => {
+  actionItemForm.value = {
+    name: item.name,
+    assigned_to: item.assigned_to?.id || '',
+    due_date: item.due_date || '',
+    state: item.state || 'todo',
+    notes: item.notes || ''
+  };
+  editingActionItem.value = item;
+  showActionItemModal.value = true;
+};
+
+// Fungsi untuk menyimpan action item (create atau update)
+const saveActionItem = async () => {
+  try {
+    if (!actionItemForm.value.name || !actionItemForm.value.assigned_to) {
+      showToast({
+        message: 'Please fill in all required fields',
+        type: 'error'
+      });
+      return;
+    }
+
+    const params = {
+      name: actionItemForm.value.name,
+      assigned_to: actionItemForm.value.assigned_to,
+      state: actionItemForm.value.state,
+      meeting_id: selectedMeeting.value.id
+    };
+
+    // Add optional fields if they have values
+    if (actionItemForm.value.due_date) {
+      params.due_date = actionItemForm.value.due_date;
+    }
+
+    if (actionItemForm.value.notes) {
+      params.notes = actionItemForm.value.notes;
+    }
+
+    // Determine if we're creating or updating
+    if (editingActionItem.value) {
+      params.operation = 'update';
+      params.action_id = editingActionItem.value.id;
+    } else {
+      params.operation = 'create';
+    }
+
+    const response = await apiClient.post('/web/v2/team/meetings/actions', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: params
+    });
+
+    if (response.data.result?.status === 'success') {
+      showToast({
+        message: `Action item ${editingActionItem.value ? 'updated' : 'created'} successfully`,
+        type: 'success'
+      });
+      showActionItemModal.value = false;
+      await fetchMeetingActionItems(selectedMeeting.value.id);
+    } else {
+      throw new Error(response.data.result?.message || `Failed to ${editingActionItem.value ? 'update' : 'create'} action item`);
+    }
+  } catch (error) {
+    console.error(`Error ${editingActionItem.value ? 'updating' : 'creating'} action item:`, error);
+    showToast({
+      message: error.message || `Failed to ${editingActionItem.value ? 'update' : 'create'} action item`,
+      type: 'error'
+    });
+  }
+};
 
 // Lifecycle
 onMounted(() => {
   fetchDepartments();
   fetchProjectDetail();
   fetchProjectAttachments(); // Tambahkan ini
+  fetchTasks(); // Tambahkan ini
 });
 
 onMounted(() => {
@@ -2956,6 +4369,43 @@ watch(() => projectId.value, (newId) => {
 </script>
 
 <style scoped>
+.chat-editor {
+  height: 120px;
+}
+.ql-toolbar.ql-snow {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 4px 8px;
+}
+.ql-container.ql-snow {
+  border: none;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 640px) {
+  .message-content {
+    max-width: 90vw;
+  }
+  
+  .mention-input-container textarea {
+    min-height: 100px;
+  }
+}
+
+/* Fix for emoji picker positioning on mobile */
+@media (max-width: 640px) {
+  .emoji-picker {
+    position: fixed;
+    bottom: 20%;
+    right: 10%;
+    left: 10%;
+    width: 80% !important;
+  }
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -2990,5 +4440,52 @@ dialog {
   .max-h-\[70vh\] {
     max-height: 85vh;
   }
+}
+
+/* Tambahkan CSS berikut ke bagian <style> di komponen Anda */
+
+/* Untuk line-clamp dan truncation judul tugas */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Animasi tooltip untuk judul tugas yang panjang */
+.group:hover .group-hover\:visible {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0.5s;
+}
+
+/* Gaya break-words membantu judul panjang untuk diputus di dalam kontainer */
+.break-words {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Animasi transisi pada input fokus */
+.focus\:ring-rose-500:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgba(244, 63, 94, var(--tw-ring-opacity));
+  box-shadow: 0 0 0 2px var(--tw-ring-color);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Untuk tooltip task name panjang */
+.absolute {
+  position: absolute;
+}
+
+.max-w-xs {
+  max-width: 20rem;
+}
+
+.z-10 {
+  z-index: 10;
 }
 </style>

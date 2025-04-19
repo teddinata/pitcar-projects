@@ -169,7 +169,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { Loader2 } from 'lucide-vue-next'
 import Modal from '@/components/projects/ProjectModal.vue'
-import TeamSelect from '@/components/TeamSelect.vue'
+import TeamSelect from '@/components/MeetingTeamSelect.vue'
 import apiClient from '@/config/api'
 
 const props = defineProps({
@@ -181,6 +181,10 @@ const props = defineProps({
   projectId: {
     type: [Number, String],
     required: true
+  },
+  meetingData: {
+    type: Object,
+    default: null
   }
 })
 
@@ -189,7 +193,7 @@ const loading = ref(false)
 const attendeesSelect = ref(null)
 const employeeMasters = ref(null)
 
-const editMode = computed(() => !!props.meetingId)
+const editMode = computed(() => !!props.meetingId || !!props.meetingData) 
 
 const formData = ref({
   name: '',
@@ -216,6 +220,48 @@ const isFormValid = computed(() => {
     formData.value.organizer_id
   )
 })
+
+const fillMeetingData = async () => {
+  if (props.meetingData) {
+    // Jika data meeting dikirim langsung sebagai prop
+    populateMeetingForm(props.meetingData)
+  } else if (props.meetingId) {
+    // Jika hanya ID meeting yang dikirim, ambil data dari server
+    await fetchMeetingData()
+  }
+}
+
+const populateMeetingForm = (meeting) => {
+  // Ekstrak data tanggal dan waktu dengan mempertimbangkan timezone
+  let startDateTime, endDateTime
+  
+  try {
+    startDateTime = new Date(meeting.dates.start)
+    endDateTime = new Date(meeting.dates.end)
+  } catch (error) {
+    console.error('Error parsing meeting dates:', error)
+    startDateTime = new Date()
+    endDateTime = new Date()
+    endDateTime.setHours(endDateTime.getHours() + 1)
+  }
+  
+  formData.value = {
+    name: meeting.name || '',
+    start_date: formatDateForInput(startDateTime),
+    start_time: formatTimeForInput(startDateTime),
+    end_date: formatDateForInput(endDateTime),
+    end_time: formatTimeForInput(endDateTime),
+    organizer_id: meeting.organizer?.id,
+    attendee_ids: meeting.attendees?.map(a => a.id) || [],
+    location: meeting.location || '',
+    virtual_location: meeting.virtual_location || '',
+    agenda: meeting.agenda || '',
+    notes: meeting.notes || '',
+    notify_attendees: false // Jangan kirim notifikasi ulang untuk edit
+  }
+}
+
+
 
 const handleAttendeesChange = (newValue) => {
   formData.value.attendee_ids = Array.isArray(newValue) ? newValue : [newValue]
@@ -411,14 +457,48 @@ const handleClose = () => {
 }
 
 // Lifecycle hooks
+// Lifecycle hooks
 onMounted(async () => {
   await fetchEmployeeMasters()
   
   if (editMode.value) {
-    await fetchMeetingData()
+    await fillMeetingData()
   } else {
     setDefaultTimes()
     await setCurrentUserAsOrganizer()
+  }
+})
+
+// Reset form when modal is closed and reopened
+watch(() => props.show, async (newVal) => {
+  if (newVal) {
+    if (editMode.value) {
+      await fillMeetingData()
+    } else {
+      formData.value = {
+        name: '',
+        start_date: '',
+        start_time: '09:00',
+        end_date: '',
+        end_time: '10:00',
+        organizer_id: null,
+        attendee_ids: [],
+        location: '',
+        virtual_location: '',
+        agenda: '',
+        notes: '',
+        notify_attendees: true
+      }
+      setDefaultTimes()
+      await setCurrentUserAsOrganizer()
+    }
+  }
+})
+
+// Watch untuk meetingData
+watch(() => props.meetingData, async (newData) => {
+  if (newData && props.show) {
+    populateMeetingForm(newData)
   }
 })
 

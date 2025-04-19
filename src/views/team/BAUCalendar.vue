@@ -1219,14 +1219,14 @@ const fetchEmployees = async () => {
 const handleSubmit = async (submittedFormData) => {
   try {
     // Validate date (only today for new activities)
-    if (!isEditing.value && submittedFormData.date !== todayDate.value) {
-      showToast({
-        message: 'Aktivitas baru hanya dapat dibuat untuk hari ini',
-        type: 'error',
-        duration: 5000
-      });
-      return;
-    }
+    // if (!isEditing.value && submittedFormData.date !== todayDate.value) {
+    //   showToast({
+    //     message: 'Aktivitas baru hanya dapat dibuat untuk hari ini',
+    //     type: 'error',
+    //     duration: 5000
+    //   });
+    //   return;
+    // }
     
     submitting.value = true;
     
@@ -1592,14 +1592,14 @@ const quickAddActivity = (date) => {
   selectedDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   
-  if (selectedDate.getTime() !== today.getTime()) {
-    showToast({
-      message: 'Aktivitas baru hanya dapat dibuat untuk hari ini',
-      type: 'warning',
-      duration: 3000
-    });
-    return;
-  }
+  // if (selectedDate.getTime() !== today.getTime()) {
+  //   showToast({
+  //     message: 'Aktivitas baru hanya dapat dibuat untuk hari ini',
+  //     type: 'warning',
+  //     duration: 3000
+  //   });
+  //   return;
+  // }
   
   formData.value.date = date;
   isEditing.value = false;
@@ -1615,14 +1615,14 @@ const handleTimeSlotClick = (timeSlotInfo) => {
   selectedDate.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   
-  if (selectedDate.getTime() !== today.getTime()) {
-    showToast({
-      message: 'Aktivitas baru hanya dapat dibuat untuk hari ini',
-      type: 'warning',
-      duration: 3000
-    });
-    return;
-  }
+  // if (selectedDate.getTime() !== today.getTime()) {
+  //   showToast({
+  //     message: 'Aktivitas baru hanya dapat dibuat untuk hari ini',
+  //     type: 'warning',
+  //     duration: 3000
+  //   });
+  //   return;
+  // }
   
   // Set form data with time slot info
   formData.value = {

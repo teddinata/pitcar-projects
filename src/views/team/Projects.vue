@@ -529,7 +529,7 @@ const sortDropdownOpen = ref(false);
 const pagination = ref({
   currentPage: 1,
   totalPages: 1,
-  limit: 7,
+  limit: 12,
   total: 0
 });
 

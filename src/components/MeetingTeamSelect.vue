@@ -1,4 +1,4 @@
-<!-- src/components/TeamSelect.vue -->
+<!-- src/components/MeetingTeamSelect.vue -->
 <template>
   <div class="space-y-2" @click.stop>
     <!-- Search & Multi-select Input -->
@@ -200,8 +200,8 @@ const fetchMembers = async () => {
       jsonrpc: '2.0',
       method: 'call',
       params: {
-        department_id: 9,
-        limit: 100,
+        // department_id: 9,
+        limit: 50,
         include_details: true, // Request additional details if needed
         sort_by: 'name',
         sort_order: 'asc'

@@ -79,8 +79,6 @@
                       type="date" 
                       v-model="localFormData.date"
                       required
-                      :min="isEditing ? '' : todayDate"
-                      :max="isEditing ? '' : todayDate"
                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                     <p v-if="!isEditing" class="mt-1 text-xs text-gray-500">Aktivitas hanya dapat dibuat untuk hari ini</p>
@@ -193,7 +191,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { XCircleIcon } from '@heroicons/vue/24/outline';
-import TeamSelect from '@/components/GeneralTeamSelect.vue';
+import TeamSelect from '@/components/MeetingTeamSelect.vue';
 import CustomTimePicker from '@/components/CustomTimePicker.vue';
 
 const props = defineProps({
@@ -249,10 +247,10 @@ watch(() => props.show, (newShow) => {
   }
 });
 
-const todayDate = computed(() => {
-  const today = new Date();
-  return formatDateYYYYMMDD(today);
-});
+// const todayDate = computed(() => {
+//   const today = new Date();
+//   return formatDateYYYYMMDD(today);
+// });
 
 const calculatedHours = computed(() => {
   if (!localFormData.value.time_start || !localFormData.value.time_end) return 0;

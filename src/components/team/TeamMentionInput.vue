@@ -1,10 +1,77 @@
 <!-- src/components/TeamMentionInput.vue -->
 <template>
   <div class="mention-input-container w-full relative">
+    <!-- Simple formatting toolbar -->
+    <div class="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-300 border-b-0 rounded-t-md">
+      <button 
+        @click="applyFormat('bold')" 
+        type="button"
+        class="p-1 rounded hover:bg-gray-200 text-gray-700"
+        title="Bold (Ctrl+B)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+          <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+        </svg>
+      </button>
+      <button 
+        @click="applyFormat('italic')" 
+        type="button"
+        class="p-1 rounded hover:bg-gray-200 text-gray-700"
+        title="Italic (Ctrl+I)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="4" x2="10" y2="4"></line>
+          <line x1="14" y1="20" x2="5" y2="20"></line>
+          <line x1="15" y1="4" x2="9" y2="20"></line>
+        </svg>
+      </button>
+      <button 
+        @click="applyFormat('underline')" 
+        type="button"
+        class="p-1 rounded hover:bg-gray-200 text-gray-700"
+        title="Underline (Ctrl+U)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
+          <line x1="4" y1="21" x2="20" y2="21"></line>
+        </svg>
+      </button>
+      <span class="h-4 border-l border-gray-300 mx-1"></span>
+      <button 
+        @click="applyFormat('list')" 
+        type="button"
+        class="p-1 rounded hover:bg-gray-200 text-gray-700"
+        title="Numbered List"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="9" y1="6" x2="20" y2="6"></line>
+          <line x1="9" y1="12" x2="20" y2="12"></line>
+          <line x1="9" y1="18" x2="20" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+      </button>
+      <button 
+        @click="applyFormat('link')" 
+        type="button"
+        class="p-1 rounded hover:bg-gray-200 text-gray-700"
+        title="Add Link"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </button>
+      <span class="text-xs text-gray-500 ml-2">Format with **bold**, *italic*, or __underline__</span>
+    </div>
+    
+    <!-- Existing textarea with rounded-top removed -->
     <textarea 
       ref="textareaRef"
       v-model="text" 
-      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm resize-none py-2 px-3"
+      class="block w-full rounded-b-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm resize-none py-2 px-3"
       :placeholder="placeholder"
       @input="handleInput"
       @keydown="handleKeyDown"
@@ -13,7 +80,7 @@
     
     <!-- Dropdown untuk mention suggestions -->
     <div v-if="showSuggestions && filteredMembers.length > 0"
-         class="mention-suggestions fixed w-64 rounded-lg bg-white shadow-xl  overflow-auto border border-red-100"
+         class="mention-suggestions fixed w-64 rounded-lg bg-white shadow-xl overflow-auto border border-red-100"
          :style="dropdownStyle">
       <div v-if="loading" class="flex justify-center items-center py-3">
         <div class="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
@@ -47,6 +114,34 @@
           </div>
         </li>
       </ul>
+    </div>
+    
+    <!-- Link modal -->
+    <div v-if="showLinkModal" class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-4 w-80 link-modal">
+        <h3 class="text-lg font-medium mb-3">Add Link</h3>
+        <input 
+          v-model="linkUrl" 
+          type="text" 
+          placeholder="https://example.com" 
+          class="w-full border border-gray-300 rounded-md shadow-sm p-2 mb-3 focus:border-red-500 focus:ring-red-500"
+          @keydown.enter="insertLink"
+        >
+        <div class="flex justify-end space-x-2">
+          <button 
+            @click="showLinkModal = false" 
+            class="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="insertLink" 
+            class="px-3 py-1.5 bg-red-600 border border-transparent rounded-md text-sm text-white"
+          >
+            Insert
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -88,6 +183,11 @@ const dropdownStyle = ref({
   top: '0px',
   left: '0px'
 })
+
+// New state for formatting
+const showLinkModal = ref(false)
+const linkUrl = ref('')
+const selectedText = ref({ start: 0, end: 0, text: '' })
 
 // Calculate dropdown position based on cursor position
 const updateDropdownPosition = () => {
@@ -157,6 +257,94 @@ const updateDropdownPosition = () => {
   
   // Clean up
   document.body.removeChild(mirror)
+}
+
+// Apply formatting based on button click
+const applyFormat = (type) => {
+  if (!textareaRef.value) return
+  
+  const textarea = textareaRef.value
+  const selStart = textarea.selectionStart
+  const selEnd = textarea.selectionEnd
+  const selText = textarea.value.substring(selStart, selEnd)
+  
+  let prefix = ''
+  let suffix = ''
+  let replacement = selText
+  
+  switch (type) {
+    case 'bold':
+      prefix = '**'
+      suffix = '**'
+      break
+    case 'italic':
+      prefix = '*'
+      suffix = '*'
+      break
+    case 'underline':
+      prefix = '__'
+      suffix = '__'
+      break
+    case 'list':
+      // For list, add "1. " at the beginning of each line
+      if (selText) {
+        const lines = selText.split('\n')
+        replacement = lines.map((line, i) => `${i + 1}. ${line}`).join('\n')
+      } else {
+        replacement = '1. '
+      }
+      break
+    case 'link':
+      // For link, save selection and show modal
+      selectedText.value = {
+        start: selStart,
+        end: selEnd,
+        text: selText
+      }
+      showLinkModal.value = true
+      return
+  }
+  
+  // Update text with formatting
+  const newText = text.value.substring(0, selStart) + 
+                 prefix + replacement + suffix + 
+                 text.value.substring(selEnd)
+  
+  text.value = newText
+  
+  // Focus back on textarea and set cursor position after formatting
+  nextTick(() => {
+    textarea.focus()
+    
+    // Set cursor position after the inserted text (including formatting)
+    const newCursorPos = selStart + prefix.length + replacement.length + suffix.length
+    textarea.setSelectionRange(newCursorPos, newCursorPos)
+  })
+}
+
+// Insert link when confirmed from modal
+const insertLink = () => {
+  if (!linkUrl.value) {
+    showLinkModal.value = false
+    return
+  }
+  
+  const { start, end, text: selText } = selectedText.value
+  const linkText = selText || linkUrl.value
+  const formattedLink = `[${linkText}](${linkUrl.value})`
+  
+  const newText = text.value.substring(0, start) + 
+                 formattedLink + 
+                 text.value.substring(end)
+  
+  text.value = newText
+  showLinkModal.value = false
+  linkUrl.value = ''
+  
+  // Focus back on textarea
+  nextTick(() => {
+    textareaRef.value.focus()
+  })
 }
 
 // Watch untuk sync dengan v-model
@@ -297,6 +485,23 @@ const handleInput = () => {
 }
 
 const handleKeyDown = (e) => {
+  // Handle keyboard shortcuts for formatting
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'b') {
+      e.preventDefault()
+      applyFormat('bold')
+      return
+    } else if (e.key === 'i') {
+      e.preventDefault()
+      applyFormat('italic')
+      return
+    } else if (e.key === 'u') {
+      e.preventDefault()
+      applyFormat('underline')
+      return
+    }
+  }
+  
   // Handle Enter key untuk submit
   if (e.key === 'Enter' && !e.shiftKey) {
     if (showSuggestions.value && filteredMembers.value.length > 0) {
@@ -387,8 +592,12 @@ const extractMentions = (text) => {
   return mentions
 }
 
-// Close dropdown when clicking outside
+// Close dropdown and modals when clicking outside
 const handleClickOutside = (event) => {
+  if (showLinkModal.value && !event.target.closest('.link-modal')) {
+    showLinkModal.value = false
+  }
+  
   if (textareaRef.value && !textareaRef.value.contains(event.target)) {
     resetMentionState()
   }
@@ -414,7 +623,8 @@ defineExpose({
   extractMentions,
   focus: () => {
     textareaRef.value?.focus()
-  }
+  },
+  text: text // Expose the text ref directly
 })
 </script>
 
@@ -422,9 +632,13 @@ defineExpose({
 .mention-input-container textarea {
   min-height: 140px;
   transition: height 0.1s ease;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .mention-suggestions {
+  z-index: 100;
+  max-height: 250px;
   border-radius: 8px;
   margin-top: 20px;
 }

@@ -340,91 +340,124 @@
 
       <!-- TABLE VIEW -->
       <div v-else-if="viewMode === 'table'" class="bg-white shadow rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Task
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Assigned To
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Progress
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Dates
-              </th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="task in filteredTasks" :key="task.id" 
-                class="hover:bg-gray-50 cursor-pointer"
-                @click="selectTask(task)">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div>
-                    <div class="text-sm font-medium text-gray-900">{{ task.name }}</div>
-                    <div class="text-sm text-gray-500">{{ task.project?.name || 'No project' }}</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Task
+                </th>
+                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                  Assigned To
+                </th>
+                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Priority
+                </th>
+                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                  Progress
+                </th>
+                <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Due Date
+                </th>
+                <th scope="col" class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="task in filteredTasks" :key="task.id" 
+                  class="hover:bg-gray-50 cursor-pointer"
+                  @click="selectTask(task)">
+                <td class="px-3 py-2 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="max-w-[150px] sm:max-w-xs truncate">
+                      <div class="text-sm font-medium text-gray-900 truncate">{{ task.name }}</div>
+                      <div class="text-xs text-gray-500 truncate">{{ task.project?.name || 'No project' }}</div>
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex flex-col space-y-1">
-                  <span v-for="person in task.assigned_to" :key="person.id" class="text-sm text-gray-900">
-                    {{ person.name }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap hidden sm:table-cell">
+                  <div class="flex flex-col space-y-0.5">
+                    <span v-for="person in task.assigned_to.slice(0, 2)" :key="person.id" class="text-xs text-gray-900 truncate max-w-[120px]">
+                      {{ person.name }}
+                    </span>
+                    <span 
+                      v-if="task.assigned_to.length > 2" 
+                      class="text-xs text-gray-500 cursor-help relative group"
+                    >
+                      +{{ task.assigned_to.length - 2 }} more
+                      <!-- Tooltip -->
+                      <div class="absolute left-0 mt-1 w-48 bg-black bg-opacity-80 text-white text-xs rounded py-1 px-2 z-10 
+                                  invisible group-hover:visible shadow-lg">
+                        <div v-for="person in task.assigned_to.slice(2)" :key="person.id" class="py-0.5">
+                          {{ person.name }}
+                        </div>
+                      </div>
+                    </span>
+                  </div>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap hidden md:table-cell">
+                  <span 
+                    class="px-1.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                    :class="{
+                      'bg-blue-100 text-blue-800': task.priority === '0',
+                      'bg-emerald-100 text-emerald-800': task.priority === '1',
+                      'bg-amber-100 text-amber-800': task.priority === '2',
+                      'bg-red-100 text-red-800': task.priority === '3',
+                      'bg-gray-100 text-gray-800': !task.priority
+                    }"
+                  >
+                    <Flag class="w-2.5 h-2.5" />
+                    {{ task.priority ? formatPriority(task.priority) : 'Tidak ada' }}
                   </span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                  {{ formatStatus(task.state) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
-                    <div class="bg-red-600 h-2 rounded-full" :style="{ width: `${task.progress || 0}%` }"></div>
+                </td>
+                
+                <td class="px-3 py-2 whitespace-nowrap">
+                  <span class="px-1.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
+                    {{ formatStatus(task.state) }}
+                  </span>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap hidden lg:table-cell">
+                  <div class="flex items-center">
+                    <div class="w-16 bg-gray-200 rounded-full h-1.5 mr-1.5">
+                      <div class="bg-red-600 h-1.5 rounded-full" :style="{ width: `${task.progress || 0}%` }"></div>
+                    </div>
+                    <span class="text-xs text-gray-500">{{ task.progress || 0 }}%</span>
                   </div>
-                  <span class="text-sm text-gray-500">{{ task.progress || 0 }}%</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div v-if="task.dates?.planned_start || task.dates?.planned_end">
-                  <div v-if="task.dates?.planned_start" class="text-xs">
-                    Start: {{ formatDate(task.dates.planned_start) }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500 hidden md:table-cell">
+                  <div v-if="task.dates?.planned_start || task.dates?.planned_end" class="text-xs">
+                    <div v-if="task.dates?.planned_end" class="text-xs">
+                      {{ formatDate(task.dates.planned_end) }}
+                    </div>
                   </div>
-                  <div v-if="task.dates?.planned_end" class="text-xs">
-                    End: {{ formatDate(task.dates.planned_end) }}
+                  <span v-else>-</span>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium" @click.stop>
+                  <div class="flex justify-end space-x-1">
+                    <button
+                      @click="editTask(task)"
+                      class="text-red-600 hover:text-red-900 p-1"
+                      title="Edit Task"
+                    >
+                      <PencilIcon class="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      @click="confirmDeleteTask(task)"
+                      class="text-red-600 hover:text-red-900 p-1"
+                      title="Delete Task"
+                    >
+                      <TrashIcon class="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                </div>
-                <span v-else>-</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" @click.stop>
-                <button
-                  @click="editTask(task)"
-                  class="text-red-600 hover:text-red-900 mr-3"
-                  title="Edit Task"
-                >
-                  <PencilIcon class="h-4 w-4" />
-                </button>
-                <button
-                  @click="confirmDeleteTask(task)"
-                  class="text-red-600 hover:text-red-900"
-                  title="Delete Task"
-                >
-                  <TrashIcon class="h-4 w-4" />
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- KANBAN VIEW -->
@@ -460,8 +493,18 @@
                     <div class="text-xs text-gray-500 mb-2">{{ task.project?.name || 'No project' }}</div>
                     
                     <div class="flex justify-between items-center">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                        {{ formatStatus(task.state) }}
+                      <span 
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-emerald-100 text-emerald-800': task.priority === '1',
+                          'bg-amber-100 text-amber-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority
+                        }"
+                      >
+                        <Flag class="w-3 h-3" />
+                        {{ task.priority ? formatPriority(task.priority) : 'Tidak ada' }}
                       </span>
                       <div class="flex items-center">
                         <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
@@ -470,6 +513,8 @@
                         <span class="text-xs text-gray-500">{{ task.progress || 0 }}%</span>
                       </div>
                     </div>
+                    
+                    
                     
                     <div class="mt-2 flex justify-between items-center">
                       <div class="flex flex-wrap gap-1">
@@ -519,8 +564,18 @@
                     <div class="text-sm font-medium text-gray-900 mb-1">{{ task.name }}</div>
                     <div class="text-xs text-gray-500 mb-2">{{ task.project?.name || 'No project' }}</div>
                     <div class="flex justify-between items-center">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                        {{ formatStatus(task.state) }}
+                      <span 
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-emerald-100 text-emerald-800': task.priority === '1',
+                          'bg-amber-100 text-amber-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority
+                        }"
+                      >
+                        <Flag class="w-3 h-3" />
+                        {{ task.priority ? formatPriority(task.priority) : 'Tidak ada' }}
                       </span>
                       <div class="flex items-center">
                         <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
@@ -528,7 +583,8 @@
                         </div>
                         <span class="text-xs text-gray-500">{{ task.progress || 0 }}%</span>
                       </div>
-                    </div>
+                    </div>                    
+                    
                     <div class="mt-2 flex justify-between items-center">
                       <div class="flex flex-wrap gap-1">
                         <div v-for="person in task.assigned_to.slice(0, 2)" :key="person.id"
@@ -578,8 +634,18 @@
                     <div class="text-xs text-gray-500 mb-2">{{ task.project?.name || 'No project' }}</div>
                     
                     <div class="flex justify-between items-center">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                        {{ formatStatus(task.state) }}
+                      <span 
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-green-100 text-green-800': task.priority === '1',
+                          'bg-orange-100 text-orange-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority
+                        }"
+                      >
+                        <Flag class="w-3 h-3" />
+                        {{ task.priority ? formatPriority(task.priority) : 'No' }}
                       </span>
                       <div class="flex items-center">
                         <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
@@ -638,8 +704,18 @@
                     <div class="text-xs text-gray-500 mb-2">{{ task.project?.name || 'No project' }}</div>
                     
                     <div class="flex justify-between items-center">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                        {{ formatStatus(task.state) }}
+                      <span 
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-green-100 text-green-800': task.priority === '1',
+                          'bg-orange-100 text-orange-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority
+                        }"
+                      >
+                        <Flag class="w-3 h-3" />
+                        {{ task.priority ? formatPriority(task.priority) : 'No' }}
                       </span>
                       <div class="flex items-center">
                         <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
@@ -698,8 +774,18 @@
                     <div class="text-xs text-gray-500 mb-2">{{ task.project?.name || 'No project' }}</div>
                     
                     <div class="flex justify-between items-center">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                        {{ formatStatus(task.state) }}
+                      <span 
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-green-100 text-green-800': task.priority === '1',
+                          'bg-orange-100 text-orange-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority
+                        }"
+                      >
+                        <Flag class="w-3 h-3" />
+                        {{ task.priority ? formatPriority(task.priority) : 'No' }}
                       </span>
                       <div class="flex items-center">
                         <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
@@ -756,8 +842,18 @@
                     <div class="text-sm font-medium text-gray-900 mb-1">{{ task.name }}</div>
                     <div class="text-xs text-gray-500 mb-2">{{ task.project?.name || 'No project' }}</div>
                     <div class="flex justify-between items-center">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getStatusClass(task.state)">
-                        {{ formatStatus(task.state) }}
+                      <span 
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-green-100 text-green-800': task.priority === '1',
+                          'bg-orange-100 text-orange-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority
+                        }"
+                      >
+                        <Flag class="w-3 h-3" />
+                        {{ task.priority ? formatPriority(task.priority) : 'No' }}
                       </span>
                       <div class="flex items-center">
                         <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
@@ -1351,7 +1447,7 @@
                 class="bg-white rounded-xl shadow-xl overflow-hidden w-full max-w-5xl mx-auto relative z-10 transform transition-all"
               >
                 <!-- Header with Gradient Background -->
-                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-4">
+                <div class="bg-gradient-to-r from-rose-500 to-rose-600 px-6 py-4">
                   <div class="flex items-center justify-between">
                     <div>
                       <h2 class="text-lg font-medium text-white flex items-center">
@@ -1458,9 +1554,10 @@
                           </div>
 
                           <!-- Priority -->
+                          <!-- Priority - Ditingkatkan dengan deskripsi yang jelas -->
                           <div>
                             <label for="task-priority" class="block text-sm font-medium text-gray-700 mb-1.5">
-                              Priority
+                              Prioritas <span class="text-red-500">*</span>
                             </label>
                             <div class="relative rounded-md shadow-sm">
                               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1469,15 +1566,39 @@
                               <select
                                 id="task-priority"
                                 v-model="currentTask.priority"
+                                required
                                 class="block w-full pl-10 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-lg"
                               >
-                                <option value="0">Low</option>
-                                <option value="1">Medium</option>
-                                <option value="2">High</option>
-                                <option value="3">Critical</option>
+                                <option value="3" class="text-red-700 font-medium">Kritis (P0) - Masalah mendesak yang memerlukan perhatian segera</option>
+                                <option value="2" class="text-amber-700 font-medium">Tinggi (P1) - Masalah penting yang perlu segera ditangani</option>
+                                <option value="1" class="text-emerald-700 font-medium">Menengah (P2) - Prioritas standar untuk pekerjaan reguler</option>
+                                <option value="0" class="text-blue-700 font-medium">Rendah (P3) - Tugas yang dapat diselesaikan jika waktu memungkinkan</option>
                               </select>
-                              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <!-- <ChevronDown class="h-4 w-4 text-gray-400" /> -->
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">
+                              Pilih tingkat prioritas yang sesuai untuk tugas ini
+                            </p>
+                          </div>
+
+                          <!-- Tambahkan panduan prioritas setelah pilihan prioritas -->
+                          <div class="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-100 text-xs">
+                            <div class="font-medium mb-1 text-gray-700">Panduan Prioritas:</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div class="flex items-center">
+                                <div class="h-3 w-3 bg-red-500 rounded-full mr-2"></div>
+                                <span><span class="font-medium">P0 (Kritis):</span> Memerlukan perhatian segera</span>
+                              </div>
+                              <div class="flex items-center">
+                                <div class="h-3 w-3 bg-amber-500 rounded-full mr-2"></div>
+                                <span><span class="font-medium">P1 (Tinggi):</span> Penting, segera ditangani</span>
+                              </div>
+                              <div class="flex items-center">
+                                <div class="h-3 w-3 bg-emerald-500 rounded-full mr-2"></div>
+                                <span><span class="font-medium">P2 (Menengah):</span> Prioritas standar</span>
+                              </div>
+                              <div class="flex items-center">
+                                <div class="h-3 w-3 bg-blue-500 rounded-full mr-2"></div>
+                                <span><span class="font-medium">P3 (Rendah):</span> Dapat diselesaikan nanti</span>
                               </div>
                             </div>
                           </div>
@@ -1561,6 +1682,7 @@
                       </div>
                       
                       <!-- Schedule Card -->
+                      <!-- Schedule Card - Tampilan yang Diperbarui -->
                       <div class="bg-gray-50 rounded-lg p-6 border border-gray-100">
                         <h3 class="text-sm font-medium text-gray-700 mb-4 flex items-center">
                           <Calendar class="w-4 h-4 mr-1.5 text-red-500" />
@@ -1568,79 +1690,88 @@
                         </h3>
                         
                         <div class="space-y-4">
-                          <!-- Date range -->
-                          <div class="grid grid-cols-2 gap-4">
-                            <!-- Start Date/Time -->
-                            <div>
-                              <label for="task-planned-start" class="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
-                              <div class="grid grid-cols-3 gap-2">
-                                <div class="col-span-2 relative">
-                                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <CalendarDays class="h-4 w-4 text-gray-400" />
-                                  </div>
-                                  <input
-                                    id="task-planned-start"
-                                    v-model="currentTask.planned_date_start"
-                                    type="date"
-                                    class="block w-full pl-10 pr-3 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
-                                  />
+                          <!-- Planned Start - Dalam 1 baris -->
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Planned Start</label>
+                            <div class="flex gap-2">
+                              <div class="flex-grow relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <CalendarDays class="h-4 w-4 text-gray-400" />
                                 </div>
-                                <div>
-                                  <input
-                                    v-model="currentTask.planned_time_start"
-                                    type="time"
-                                    class="block w-full py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
-                                  />
-                                </div>
+                                <input
+                                  v-model="currentTask.planned_date_start"
+                                  type="date"
+                                  class="block w-full pl-10 pr-3 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
+                                  @change="calculatePlannedHours"
+                                />
                               </div>
-                            </div>
-                            
-                            <!-- End Date/Time -->
-                            <div>
-                              <label for="task-planned-end" class="block text-sm font-medium text-gray-700 mb-1.5">End Date</label>
-                              <div class="grid grid-cols-3 gap-2">
-                                <div class="col-span-2 relative">
-                                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <CalendarDays class="h-4 w-4 text-gray-400" />
-                                  </div>
-                                  <input
-                                    id="task-planned-end"
-                                    v-model="currentTask.planned_date_end"
-                                    type="date"
-                                    class="block w-full pl-10 pr-3 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
-                                  />
-                                </div>
-                                <div>
-                                  <input
-                                    v-model="currentTask.planned_time_end"
-                                    type="time"
-                                    class="block w-full py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
-                                  />
-                                </div>
+                              <div class="w-1/3">
+                                <input
+                                  v-model="currentTask.planned_time_start"
+                                  type="time"
+                                  class="block w-full py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
+                                  @change="calculatePlannedHours"
+                                />
                               </div>
                             </div>
                           </div>
                           
-                          <!-- Planned Hours -->
+                          <!-- Planned End - Dalam 1 baris -->
                           <div>
-                            <label for="task-planned-hours" class="block text-sm font-medium text-gray-700 mb-1.5">Planned Hours</label>
-                            <div class="relative rounded-md shadow-sm">
-                              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Clock class="h-4 w-4 text-gray-400" />
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Planned End</label>
+                            <div class="flex gap-2">
+                              <div class="flex-grow relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <CalendarDays class="h-4 w-4 text-gray-400" />
+                                </div>
+                                <input
+                                  v-model="currentTask.planned_date_end"
+                                  type="date"
+                                  class="block w-full pl-10 pr-3 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
+                                  @change="calculatePlannedHours"
+                                />
                               </div>
-                              <input
-                                id="task-planned-hours"
-                                v-model="currentTask.planned_hours"
-                                type="number"
-                                min="0"
-                                step="0.5"
-                                class="block w-full pl-10 pr-10 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
-                                placeholder="0"
-                              />
-                              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">hrs</span>
+                              <div class="w-1/3">
+                                <input
+                                  v-model="currentTask.planned_time_end"
+                                  type="time"
+                                  class="block w-full py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
+                                  @change="calculatePlannedHours"
+                                />
                               </div>
                             </div>
+                          </div>
+                          
+                          <!-- Planned Hours - Dihitung otomatis -->
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Planned Hours</label>
+                            <div class="flex gap-2 items-center">
+                              <div class="flex-grow relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <Clock class="h-4 w-4 text-gray-400" />
+                                </div>
+                                <input
+                                  v-model.number="currentTask.planned_hours"
+                                  type="number"
+                                  min="0"
+                                  step="0.1"
+                                  class="block w-full pl-10 pr-10 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"
+                                  placeholder="0.0"
+                                />
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                  <span class="text-gray-500 sm:text-sm">hrs</span>
+                                </div>
+                              </div>
+                              <button 
+                                type="button" 
+                                @click="calculatePlannedHours" 
+                                class="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                title="Hitung jam dari waktu mulai dan selesai"
+                              >
+                                <Calculator class="w-4 h-4" />
+                              </button>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Jam yang direncanakan berdasarkan waktu mulai dan selesai</p>
                           </div>
                         </div>
                       </div>
@@ -3176,12 +3307,109 @@ const handleDragEnd = async (event) => {
   }
 };
 
+const formatPriority = (priority) => {
+  const priorityMap = {
+    '0': 'Low (P3)',
+    '1': 'Medium (P2)',
+    '2': 'High (P1)',
+    '3': 'Critical (P0)'
+  };
+  return priorityMap[priority] || 'Menengah';
+};
+
+// Pastikan priorityColorMap juga diperbarui (jika ada)
+const priorityColorMap = {
+  '0': {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-100',
+    icon: 'text-blue-500'
+  },
+  '1': {
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-700',
+    border: 'border-emerald-100',
+    icon: 'text-emerald-500'
+  },
+  '2': {
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-100',
+    icon: 'text-amber-500'
+  },
+  '3': {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-100',
+    icon: 'text-red-500'
+  }
+};
+
+// Fungsi untuk menghitung planned hours berdasarkan tanggal dan waktu mulai/selesai
+const calculatePlannedHours = () => {
+  // Pastikan kedua tanggal dan waktu telah diisi
+  if (!currentTask.value.planned_date_start || !currentTask.value.planned_time_start || 
+      !currentTask.value.planned_date_end || !currentTask.value.planned_time_end) {
+    return;
+  }
+  
+  // Buat objek Date dari tanggal dan waktu mulai
+  const startDateTime = new Date(
+    `${currentTask.value.planned_date_start}T${currentTask.value.planned_time_start}:00`
+  );
+  
+  // Buat objek Date dari tanggal dan waktu selesai
+  const endDateTime = new Date(
+    `${currentTask.value.planned_date_end}T${currentTask.value.planned_time_end}:00`
+  );
+  
+  // Pastikan tanggal dan waktu valid
+  if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+    console.error('Tanggal atau waktu tidak valid');
+    return;
+  }
+  
+  // Hitung selisih waktu dalam jam
+  const diffMs = endDateTime - startDateTime;
+  
+  // Jika waktu akhir sebelum waktu mulai, tampilkan pesan kesalahan
+  if (diffMs < 0) {
+    showToast({
+      message: 'Waktu selesai harus setelah waktu mulai',
+      type: 'error'
+    });
+    return;
+  }
+  
+  // Konversi milidetik ke jam (dengan 1 desimal)
+  const diffHours = Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10;
+  
+  // Setel planned_hours
+  currentTask.value.planned_hours = diffHours;
+};
+
+// Tambahkan watchers untuk otomatis menghitung planned hours saat tanggal/waktu berubah
+// Tambahkan setelah watch yang ada dalam file (sekitar baris 1800-1900)
+
+// Watch untuk perubahan tanggal dan waktu mulai/selesai
+watch(
+  [
+    () => currentTask.value.planned_date_start,
+    () => currentTask.value.planned_time_start,
+    () => currentTask.value.planned_date_end,
+    () => currentTask.value.planned_time_end
+  ],
+  () => {
+    calculatePlannedHours();
+  }
+);
+
 // Lifecycle hooks
 onMounted(async () => {
   await Promise.all([
     fetchTasks(),
     fetchProjects(),
-    fetchEmployees(),
+    // fetchEmployees(),
     fetchDepartments() // Tambahkan ini
   ]);
   
@@ -4014,6 +4242,9 @@ const closeTaskModal = () => {
 };
 
 // Modify resetTaskForm function to include new fields
+// Perbarui fungsi resetTaskForm untuk memastikan nilai default prioritas
+// Ganti fungsi resetTaskForm yang ada (sekitar baris 1550-1570)
+
 const resetTaskForm = () => {
   formErrors.value = [];
   isUsingRichEditor.value = false; // Reset editor mode
@@ -4023,13 +4254,13 @@ const resetTaskForm = () => {
     assigned_to: [],
     planned_date_start: '',
     planned_date_end: '',
-    planned_time_start: '',
-    planned_time_end: '',
+    planned_time_start: '09:00', // Tambahkan waktu default
+    planned_time_end: '17:00',   // Tambahkan waktu default
     planned_hours: '',
     description: '',
     state: 'draft',
     progress: 0,
-    priority: '1', // String type as expected by backend
+    priority: '1', // String type as expected by backend, default ke Menengah (P2)
     type_id: '',
     reviewer_id: '',
     depends_on_ids: [],
@@ -4090,28 +4321,59 @@ const editTask = (task) => {
 };
 
 // Update validateForm function to include new required fields
+// Perbarui fungsi validateForm untuk menambahkan validasi prioritas
+// Dan pemeriksaan tanggal yang lebih ketat
+// Ganti fungsi validateForm yang ada (sekitar baris 1600-1620)
+
 const validateForm = () => {
   formErrors.value = [];
   
   if (!currentTask.value.name.trim()) {
-    formErrors.value.push('Task name is required');
+    formErrors.value.push('Nama tugas wajib diisi');
   }
   
   if (!currentTask.value.project_id) {
-    formErrors.value.push('Project is required');
+    formErrors.value.push('Proyek wajib dipilih');
   }
   
   if (!currentTask.value.assigned_to || currentTask.value.assigned_to.length === 0) {
-    formErrors.value.push('At least one assignee is required');
+    formErrors.value.push('Minimal satu anggota tim harus ditugaskan');
   }
   
-  // Validate dates if both are provided
+  // Validasi prioritas
+  if (currentTask.value.priority === undefined || currentTask.value.priority === null || currentTask.value.priority === '') {
+    formErrors.value.push('Prioritas wajib dipilih');
+  }
+  
+  // Validasi tanggal dan waktu jika sebagian diisi
+  if ((currentTask.value.planned_date_start || currentTask.value.planned_time_start) &&
+      (!currentTask.value.planned_date_start || !currentTask.value.planned_time_start)) {
+    formErrors.value.push('Tanggal dan waktu mulai harus diisi lengkap');
+  }
+  
+  if ((currentTask.value.planned_date_end || currentTask.value.planned_time_end) &&
+      (!currentTask.value.planned_date_end || !currentTask.value.planned_time_end)) {
+    formErrors.value.push('Tanggal dan waktu selesai harus diisi lengkap');
+  }
+  
+  // Validasi tanggal jika kedua tanggal diisi
   if (currentTask.value.planned_date_start && currentTask.value.planned_date_end) {
-    const startDate = new Date(currentTask.value.planned_date_start);
-    const endDate = new Date(currentTask.value.planned_date_end);
-    
-    if (endDate < startDate) {
-      formErrors.value.push('End date cannot be earlier than start date');
+    if (currentTask.value.planned_time_start && currentTask.value.planned_time_end) {
+      // Buat objek datetime lengkap untuk perbandingan
+      const startDate = new Date(`${currentTask.value.planned_date_start}T${currentTask.value.planned_time_start}:00`);
+      const endDate = new Date(`${currentTask.value.planned_date_end}T${currentTask.value.planned_time_end}:00`);
+      
+      if (endDate < startDate) {
+        formErrors.value.push('Waktu selesai harus setelah waktu mulai');
+      }
+    } else {
+      // Jika waktu tidak diisi, bandingkan hanya tanggal
+      const startDate = new Date(currentTask.value.planned_date_start);
+      const endDate = new Date(currentTask.value.planned_date_end);
+      
+      if (endDate < startDate) {
+        formErrors.value.push('Tanggal selesai harus setelah tanggal mulai');
+      }
     }
   }
   
