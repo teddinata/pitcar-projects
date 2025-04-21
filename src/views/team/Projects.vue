@@ -9,7 +9,7 @@
     />
     
     <!-- Header with Filter Button -->
-    <div class="bg-white shadow">
+    <div class="bg-white shadow mb-8">
       <div class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
           <!-- Title -->
@@ -158,6 +158,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Pengingat Auto-Archive - Tambahkan di bagian paling atas -->
+    <StaticArchiveReminder />
 
     <!-- Main Content -->
     <main class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -483,6 +486,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import TaskFormModal from '@/components/team/TaskFormPopup.vue';
+import StaticArchiveReminder from '@/components/StaticArchiveReminder.vue'
 import apiClient from '@/config/api'
 import { 
   PlusIcon, 
@@ -650,6 +654,32 @@ const handleFilterApply = (newFilters) => {
 };
 
 // Modifikasi fungsi fetchProjects untuk menerima parameter isInitialLoad
+/**
+ * Menangani notifikasi auto-archive jika ada dalam response API
+ * @param {Object} response - Response dari API
+ */
+ const handleAutoArchiveNotification = (response) => {
+  // Periksa apakah ada informasi auto-archive dalam response
+  if (response.data.result?.auto_archive && response.data.result.auto_archive.count > 0) {
+    const count = response.data.result.auto_archive.count;
+    const message = response.data.result.auto_archive.message || 
+                    `${count} projects have been automatically archived due to passing due date by 7 days`;
+    
+    // Tampilkan notifikasi kepada user
+    showToast({
+      message: message,
+      type: 'info',
+      duration: 5000  // Tampilkan lebih lama karena ini informasi penting
+    });
+    
+    // Log untuk debugging
+    console.log('Auto archive notification:', message);
+  }
+};
+
+// 3. Update fetchProjects function untuk menangani notifikasi auto-archive
+// Modifikasi function fetchProjects yang sudah ada
+
 const fetchProjects = async (isInitialLoad = false) => {
   try {
     loading.value = true;
@@ -719,6 +749,9 @@ const fetchProjects = async (isInitialLoad = false) => {
         };
       }
       
+      // Tambahkan: Check jika ada proyek yang di-auto-archive
+      handleAutoArchiveNotification(response);
+      
       // Hanya tampilkan toast jika ini bukan load awal
       if (!isInitialLoad) {
         if (projects.value.length > 0) {
@@ -751,6 +784,7 @@ const fetchProjects = async (isInitialLoad = false) => {
     loading.value = false;
   }
 };
+
 
 const goToPage = (page) => {
   if (page < 1 || page > pagination.value.totalPages) return;

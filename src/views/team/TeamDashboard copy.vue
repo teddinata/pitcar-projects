@@ -49,10 +49,8 @@
       </div>
       
       <template v-else>
-        <!-- Bagian Summary Cards -->
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <!-- Projects Card -->
           <div class="bg-white shadow rounded-lg p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
@@ -68,17 +66,8 @@
                 </div>
               </div>
             </div>
-            <div class="mt-4 border-t border-gray-100 pt-4">
-              <button 
-                @click="openModal('projects', 'Projects Detail', dashboardSummary)" 
-                class="text-sm font-medium text-red-600 hover:text-red-500"
-              >
-                View details
-              </button>
-            </div>
           </div>
           
-          <!-- Tasks Card -->
           <div class="bg-white shadow rounded-lg p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
@@ -94,17 +83,8 @@
                 </div>
               </div>
             </div>
-            <div class="mt-4 border-t border-gray-100 pt-4">
-              <button 
-                @click="openModal('tasks', 'Tasks Detail', dashboardSummary)" 
-                class="text-sm font-medium text-red-600 hover:text-red-500"
-              >
-                View details
-              </button>
-            </div>
           </div>
           
-          <!-- Hours Logged Card -->
           <div class="bg-white shadow rounded-lg p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
@@ -120,17 +100,8 @@
                 </div>
               </div>
             </div>
-            <div class="mt-4 border-t border-gray-100 pt-4">
-              <button 
-                @click="openModal('hours', 'Hours Detail', dashboardSummary)" 
-                class="text-sm font-medium text-red-600 hover:text-red-500"
-              >
-                View details
-              </button>
-            </div>
           </div>
           
-          <!-- Completion Rate Card -->
           <div class="bg-white shadow rounded-lg p-4">
             <div class="flex items-center">
               <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
@@ -146,17 +117,8 @@
                 </div>
               </div>
             </div>
-            <div class="mt-4 border-t border-gray-100 pt-4">
-              <button 
-                @click="openModal('completion', 'Completion Rate Detail', dashboardSummary)" 
-                class="text-sm font-medium text-red-600 hover:text-red-500"
-              >
-                View details
-              </button>
-            </div>
           </div>
         </div>
-
         
         <!-- Main Dashboard Widgets Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -204,16 +166,6 @@
         />
       </template>
     </div>
-    <!-- Tambahkan di bagian bawah template, sebelum tag penutup </div> -->
-    <DashboardModal 
-      :show="showModal"
-      :title="modalTitle"
-      :modalType="modalType"
-      :data="modalData"
-      :allocationData="resourceAllocation"
-      :performanceData="projectPerformance"
-      @close="closeModal"
-    />
   </div>
 </template>
 
@@ -236,8 +188,6 @@ import ProjectPerformance from '@/components/team-dashboard/ProjectPerformance.v
 import ResourceAllocation from '@/components/team-dashboard/ResourceAllocation.vue';
 import RecentActivity from '@/components/team-dashboard/RecentActivity.vue';
 import UpcomingDeadlines from '@/components/team-dashboard/UpcomingDeadlines.vue';
-// Tambahkan di bagian imports
-import DashboardModal from '@/components/team-dashboard/DashboardModal.vue';
 
 const { showToast } = useToast();
 
@@ -284,24 +234,6 @@ const resourceAllocation = ref({
   allocation_by_employee: [],
   project_resources: []
 });
-
-// Tambahkan di bagian state
-const showModal = ref(false);
-const modalType = ref('');
-const modalTitle = ref('');
-const modalData = ref({});
-
-// Tambahkan method untuk menangani modal
-const openModal = (type, title, data) => {
-  modalType.value = type;
-  modalTitle.value = title;
-  modalData.value = data;
-  showModal.value = true;
-};
-
-const closeModal = () => {
-  showModal.value = false;
-};
 
 // Methods
 const initDateRange = () => {

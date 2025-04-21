@@ -116,13 +116,25 @@
           </table>
         </div>
       </div>
+
+       <!-- Tambahkan tombol View Details di bagian bawah -->
+       <div class="mt-4 border-t border-gray-100 pt-4 flex justify-end">
+        <button 
+          @click="openModal('allocation', 'Resource Allocation Detail', allocationData)" 
+          class="text-sm font-medium text-red-600 hover:text-red-500 inline-flex items-center"
+        >
+          <ChartBarIcon class="h-4 w-4 mr-1" />
+          View detailed allocation
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+// Tambahkan import ChartBarIcon
 import { defineProps, defineEmits, ref, computed, onMounted, watch } from 'vue';
-import { RefreshCw, Loader2, Users } from 'lucide-vue-next';
+import { RefreshCw, Loader2, Users, BarChart as ChartBarIcon } from 'lucide-vue-next';
 import Chart from 'chart.js/auto';
 
 const props = defineProps({
@@ -140,7 +152,8 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['refresh']);
+// Tambahkan emit untuk openModal
+const emit = defineEmits(['refresh', 'openModal']);
 
 const viewMode = ref('project');
 const projectChart = ref(null);
@@ -227,6 +240,11 @@ const renderProjectChart = () => {
   };
   
   chartInstance = new Chart(projectChart.value, config);
+};
+
+// Tambahkan method untuk openModal
+const openModal = (modalType, title, data) => {
+  emit('openModal', modalType, title, data);
 };
 
 // Watch for changes to render charts
