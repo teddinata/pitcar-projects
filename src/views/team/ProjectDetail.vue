@@ -3080,25 +3080,11 @@ const extractMentionsFromEditor = () => {
 
 // Add emoji to editor content instead of newMessage
 const addEmoji = (emoji) => {
-  // If there's a mention input ref, insert the emoji at the current cursor position
-  if (mentionInputRef.value && mentionInputRef.value.textareaRef) {
-    const textarea = mentionInputRef.value.textareaRef;
-    const cursorPos = textarea.selectionStart;
-    
-    // Get current text and insert emoji at cursor position
-    const currentText = mentionInputRef.value.text || '';
-    const newText = currentText.substring(0, cursorPos) + emoji + currentText.substring(cursorPos);
-    
-    // Update the text
-    mentionInputRef.value.text = newText;
-    
-    // Focus back on the textarea and position cursor after the emoji
-    nextTick(() => {
-      textarea.focus();
-      textarea.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
-    });
+
+  if (mentionInputRef.value) {
+    mentionInputRef.value.insertText(emoji);
   }
-  
+  // Tutup emoji picker
   showEmojiPicker.value = false;
 };
 

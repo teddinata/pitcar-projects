@@ -618,14 +618,34 @@ onUnmounted(() => {
   window.removeEventListener('scroll', updateDropdownPosition)
 })
 
-// Expose functions that might be useful
+// Tambahkan ini ke dalam script di TeamMentionInput.vue
+const insertText = (insertedText) => {
+  if (!textareaRef.value) return;
+  
+  const textarea = textareaRef.value;
+  const cursorPos = textarea.selectionStart;
+  
+  // Insert text pada posisi kursor
+  const newText = text.value.substring(0, cursorPos) + insertedText + text.value.substring(cursorPos);
+  text.value = newText;
+  
+  // Fokus kembali ke textarea
+  nextTick(() => {
+    textarea.focus();
+    textarea.setSelectionRange(cursorPos + insertedText.length, cursorPos + insertedText.length);
+  });
+};
+
+// Tambahkan ke defineExpose
 defineExpose({
   extractMentions,
+  textareaRef,
   focus: () => {
-    textareaRef.value?.focus()
+    textareaRef.value?.focus();
   },
-  text: text // Expose the text ref directly
-})
+  text,
+  insertText // Ekspos metode insertText
+});
 </script>
 
 <style scoped>
