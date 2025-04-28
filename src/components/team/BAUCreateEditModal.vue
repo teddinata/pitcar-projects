@@ -93,7 +93,7 @@
                       <CustomTimePicker 
                         v-model="localFormData.time_start"
                         :interval="15"
-                        :start-hour="8"
+                        :start-hour="7"
                         :end-hour="18"
                       />
                     </div>

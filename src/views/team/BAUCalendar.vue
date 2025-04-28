@@ -156,9 +156,10 @@
           <h4 class="text-sm font-medium text-gray-700 mb-2">Filter Departemen Multi-Pilihan</h4>
           
           <!-- Department Tags -->
+          <!-- Department Tags -->
           <div class="flex flex-wrap gap-2 mb-2">
             <div 
-              v-for="dept in departments.filter(d => selectedDepartments.includes(d.id))" 
+              v-for="dept in selectedDepartmentsWithNames" 
               :key="`tag-${dept.id}`"
               class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"
             >
@@ -681,6 +682,30 @@ const clearFilters = () => {
   fetchActivities();
 };
 
+const getActivityDepartmentId = (activity) => {
+  // Cek jika aktivitas punya project dengan departemen
+  if (activity.project?.department_id) {
+    return activity.project.department_id;
+  }
+  
+  // Cek jika aktivitas punya creator dengan departemen
+  if (activity.creator?.department_id) {
+    return activity.creator.department_id;
+  }
+  
+  // Jika aktivitas punya project ID tapi tidak ada department_id
+  if (activity.project?.id) {
+    // Cari project dari daftar projects
+    const project = projects.value.find(p => p.id === activity.project.id);
+    if (project?.department?.id) {
+      return project.department.id;
+    }
+  }
+  
+  // Default jika tidak ada departemen yang ditemukan
+  return null;
+};
+
 
 // Add or modify this function in your component
 const getDepartmentColors = (departmentId) => {
@@ -698,6 +723,7 @@ const getDepartmentColors = (departmentId) => {
     10: { border: 'border-lime-500', bg: 'bg-lime-50' },
     11: { border: 'border-teal-500', bg: 'bg-teal-50' },
     12: { border: 'border-emerald-500', bg: 'bg-emerald-50' }, // IT Division
+    13: { border: 'border-amber-500', bg: 'bg-amber-50' }, // General Affairs
     // Add more departments as needed
   };
   
@@ -1034,8 +1060,9 @@ const fetchActivities = async () => {
           if (!day.activities) return day;
           
           const filteredActivities = day.activities.filter(activity => {
-            const hasDepartment = activity.project && activity.project.department_id === departmentId;
-            return hasDepartment;
+            // Gunakan fungsi helper untuk mendapatkan departement_id
+            const activityDeptId = getActivityDepartmentId(activity);
+            return activityDeptId === departmentId;
           });
           
           return {
@@ -1047,8 +1074,8 @@ const fetchActivities = async () => {
           };
         });
       }
-      
-      // 2. Filter berdasarkan multiple departments (checkbox)
+
+      // 2. Filter berdasarkan multiple departments (checkbox) jika ada
       else if (selectedDepartments.value.length > 0) {
         console.log(`Filtering by ${selectedDepartments.value.length} selected departments`);
         
@@ -1056,8 +1083,9 @@ const fetchActivities = async () => {
           if (!day.activities) return day;
           
           const filteredActivities = day.activities.filter(activity => {
-            if (!activity.project || !activity.project.department_id) return false;
-            return selectedDepartments.value.includes(activity.project.department_id);
+            // Gunakan fungsi helper untuk mendapatkan departement_id
+            const activityDeptId = getActivityDepartmentId(activity);
+            return activityDeptId && selectedDepartments.value.includes(activityDeptId);
           });
           
           return {
@@ -1069,6 +1097,7 @@ const fetchActivities = async () => {
           };
         });
       }
+
       
       console.log('Filtered calendar data:', calendarData);
       
@@ -1157,16 +1186,31 @@ const fetchProjects = async () => {
     const response = await apiClient.post('/web/v2/team/projects/list', {
       jsonrpc: '2.0',
       id: new Date().getTime(),
-      params: {
-        limit: 100 // Get all projects for dropdown
-      }
+      params: { limit: 100 }
     });
 
     if (response.data.result?.status === 'success') {
-      projects.value = response.data.result.data || [];
-
-      // Verifikasi apakah project memiliki informasi department
-      const projectsWithDept = projects.value.filter(p => p.department && p.department.id);
+      // Memproses data projek dari response
+      let projectData = response.data.result.data || [];
+      
+      // Enrich project data dengan informasi departemen
+      projects.value = projectData.map(project => {
+        // Periksa apakah project memiliki departments array
+        if (project.departments && project.departments.length > 0) {
+          // Ambil departemen pertama sebagai departemen utama project
+          const primaryDepartment = project.departments[0];
+          return {
+            ...project,
+            department: {
+              id: primaryDepartment.id,
+              name: primaryDepartment.name
+            }
+          };
+        }
+        return project;
+      });
+      
+      console.log('Projects with department info:', projects.value.filter(p => p.department));
     }
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -1176,6 +1220,31 @@ const fetchProjects = async () => {
     });
   }
 };
+
+// Metode untuk handle perubahan departemen dari dropdown
+const handleDepartmentChange = () => {
+  // Jika departemen dipilih dari dropdown, hapus semua pilihan multi-departemen
+  if (filters.value.department_id) {
+    selectedDepartments.value = [];
+  }
+  applyFilters();
+};
+
+// Metode untuk handle perubahan multi-departemen dari checkbox
+const handleMultiDepartmentChange = () => {
+  // Jika ada departemen yang dipilih, reset dropdown departemen
+  if (selectedDepartments.value.length > 0) {
+    filters.value.department_id = '';
+  }
+};
+
+// Computed property untuk department list dengan nama
+const selectedDepartmentsWithNames = computed(() => {
+  return selectedDepartments.value.map(deptId => {
+    const dept = departments.value.find(d => d.id === deptId);
+    return { id: deptId, name: dept ? dept.name : `ID: ${deptId}` };
+  });
+});
 
 const fetchDepartments = async () => {
   try {
@@ -1926,13 +1995,16 @@ onMounted(() => {
   // Initialize batch form
   initBatchForm();
   
-  // Fetch initial data
-  fetchProjects();
-  fetchDepartments();
-  fetchEmployees();
-  fetchActivities();
-
-  
+  // Fetch initial data dengan urutan tertentu untuk memastikan data departemen dan proyek
+  // sudah siap sebelum mengambil aktivitas
+  Promise.all([
+    fetchProjects(), 
+    fetchDepartments(),
+    fetchEmployees()
+  ]).then(() => {
+    // Fetch activities hanya setelah semua data pendukung tersedia
+    fetchActivities();
+  });
 });
 
 </script>
