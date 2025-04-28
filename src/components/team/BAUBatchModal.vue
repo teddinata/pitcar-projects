@@ -44,7 +44,7 @@
                     v-model="formValues.name"
                     type="text"
                     required
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     placeholder="Nama aktivitas BAU"
                   />
                 </div>
@@ -56,7 +56,7 @@
                     id="batch-type"
                     v-model="formValues.activity_type"
                     required
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option value="meeting">Meeting</option>
                     <option value="training">Training</option>
@@ -72,7 +72,7 @@
                   <select
                     id="batch-project"
                     v-model="formValues.project_id"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option value="">Tanpa Proyek</option>
                     <option v-for="project in projects" :key="project.id" :value="project.id">
@@ -87,7 +87,7 @@
                   <select
                     id="batch-creator"
                     v-model="formValues.creator_id"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option v-for="employee in employees" :key="employee.id" :value="employee.id">
                       {{ employee.name }}
@@ -107,7 +107,7 @@
                       v-model="formValues.date_from"
                       type="date"
                       required
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                      class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     />
                   </div>
                   <div>
@@ -117,7 +117,7 @@
                       v-model="formValues.date_to"
                       type="date"
                       required
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                      class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -145,7 +145,7 @@
                       id="batch-time-start"
                       v-model="formValues.time_start"
                       @change="calculateHours"
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                      class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     >
                       <option v-for="time in timeOptions" :key="time.value" :value="time.value">
                         {{ time.label }}
@@ -158,7 +158,7 @@
                       id="batch-time-end"
                       v-model="formValues.time_end"
                       @change="calculateHours"
-                      class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                      class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     >
                       <option v-for="time in timeOptions" :key="time.value" :value="time.value">
                         {{ time.label }}
@@ -175,7 +175,7 @@
                     :value="formValues.hours_spent"
                     type="text"
                     readonly
-                    class="block w-full rounded-md bg-gray-50 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block px-3 py-2 w-full rounded-md bg-gray-50 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     placeholder="Jam kerja (otomatis dari waktu mulai/selesai)"
                   />
                   <p class="mt-1 text-xs text-gray-500">Dihitung otomatis berdasarkan waktu mulai dan selesai yang dipilih</p>
@@ -188,7 +188,7 @@
                     id="batch-description"
                     v-model="formValues.description"
                     rows="3"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="block px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     placeholder="Deskripsi aktivitas (opsional)"
                   ></textarea>
                 </div>
