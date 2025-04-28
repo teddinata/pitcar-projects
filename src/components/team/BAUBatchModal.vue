@@ -44,7 +44,7 @@
                     v-model="localFormData.name"
                     type="text"
                     required
-                    class="mt-1 px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     placeholder="Nama aktivitas BAU"
                   />
                 </div>
@@ -56,7 +56,7 @@
                     id="batch-type"
                     v-model="localFormData.activity_type"
                     required
-                    class="mt-1 px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option value="meeting">Meeting</option>
                     <option value="training">Training</option>
@@ -72,7 +72,7 @@
                   <select
                     id="batch-project"
                     v-model="localFormData.project_id"
-                    class="mt-1 px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                   >
                     <option value="">Tanpa Proyek</option>
                     <option v-for="project in projects" :key="project.id" :value="project.id">
@@ -84,13 +84,15 @@
                 <!-- Creator (For admin or team leads) -->
                 <div v-if="hasAdminRights" class="mb-4">
                   <label for="batch-creator" class="block text-sm font-medium text-gray-700">Dibuat Untuk <span class="text-red-500">*</span></label>
-                  <TeamSelect
+                  <select
                     id="batch-creator"
                     v-model="localFormData.creator_id"
-                    :disabled="submitting"
-                    :multiple="false"
-                    class="w-full px-3 py-2"
-                  />
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                  >
+                    <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                      {{ employee.name }}
+                    </option>
+                  </select>
                   <p class="mt-1 text-xs text-gray-500">
                     Anda membuat aktivitas atas nama anggota tim.
                   </p>
@@ -105,7 +107,7 @@
                       v-model="localFormData.date_from"
                       type="date"
                       required
-                      class="mt-1 px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     />
                   </div>
                   <div>
@@ -115,7 +117,7 @@
                       v-model="localFormData.date_to"
                       type="date"
                       required
-                      class="mt-1 px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     />
                   </div>
                 </div>
@@ -135,29 +137,47 @@
                   </div>
                 </div>
                 
-                <!-- Time Range dengan CustomTimePicker -->
-                <div class="mb-4">
-                  <label class="block text-sm font-medium text-gray-700">Waktu <span class="text-red-500">*</span></label>
-                  <div class="flex items-center space-x-2">
-                    <div class="w-1/2">
-                      <CustomTimePicker 
-                        v-model="localFormData.time_start"
-                        :interval="15"
-                        :start-hour="7"
-                        :end-hour="18"
-                      />
-                    </div>
-                    <span class="text-gray-500">-</span>
-                    <div class="w-1/2">
-                      <CustomTimePicker 
-                        v-model="localFormData.time_end"
-                        :interval="15"
-                        :start-hour="8"
-                        :end-hour="18"
-                      />
-                    </div>
+                <!-- Time Range - Gunakan time input biasa untuk sementara -->
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+                  <div>
+                    <label for="batch-time-start" class="block text-sm font-medium text-gray-700">Waktu Mulai <span class="text-red-500">*</span></label>
+                    <input
+                      id="batch-time-start"
+                      v-model="localFormData.time_start"
+                      type="time"
+                      required
+                      @change="updateHoursSpent"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    />
                   </div>
-                  <p class="mt-1 text-xs text-gray-500">Jam yang dicatat: {{ calculatedHours }}</p>
+                  <div>
+                    <label for="batch-time-end" class="block text-sm font-medium text-gray-700">Waktu Selesai <span class="text-red-500">*</span></label>
+                    <input
+                      id="batch-time-end"
+                      v-model="localFormData.time_end"
+                      type="time"
+                      required
+                      @change="updateHoursSpent"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <!-- Hours Spent - Readonly, dihitung otomatis -->
+                <div class="mb-4">
+                  <label for="batch-hours" class="block text-sm font-medium text-gray-700">Jam Kerja</label>
+                  <input
+                    id="batch-hours"
+                    v-model.number="localFormData.hours_spent"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="24"
+                    readonly
+                    class="mt-1 block w-full rounded-md bg-gray-50 border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    placeholder="Jam kerja (otomatis dari waktu mulai/selesai)"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Dihitung otomatis dari waktu mulai dan selesai</p>
                 </div>
                 
                 <!-- Description -->
@@ -167,7 +187,7 @@
                     id="batch-description"
                     v-model="localFormData.description"
                     rows="3"
-                    class="mt-1 px-3 py-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                     placeholder="Deskripsi aktivitas (opsional)"
                   ></textarea>
                 </div>
@@ -202,11 +222,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { XCircleIcon } from '@heroicons/vue/24/outline';
 import { useAuthStore } from '@/stores/auth';
-import TeamSelect from '@/components/MeetingTeamSelect.vue';
-import CustomTimePicker from '@/components/CustomTimePicker.vue';
 
 const props = defineProps({
   show: {
@@ -233,13 +251,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit', 'update:hours-spent']);
 
-// Local form data
-const localFormData = ref({ ...props.formData });
+// Local form data - clone untuk mencegah modifikasi langsung pada props
+const localFormData = ref({...props.formData});
 
-// Get auth store for permissions
+// Get auth store untuk permissions
 const authStore = useAuthStore();
 
-// Computed properties for permissions
+// Computed properties untuk permissions
 const isAdmin = computed(() => {
   return authStore.user?.is_admin === true || localStorage.getItem('isAdmin') === 'true';
 });
@@ -250,65 +268,64 @@ const isTeamLead = computed(() => {
 
 const hasAdminRights = computed(() => isAdmin.value || isTeamLead.value);
 
-// Watch for changes to form data from parent
+// Watch untuk perubahan form data dari parent
 watch(() => props.formData, (newFormData) => {
-  localFormData.value = { ...newFormData };
+  // Buat deep clone untuk menghindari referencing issue
+  localFormData.value = JSON.parse(JSON.stringify(newFormData));
 }, { deep: true });
 
-// Watch for changes to time values to calculate hours
-watch([() => localFormData.value.time_start, () => localFormData.value.time_end], () => {
-  if (localFormData.value.time_start && localFormData.value.time_end) {
+// Watch untuk perubahan status modal
+watch(() => props.show, (isVisible) => {
+  if (isVisible) {
+    // Reset form dengan nilai dari props saat modal dibuka
+    localFormData.value = JSON.parse(JSON.stringify(props.formData));
+    // Hitung jam langsung saat modal dibuka
     updateHoursSpent();
   }
 });
 
-// Reset local form when closing
-watch(() => props.show, (isVisible) => {
-  if (!isVisible) {
-    localFormData.value = { ...props.formData };
-  }
-});
-
-// Computed property for calculated hours
-const calculatedHours = computed(() => {
-  if (!localFormData.value.time_start || !localFormData.value.time_end) return 0;
-  
-  try {
-    // Parse time strings
-    const startParts = localFormData.value.time_start.split(':');
-    const endParts = localFormData.value.time_end.split(':');
-    
-    const startHours = parseInt(startParts[0]) + (parseInt(startParts[1]) / 60);
-    const endHours = parseInt(endParts[0]) + (parseInt(endParts[1]) / 60);
-    
-    // Calculate duration (handle overnight activities)
-    let duration = endHours - startHours;
-    if (duration < 0) {
-      duration = 24 + duration; // Add 24 hours if end time is on next day
-    }
-    
-    return parseFloat(duration.toFixed(2));
-  } catch (e) {
-    console.error('Error calculating hours:', e);
-    return 0;
-  }
-});
-
-// Update hours spent in the form data
+// Hitung jam kerja otomatis
 function updateHoursSpent() {
-  const hours = calculatedHours.value;
-  localFormData.value.hours_spent = hours;
-  emit('update:hours-spent', hours);
+  if (localFormData.value.time_start && localFormData.value.time_end) {
+    try {
+      console.log(`Calculating hours between ${localFormData.value.time_start} and ${localFormData.value.time_end}`);
+      
+      // Parse string waktu
+      const startParts = localFormData.value.time_start.split(':').map(Number);
+      const endParts = localFormData.value.time_end.split(':').map(Number);
+      
+      const startHours = startParts[0] + (startParts[1] / 60);
+      const endHours = endParts[0] + (endParts[1] / 60);
+      
+      // Hitung durasi (handle aktivitas semalaman)
+      let duration = endHours - startHours;
+      if (duration < 0) {
+        duration = 24 + duration; // Tambah 24 jam jika waktu selesai di hari berikutnya
+      }
+      
+      const calculatedHours = parseFloat(duration.toFixed(2));
+      console.log(`Calculated hours: ${calculatedHours}`);
+      
+      // Update localFormData
+      localFormData.value.hours_spent = calculatedHours;
+      
+      // Emit event untuk update parent
+      emit('update:hours-spent', calculatedHours);
+    } catch (e) {
+      console.error('Error calculating hours:', e);
+    }
+  }
 }
 
 // Form submission
 function handleSubmit() {
-  // Basic validation
+  // Validasi dasar
   if (!localFormData.value.name || !localFormData.value.date_from || !localFormData.value.date_to) {
+    alert('Harap isi semua kolom yang wajib.');
     return;
   }
   
-  // Validate date range
+  // Validasi rentang tanggal
   const startDate = new Date(localFormData.value.date_from);
   const endDate = new Date(localFormData.value.date_to);
   
@@ -317,29 +334,24 @@ function handleSubmit() {
     return;
   }
   
-  // Validate times
+  // Validasi waktu
   if (!localFormData.value.time_start || !localFormData.value.time_end) {
-    alert('Waktu mulai dan selesai harus diisi');
+    alert('Waktu mulai dan selesai harus diisi.');
     return;
   }
   
-  // Ensure hours_spent is updated
-  localFormData.value.hours_spent = calculatedHours.value;
+  // Pastikan hours_spent sudah diperbarui
+  updateHoursSpent();
   
-  // Validate that end time is after start time or handle overnight
-  const startParts = localFormData.value.time_start.split(':');
-  const endParts = localFormData.value.time_end.split(':');
-  
-  const startHours = parseInt(startParts[0]) + (parseInt(startParts[1]) / 60);
-  const endHours = parseInt(endParts[0]) + (parseInt(endParts[1]) / 60);
-  
-  // If end time is before start time and the difference is more than 16 hours, it's probably a mistake
-  if (endHours < startHours && (startHours - endHours) > 16) {
-    alert('Rentang waktu terlalu lama. Pastikan waktu selesai setelah waktu mulai.');
-    return;
-  }
-  
-  // Emit submit event with form data
-  emit('submit', { ...localFormData.value });
+  // Emit submit event dengan data yang diperbarui
+  emit('submit', {...localFormData.value});
 }
+
+// Perbarui hours_spent saat komponen dimount
+onMounted(() => {
+  // Tunggu beberapa saat agar refs selesai dimount
+  setTimeout(() => {
+    updateHoursSpent();
+  }, 100);
+});
 </script>
