@@ -1,12 +1,159 @@
-<!-- src/components/team/ProjectGanttChart.vue -->
+<!-- src/components/content/ContentProjectGanttChart.vue -->
 <template>
   <div class="bg-white shadow rounded-lg overflow-hidden flex flex-col h-full">
-    <!-- Header with filters and controls -->
+    <!-- Header with controls -->
     <div class="p-4 border-b border-gray-200">
-      <!-- Controls section - unchanged -->
+      <div
+        class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+      >
+        <!-- Left side: View mode and navigation -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <!-- View Mode Toggle -->
+          <div class="inline-flex rounded-md shadow-sm">
+            <button
+              @click="setViewMode('month')"
+              class="px-3 py-1.5 text-xs font-medium rounded-l-md border focus:outline-none focus:ring-1 focus:ring-red-500"
+              :class="
+                viewMode === 'month'
+                  ? 'bg-red-600 text-white border-red-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              "
+            >
+              Month
+            </button>
+            <button
+              @click="setViewMode('week')"
+              class="px-3 py-1.5 text-xs font-medium border-t border-b focus:outline-none focus:ring-1 focus:ring-red-500"
+              :class="
+                viewMode === 'week'
+                  ? 'bg-red-600 text-white border-red-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              "
+            >
+              Week
+            </button>
+            <button
+              @click="setViewMode('day')"
+              class="px-3 py-1.5 text-xs font-medium rounded-r-md border focus:outline-none focus:ring-1 focus:ring-red-500"
+              :class="
+                viewMode === 'day'
+                  ? 'bg-red-600 text-white border-red-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              "
+            >
+              Day
+            </button>
+          </div>
+
+          <!-- Timeline Navigation -->
+          <div class="flex items-center gap-2">
+            <button
+              @click="moveTimelinePrev"
+              class="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+            >
+              <ChevronLeftIcon class="h-4 w-4" />
+            </button>
+
+            <div
+              class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 rounded border"
+            >
+              {{ timelinePeriodLabel }}
+            </div>
+
+            <button
+              @click="moveTimelineNext"
+              class="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+            >
+              <ChevronRightIcon class="h-4 w-4" />
+            </button>
+
+            <button
+              @click="resetTimeline"
+              class="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500"
+              title="Go to today"
+            >
+              <CalendarIcon class="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Right side: Zoom and expand controls -->
+        <div class="flex items-center gap-2">
+          <!-- Zoom Controls -->
+          <div class="flex items-center gap-1">
+            <button
+              @click="decreaseZoom"
+              :disabled="zoomLevel <= minZoomLevel"
+              class="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <MinusIcon class="h-4 w-4" />
+            </button>
+
+            <span class="text-xs text-gray-600 px-2"
+              >{{ Math.round(zoomLevel * 100) }}%</span
+            >
+
+            <button
+              @click="increaseZoom"
+              :disabled="zoomLevel >= maxZoomLevel"
+              class="p-1.5 text-gray-600 hover:text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <PlusIcon class="h-4 w-4" />
+            </button>
+          </div>
+
+          <!-- Expand All Button -->
+          <button
+            @click="toggleExpandAll"
+            class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
+          >
+            {{ allExpanded ? "Collapse All" : "Expand All" }}
+          </button>
+
+          <!-- Applied Filters Display -->
+          <div v-if="hasActiveFilters" class="flex items-center gap-2">
+            <span class="text-xs text-gray-500">Filters:</span>
+            <div class="flex gap-1">
+              <div
+                v-if="stateFilter"
+                class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2 py-1 flex items-center"
+              >
+                <span>{{ formatState(stateFilter) }}</span>
+                <XMarkIcon
+                  @click="$emit('clearFilter', 'state')"
+                  class="ml-1 h-3 w-3 cursor-pointer hover:text-red-800"
+                />
+              </div>
+
+              <div
+                v-if="startDateFilter || endDateFilter"
+                class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2 py-1 flex items-center"
+              >
+                <span>{{ formatDateRange() }}</span>
+                <XMarkIcon
+                  @click="$emit('clearFilter', 'date')"
+                  class="ml-1 h-3 w-3 cursor-pointer hover:text-red-800"
+                />
+              </div>
+            </div>
+
+            <button
+              @click="$emit('resetFilters')"
+              class="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              Reset All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Date Range Display (when filtered) -->
+      <div v-if="dateRangeLabel" class="mt-2 text-sm text-gray-600">
+        <span class="font-medium">Showing:</span> {{ dateRangeLabel }}
+      </div>
     </div>
 
-    <!-- Gantt Chart Container -->
+    <!-- Gantt Chart Container - Using same structure as TeamProject -->
     <div class="flex-grow overflow-hidden relative">
       <!-- Main Gantt Structure -->
       <div class="gantt-main">
@@ -14,9 +161,9 @@
         <div class="gantt-headers">
           <!-- Left header (Projects & Tasks) -->
           <div class="project-header">
-            <h3 class="font-medium text-gray-700">Projects & Tasks</h3>
+            <h3 class="font-medium text-gray-700">Content Projects & Tasks</h3>
           </div>
-          
+
           <!-- Right header (Timeline dates) -->
           <div class="timeline-header" ref="timelineHeader">
             <!-- Top row (months) -->
@@ -27,10 +174,12 @@
                 class="month-cell"
                 :style="{ width: `${timeUnit.width}px` }"
               >
-                <span class="text-xs font-medium text-gray-700">{{ timeUnit.label }}</span>
+                <span class="text-xs font-medium text-gray-700">{{
+                  timeUnit.label
+                }}</span>
               </div>
             </div>
-            
+
             <!-- Bottom row (days) -->
             <div class="day-row">
               <div
@@ -39,7 +188,7 @@
                 :class="[
                   'day-cell',
                   timeUnit.isWeekend ? 'weekend' : '',
-                  timeUnit.isToday ? 'today' : ''
+                  timeUnit.isToday ? 'today' : '',
                 ]"
                 :style="{ width: `${getDayWidth()}px` }"
               >
@@ -50,14 +199,21 @@
         </div>
 
         <!-- Scrollable Content Container -->
-        <div class="gantt-scroll-container" @scroll="handleScroll" ref="scrollContainer">
+        <div
+          class="gantt-scroll-container"
+          @scroll="handleScroll"
+          ref="scrollContainer"
+        >
           <!-- Table Content -->
           <div class="gantt-table">
             <!-- Left side: Projects & Tasks List -->
             <div class="projects-list" ref="projectsList">
-              <template v-for="(project, projectIndex) in projects" :key="project.id">
+              <template
+                v-for="(project, projectIndex) in projects"
+                :key="project.id"
+              >
                 <!-- Project Row -->
-                <div 
+                <div
                   :id="`project-row-${project.id}`"
                   class="project-row"
                   :data-row-id="project.id"
@@ -65,35 +221,46 @@
                 >
                   <div class="project-row-content">
                     <button class="expand-button">
-                      <ChevronRightIcon 
-                        class="h-4 w-4 transform transition-transform" 
+                      <ChevronRightIcon
+                        class="h-4 w-4 transform transition-transform"
                         :class="{ 'rotate-90': project.expanded }"
                       />
                     </button>
-                    
-                    <div class="status-indicator" :class="getStatusClass(project.state)"></div>
-                    
+
+                    <div
+                      class="status-indicator"
+                      :class="getStatusClass(project.state)"
+                    ></div>
+
                     <div class="project-name-container">
                       <div class="project-name">{{ project.name }}</div>
+                      <div class="project-meta text-xs text-gray-500">
+                        {{ project.task_count || 0 }} tasks
+                        <span v-if="project.project_manager_name">
+                          • {{ project.project_manager_name }}</span
+                        >
+                      </div>
                     </div>
-                    
+
                     <div class="progress-container">
                       <div class="progress-bar-bg">
                         <div
-                          class="progress-bar-fill" 
+                          class="progress-bar-fill"
                           :class="getProgressColorClass(project.progress)"
                           :style="{ width: `${project.progress || 0}%` }"
                         ></div>
                       </div>
-                      <div class="progress-text">{{ project.progress || 0 }}%</div>
+                      <div class="progress-text">
+                        {{ project.progress || 0 }}%
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Tasks Row (when expanded) -->
                 <template v-if="project.expanded">
-                  <div 
-                    v-for="task in project.tasks" 
+                  <div
+                    v-for="task in project.tasks"
                     :key="task.id"
                     :id="`task-row-${task.id}`"
                     class="task-row"
@@ -101,25 +268,50 @@
                     @click.stop="handleTaskClick(task)"
                   >
                     <div class="task-row-content">
-                      <div class="status-indicator" :class="getStatusClass(task.state)"></div>
-                      
+                      <div
+                        class="status-indicator"
+                        :class="getStatusClass(task.state)"
+                      ></div>
+
                       <div class="task-name-container">
                         <div class="task-name">{{ task.name }}</div>
+                        <div class="task-meta text-xs text-gray-500">
+                          <span
+                            class="content-type-badge"
+                            :class="getContentTypeClass(task.content_type)"
+                          >
+                            {{ task.content_type }}
+                          </span>
+                          <span
+                            v-if="
+                              task.assigned_to && task.assigned_to.length > 0
+                            "
+                            class="ml-2"
+                          >
+                            •
+                            {{ task.assigned_to.map((u) => u.name).join(", ") }}
+                          </span>
+                        </div>
                       </div>
-                      
+
                       <div class="progress-container">
                         <div class="progress-bar-bg">
                           <div
-                            class="progress-bar-fill" 
+                            class="progress-bar-fill"
                             :class="getProgressColorClass(task.progress)"
                             :style="{ width: `${task.progress || 0}%` }"
                           ></div>
                         </div>
-                        <div class="progress-text">{{ task.progress || 0 }}%</div>
+                        <div class="progress-text">
+                          {{ task.progress || 0 }}%
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div v-if="project.tasks.length === 0" class="empty-tasks-row">
+                  <div
+                    v-if="project.tasks.length === 0"
+                    class="empty-tasks-row"
+                  >
                     <div class="empty-tasks-message">No tasks found</div>
                   </div>
                 </template>
@@ -128,31 +320,37 @@
 
             <!-- Right side: Timeline Chart -->
             <div class="timeline-chart" ref="timelineChart">
-              <template v-for="(project, projectIndex) in projects" :key="project.id">
+              <template
+                v-for="(project, projectIndex) in projects"
+                :key="project.id"
+              >
                 <!-- Project Timeline Row -->
-                <div 
+                <div
                   :id="`project-timeline-row-${project.id}`"
                   class="project-timeline-row"
                   :data-row-id="project.id"
-                  :class="{ 'expanded': project.expanded }"
+                  :class="{ expanded: project.expanded }"
                 >
                   <!-- Background grid -->
                   <div class="grid-background">
-                    <template v-for="timeUnit in timeUnits.minor" :key="timeUnit.key">
+                    <template
+                      v-for="timeUnit in timeUnits.minor"
+                      :key="timeUnit.key"
+                    >
                       <div
                         class="grid-cell"
                         :class="[
                           timeUnit.isWeekend ? 'weekend' : '',
-                          timeUnit.isToday ? 'today' : ''
+                          timeUnit.isToday ? 'today' : '',
                         ]"
-                        :style="{ 
+                        :style="{
                           left: `${getTimeUnitPosition(timeUnit)}px`,
-                          width: `${getDayWidth()}px`
+                          width: `${getDayWidth()}px`,
                         }"
                       ></div>
                     </template>
                   </div>
-                  
+
                   <!-- Project Bar -->
                   <div
                     v-if="getBarPosition(project).width > 0"
@@ -160,24 +358,27 @@
                     :class="getProjectBarClass(project.state)"
                     :style="{
                       left: `${getBarPosition(project).left}px`,
-                      width: `${getBarPosition(project).width}px`
+                      width: `${getBarPosition(project).width}px`,
                     }"
                     @click.stop="handleProjectClick(project)"
                     :title="getProjectTooltip(project)"
                   >
                     <!-- Progress fill -->
-                    <div 
+                    <div
                       class="progress-fill"
                       :class="getProgressFillClass(project.state)"
                       :style="{ width: `${project.progress || 0}%` }"
                     ></div>
-                    
+
                     <!-- Bar label -->
-                    <div v-if="getBarPosition(project).width > 50" class="bar-label">
+                    <div
+                      v-if="getBarPosition(project).width > 50"
+                      class="bar-label"
+                    >
                       <span>{{ project.name }}</span>
                     </div>
                   </div>
-                    
+
                   <!-- Today indicator -->
                   <div
                     v-if="isTodayVisible"
@@ -185,7 +386,7 @@
                     :style="{ left: `${getTodayPosition()}px` }"
                   ></div>
                 </div>
-                
+
                 <!-- Tasks Timeline (when project expanded) -->
                 <template v-if="project.expanded">
                   <div
@@ -197,21 +398,24 @@
                   >
                     <!-- Background grid -->
                     <div class="grid-background">
-                      <template v-for="timeUnit in timeUnits.minor" :key="timeUnit.key">
+                      <template
+                        v-for="timeUnit in timeUnits.minor"
+                        :key="timeUnit.key"
+                      >
                         <div
                           class="grid-cell"
                           :class="[
                             timeUnit.isWeekend ? 'weekend' : '',
-                            timeUnit.isToday ? 'today' : ''
+                            timeUnit.isToday ? 'today' : '',
                           ]"
-                          :style="{ 
+                          :style="{
                             left: `${getTimeUnitPosition(timeUnit)}px`,
-                            width: `${getDayWidth()}px`
+                            width: `${getDayWidth()}px`,
                           }"
                         ></div>
                       </template>
                     </div>
-                    
+
                     <!-- Task Bar -->
                     <div
                       v-if="getBarPosition(task).width > 0"
@@ -219,37 +423,53 @@
                       :class="getTaskBarClass(task.state)"
                       :style="{
                         left: `${getBarPosition(task).left}px`,
-                        width: `${getBarPosition(task).width}px`
+                        width: `${getBarPosition(task).width}px`,
                       }"
                       @click.stop="handleTaskClick(task)"
                       :title="getTaskTooltip(task, project)"
                     >
                       <!-- Progress fill -->
-                      <div 
+                      <div
                         class="progress-fill"
                         :class="getProgressFillClass(task.state)"
                         :style="{ width: `${task.progress || 0}%` }"
                       ></div>
-                        
+
                       <!-- Bar label -->
-                      <div v-if="getBarPosition(task).width > 50" class="bar-label">
+                      <div
+                        v-if="getBarPosition(task).width > 50"
+                        class="bar-label"
+                      >
                         <span>{{ task.name }}</span>
                       </div>
-                      
+
+                      <!-- Content Type Indicator -->
+                      <div
+                        v-if="getBarPosition(task).width > 100"
+                        class="content-type-indicator"
+                        :class="getContentTypeClass(task.content_type)"
+                      >
+                        {{ task.content_type?.charAt(0).toUpperCase() }}
+                      </div>
+
                       <!-- Assigned Users -->
-                      <div 
-                        v-if="task.assigned_to && task.assigned_to.length > 0 && getBarPosition(task).width > 150"
+                      <div
+                        v-if="
+                          task.assigned_to &&
+                          task.assigned_to.length > 0 &&
+                          getBarPosition(task).width > 150
+                        "
                         class="assigned-users"
                       >
-                        <div 
-                          v-for="(user, index) in task.assigned_to.slice(0, 3)" 
+                        <div
+                          v-for="(user, index) in task.assigned_to.slice(0, 3)"
                           :key="index"
                           class="user-avatar"
                           :title="user.name"
                         >
                           <span>{{ getInitials(user.name) }}</span>
                         </div>
-                        <div 
+                        <div
                           v-if="task.assigned_to.length > 3"
                           class="more-users"
                           :title="getRemainingUsersTitle(task.assigned_to, 3)"
@@ -258,7 +478,7 @@
                         </div>
                       </div>
                     </div>
-                      
+
                     <!-- Today indicator -->
                     <div
                       v-if="isTodayVisible"
@@ -266,7 +486,10 @@
                       :style="{ left: `${getTodayPosition()}px` }"
                     ></div>
                   </div>
-                  <div v-if="project.tasks.length === 0" class="empty-tasks-timeline-row"></div>
+                  <div
+                    v-if="project.tasks.length === 0"
+                    class="empty-tasks-timeline-row"
+                  ></div>
                 </template>
               </template>
             </div>
@@ -274,49 +497,58 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Loading State -->
-    <div 
-      v-if="loading" 
+    <div
+      v-if="loading"
       class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-30"
     >
       <div class="flex flex-col items-center">
-        <div class="animate-spin rounded-full h-10 w-10 border-2 border-red-600 border-t-transparent"></div>
+        <div
+          class="animate-spin rounded-full h-10 w-10 border-2 border-red-600 border-t-transparent"
+        ></div>
         <p class="mt-2 text-sm text-gray-600">Loading timeline...</p>
       </div>
     </div>
 
-    <!-- Task Detail Modal -->
-    <TaskDetailPopup
-      :show="showTaskModal"
-      :task-id="selectedTaskId"
-      @close="closeTaskModal"
-      @edit-task="handleEditTask"
-    />
+    <!-- Empty State -->
+    <div
+      v-if="!loading && projects.length === 0"
+      class="absolute inset-0 flex items-center justify-center"
+    >
+      <div class="text-center">
+        <DocumentIcon class="mx-auto h-12 w-12 text-gray-400" />
+        <h3 class="mt-2 text-sm font-medium text-gray-900">
+          No projects found
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          No content projects match the current filters.
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
-import { 
-  ChevronLeftIcon, 
-  ChevronRightIcon, 
-  MinusIcon, 
-  PlusIcon, 
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MinusIcon,
+  PlusIcon,
   CalendarIcon,
   XMarkIcon,
-  ArrowPathIcon
-} from '@heroicons/vue/24/outline';
-import { 
-  format, 
-  parseISO, 
-  addDays, 
-  subDays, 
-  startOfMonth, 
-  endOfMonth, 
-  eachDayOfInterval, 
-  isWeekend, 
+  DocumentIcon,
+} from "@heroicons/vue/24/outline";
+import {
+  format,
+  parseISO,
+  addDays,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isWeekend,
   isToday,
   addMonths,
   subMonths,
@@ -325,384 +557,351 @@ import {
   addWeeks,
   subWeeks,
   differenceInDays,
-  isSameMonth
-} from 'date-fns';
-import apiClient from '@/config/api';
-import TaskDetailPopup from '@/components/team/TaskDetailPopup.vue';
+} from "date-fns";
+import apiClient from "@/config/api";
 
 const props = defineProps({
-  departmentId: {
-    type: [Number, String],
-    default: null
-  },
-  // Add state filter
-  stateFilter: {
-    type: String,
-    default: null
-  },
-  // Add sort options
-  sortField: {
-    type: String,
-    default: 'priority'
-  },
-  sortOrder: {
-    type: String,
-    default: 'desc'
-  },
-  projectId: {
-    type: [Number, String],
-    default: null
-  },
-  singleProject: {
-    type: Boolean,
-    default: false
-  },
   startDateFilter: {
     type: String,
-    default: null
+    default: null,
   },
   endDateFilter: {
     type: String,
-    default: null
+    default: null,
   },
-  departmentName: {
+  stateFilter: {
     type: String,
-    default: ''
-  }
+    default: null,
+  },
+  projectManagerFilter: {
+    type: [Number, String],
+    default: null,
+  },
+  sortField: {
+    type: String,
+    default: "date_start",
+  },
+  sortOrder: {
+    type: String,
+    default: "asc",
+  },
 });
 
 const emit = defineEmits([
-  'view-task-detail', 
-  'view-project-detail',
-  'edit-task',
-  'update:dateRange',
-  'clearFilter',
-  'resetFilters'
+  "view-project-detail",
+  "edit-task",
+  "update:dateRange",
+  "clearFilter",
+  "resetFilters",
 ]);
 
-// State
+// State - same as TeamProject Gantt
 const projects = ref([]);
 const loading = ref(false);
 const startDate = ref(new Date());
-const viewMode = ref('month'); // 'day', 'week', 'month'
+const viewMode = ref("month");
 const zoomLevel = ref(1);
 const minZoomLevel = ref(0.5);
 const maxZoomLevel = ref(3);
 const allExpanded = ref(false);
-const error = ref(null);
-const showTaskModal = ref(false);
-const selectedTaskId = ref(null);
 const isInternalNavigation = ref(false);
 
-// Format date range for display
+// Computed properties
+const hasActiveFilters = computed(() => {
+  return (
+    props.stateFilter ||
+    props.startDateFilter ||
+    props.endDateFilter ||
+    props.projectManagerFilter
+  );
+});
+
+const timelinePeriodLabel = computed(() => {
+  if (viewMode.value === "month") {
+    const monthStart = startOfMonth(startDate.value);
+    return format(monthStart, "MMMM yyyy");
+  } else if (viewMode.value === "week") {
+    const weekStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
+    return `${format(weekStart, "MMM d")} - ${format(weekEnd, "MMM d, yyyy")}`;
+  } else {
+    const dayStart = startDate.value;
+    const dayEnd = addDays(startDate.value, 14);
+    return `${format(dayStart, "MMM d")} - ${format(dayEnd, "MMM d, yyyy")}`;
+  }
+});
+
 const dateRangeLabel = computed(() => {
   if (props.startDateFilter && props.endDateFilter) {
     try {
-      const start = format(parseISO(props.startDateFilter), 'MMM d, yyyy');
-      const end = format(parseISO(props.endDateFilter), 'MMM d, yyyy');
+      const start = format(parseISO(props.startDateFilter), "MMM d, yyyy");
+      const end = format(parseISO(props.endDateFilter), "MMM d, yyyy");
       return `${start} - ${end}`;
     } catch (e) {
       return `${props.startDateFilter} - ${props.endDateFilter}`;
     }
   }
-  return '';
+  return "";
 });
 
-// Computed properties
-const timelinePeriodLabel = computed(() => {
-  if (viewMode.value === 'month') {
-    const monthStart = startOfMonth(startDate.value);
-    const monthEnd = endOfMonth(startDate.value);
-    return `${format(monthStart, 'MMMM yyyy')}`;
-  } else if (viewMode.value === 'week') {
-    const weekStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
-    return `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
-  } else { // day view
-    const dayStart = startDate.value;
-    const dayEnd = addDays(startDate.value, 14); // Show 2 weeks in day view
-    return `${format(dayStart, 'MMM d')} - ${format(dayEnd, 'MMM d, yyyy')}`;
-  }
-});
-
-// Effective date range based on view mode and filters
 const effectiveDateRange = computed(() => {
-  // Generate date range based on view mode and current startDate
   let rangeStart, rangeEnd;
-  
-  if (viewMode.value === 'month') {
+
+  if (viewMode.value === "month") {
     rangeStart = startOfMonth(startDate.value);
     rangeEnd = endOfMonth(startDate.value);
-  } else if (viewMode.value === 'week') {
+  } else if (viewMode.value === "week") {
     rangeStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
     rangeEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
-  } else { // day view
+  } else {
     rangeStart = startDate.value;
-    rangeEnd = addDays(startDate.value, 14); // 2 weeks default
+    rangeEnd = addDays(startDate.value, 14);
   }
-  
-  // If props provide date filters and not in internal navigation mode,
-  // use them for display but DON'T update internal startDate
-  if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
+
+  if (
+    props.startDateFilter &&
+    props.endDateFilter &&
+    !isInternalNavigation.value
+  ) {
     try {
       const start = parseISO(props.startDateFilter);
       const end = parseISO(props.endDateFilter);
-      
-      // Make sure both dates are valid
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         return { start, end };
       }
     } catch (e) {
-      console.error('Error parsing date filters:', e);
+      console.error("Error parsing date filters:", e);
     }
   }
-  
-  // Ensure both dates are valid
+
   if (isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
     const today = new Date();
     rangeStart = startOfMonth(today);
     rangeEnd = endOfMonth(today);
   }
-  
+
   return { start: rangeStart, end: rangeEnd };
 });
 
-// Time units for the timeline display
 const timeUnits = computed(() => {
   try {
-    // Get date range safely
     const rangeStart = effectiveDateRange.value.start;
     const rangeEnd = effectiveDateRange.value.end;
-    
-    // Validate dates
-    if (!rangeStart || !rangeEnd || isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
-      console.error('Invalid date range for time units calculation');
+
+    if (
+      !rangeStart ||
+      !rangeEnd ||
+      isNaN(rangeStart.getTime()) ||
+      isNaN(rangeEnd.getTime())
+    ) {
       return { major: [], minor: [] };
     }
-    
-    // Generate all days in the range
+
     const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
-    
+
     // Major time units (months)
     const majorUnits = [];
     let currentMonth = null;
     let currentMonthDays = 0;
-    
+
     days.forEach((day, index) => {
-      const month = format(day, 'yyyy-MM');
-      
-      // If new month or first day
+      const month = format(day, "yyyy-MM");
+
       if (month !== currentMonth || index === 0) {
-        // Finish previous month if exists
         if (currentMonth && currentMonthDays > 0) {
-          majorUnits[majorUnits.length - 1].width = currentMonthDays * getDayWidth();
+          majorUnits[majorUnits.length - 1].width =
+            currentMonthDays * getDayWidth();
         }
-        
-        // Start new month
+
         currentMonth = month;
         currentMonthDays = 1;
-        
+
         majorUnits.push({
           key: month,
-          label: format(day, 'MMMM yyyy'),
+          label: format(day, "MMMM yyyy"),
           start: day,
-          end: null, // Will be set later
-          width: 0 // Will be updated later
+          end: null,
+          width: 0,
         });
       } else {
-        // Still in same month
         currentMonthDays++;
-        
-        // If last day, update width of last month
+
         if (index === days.length - 1) {
-          majorUnits[majorUnits.length - 1].width = currentMonthDays * getDayWidth();
+          majorUnits[majorUnits.length - 1].width =
+            currentMonthDays * getDayWidth();
           majorUnits[majorUnits.length - 1].end = day;
         }
       }
     });
-    
+
     // Minor time units (days)
-    const minorUnits = days.map(day => ({
-      key: format(day, 'yyyy-MM-dd'),
-      label: format(day, 'd'),
+    const minorUnits = days.map((day) => ({
+      key: format(day, "yyyy-MM-dd"),
+      label: format(day, "d"),
       date: day,
       isWeekend: isWeekend(day),
       isToday: isToday(day),
-      monthLabel: format(day, 'MMM'),
-      position: 0 // Will be calculated in getTimeUnitPosition
+      monthLabel: format(day, "MMM"),
+      position: 0,
     }));
-    
+
     return {
       major: majorUnits,
-      minor: minorUnits
+      minor: minorUnits,
     };
   } catch (error) {
-    console.error('Error generating time units:', error);
+    console.error("Error generating time units:", error);
     return { major: [], minor: [] };
   }
 });
 
-// Check if today is visible in the current view
 const isTodayVisible = computed(() => {
   try {
-    // Get today's date
     const today = new Date();
-    
-    // Get the current view range
     const viewRange = effectiveDateRange.value;
-    
-    // Check if today falls within the current view range
     return today >= viewRange.start && today <= viewRange.end;
   } catch (error) {
-    console.error('Error calculating if today is visible:', error);
     return false;
   }
 });
 
-// Methods for ProjectGanttChart
-
-// Core data fetching function
+// Methods - adapted from TeamProject Gantt
 function fetchProjects() {
   loading.value = true;
-  error.value = null;
-  
-  // Initialize request parameters
+
   const params = {
-    jsonrpc: '2.0',
+    jsonrpc: "2.0",
     id: new Date().getTime(),
-    params: {}
+    params: {},
   };
-  
-  // Get date range, either from props or from internal state
+
   let dateStart, dateEnd;
-  
-  if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
-    // Use props directly
+
+  if (
+    props.startDateFilter &&
+    props.endDateFilter &&
+    !isInternalNavigation.value
+  ) {
     dateStart = props.startDateFilter;
     dateEnd = props.endDateFilter;
   } else {
-    // Use the calculated date range from our component
     const dateRange = effectiveDateRange.value;
-    dateStart = format(dateRange.start, 'yyyy-MM-dd');
-    dateEnd = format(dateRange.end, 'yyyy-MM-dd');
-  }
-  
-  // Add date parameters to the params object
-  params.params.date_start = dateStart;
-  params.params.date_end = dateEnd;
-  
-  // Add department ids if present (Note the change to department_ids plural)
-  if (props.departmentId) {
-    console.log('Including department filter:', props.departmentId);
-    params.params.department_ids = [parseInt(props.departmentId)];
+    dateStart = format(dateRange.start, "yyyy-MM-dd");
+    dateEnd = format(dateRange.end, "yyyy-MM-dd");
   }
 
-  // Add state filter if present
+  params.params.date_start = dateStart;
+  params.params.date_end = dateEnd;
+
   if (props.stateFilter) {
-    console.log('Including state filter:', props.stateFilter);
     params.params.state = props.stateFilter;
   }
-  
-  // Add project filter if present
-  if (props.projectId) {
-    console.log('Including project filter:', props.projectId);
-    params.params.project_id = parseInt(props.projectId);
+
+  if (props.projectManagerFilter) {
+    params.params.project_manager_id = parseInt(props.projectManagerFilter);
   }
-  
-  // Add sort parameters
+
   if (props.sortField) {
     params.params.sort_field = props.sortField;
   }
-  
+
   if (props.sortOrder) {
     params.params.sort_order = props.sortOrder;
   }
 
-  // Debug logging
-  console.log('Fetching Gantt data with params:', JSON.stringify(params));
+  console.log(
+    "Fetching Content Gantt data with params:",
+    JSON.stringify(params)
+  );
 
-  // API call
-  apiClient.post('/web/v2/team/dashboard/timeline', params)
-    .then(response => {
-      if (response.data.result?.status === 'success') {
-        console.log('Gantt data fetched successfully');
-        // Transform data to match our component structure
+  // Use the new content timeline API
+  apiClient
+    .post("/web/v2/content/dashboard/timeline", params)
+    .then((response) => {
+      if (response.data.result?.status === "success") {
+        console.log("Content Gantt data fetched successfully");
         const projectsData = response.data.result.data || [];
-        projects.value = projectsData.map(project => {
-          // Safely handle date parsing
+        projects.value = projectsData.map((project) => {
           let startDate, endDate;
           try {
             startDate = project.start ? parseISO(project.start) : new Date();
           } catch (e) {
-            console.warn('Invalid start date for project:', project.id);
+            console.warn("Invalid start date for project:", project.id);
             startDate = new Date();
           }
-          
+
           try {
-            endDate = project.end ? parseISO(project.end) : addDays(new Date(), 30);
+            endDate = project.end
+              ? parseISO(project.end)
+              : addDays(new Date(), 30);
           } catch (e) {
-            console.warn('Invalid end date for project:', project.id);
+            console.warn("Invalid end date for project:", project.id);
             endDate = addDays(new Date(), 30);
           }
-          
+
           return {
             id: project.id,
             name: project.name,
-            startDate: project.start || null, // Keep the original string for reference
-            endDate: project.end || null,     // Keep the original string for reference
+            startDate: project.start || null,
+            endDate: project.end || null,
             start: startDate,
             end: endDate,
             progress: project.progress || 0,
-            state: project.type === 'project' ? (project.state || 'in_progress') : 'task',
+            state: project.state || "draft",
             expanded: false,
-            tasks: (project.children || []).map(task => {
-              // Safely handle task date parsing
+            project_manager_name: project.project_manager_name || "",
+            task_count: project.children ? project.children.length : 0,
+            tasks: (project.children || []).map((task) => {
               let taskStartDate, taskEndDate;
               try {
                 taskStartDate = task.start ? parseISO(task.start) : new Date();
               } catch (e) {
-                console.warn('Invalid start date for task:', task.id);
+                console.warn("Invalid start date for task:", task.id);
                 taskStartDate = new Date();
               }
-              
+
               try {
-                taskEndDate = task.end ? parseISO(task.end) : addDays(new Date(), 7);
+                taskEndDate = task.end
+                  ? parseISO(task.end)
+                  : addDays(new Date(), 7);
               } catch (e) {
-                console.warn('Invalid end date for task:', task.id);
+                console.warn("Invalid end date for task:", task.id);
                 taskEndDate = addDays(new Date(), 7);
               }
-              
+
               return {
                 id: task.id,
                 name: task.name,
-                startDate: task.start || null, // Keep the original string
-                endDate: task.end || null,     // Keep the original string
+                startDate: task.start || null,
+                endDate: task.end || null,
                 start: taskStartDate,
                 end: taskEndDate,
                 progress: task.progress || 0,
-                state: task.state || 'in_progress',
-                assigned_to: task.assigned_to || []
+                state: task.state || "draft",
+                content_type: task.content_type || "other",
+                assigned_to: task.assigned_to || [],
               };
-            })
+            }),
           };
         });
       } else {
-        console.error('Error fetching Gantt data:', response.data.result?.message);
-        error.value = response.data.result?.message || 'Failed to load projects';
+        console.error(
+          "Error fetching Content Gantt data:",
+          response.data.result?.message
+        );
       }
     })
-    .catch(err => {
-      console.error('API error fetching project timeline data:', err);
-      error.value = 'Error loading project data';
+    .catch((err) => {
+      console.error("API error fetching content project timeline data:", err);
     })
     .finally(() => {
       loading.value = false;
     });
 }
 
-// Timeline navigation and control methods
+// Timeline methods - same as TeamProject
 function getDayWidth() {
-  // Base day width multiplied by zoom level
   const baseDayWidth = 30;
   return baseDayWidth * zoomLevel.value;
 }
@@ -714,43 +913,44 @@ function getTimeUnitPosition(timeUnit) {
 }
 
 function getBarPosition(item) {
-  // Check if item or required properties are missing
   if (!item || !item.start || !item.end) {
     return { left: 0, width: 0 };
   }
-  
+
   try {
-    // Use effectiveDateRange instead of view-based range
     const viewStart = effectiveDateRange.value.start;
     const viewEnd = effectiveDateRange.value.end;
-    
-    // Safe parsing of dates - ensure they're Date objects
-    const itemStartDate = typeof item.start === 'string' ? parseISO(item.start) : item.start;
-    const itemEndDate = typeof item.end === 'string' ? parseISO(item.end) : item.end;
-    
-    // Validate parsed dates
-    if (!itemStartDate || !itemEndDate || isNaN(itemStartDate.getTime()) || isNaN(itemEndDate.getTime())) {
+
+    const itemStartDate =
+      typeof item.start === "string" ? parseISO(item.start) : item.start;
+    const itemEndDate =
+      typeof item.end === "string" ? parseISO(item.end) : item.end;
+
+    if (
+      !itemStartDate ||
+      !itemEndDate ||
+      isNaN(itemStartDate.getTime()) ||
+      isNaN(itemEndDate.getTime())
+    ) {
       return { left: 0, width: 0 };
     }
-    
-    // If item is completely outside the view
+
     if (itemEndDate < viewStart || itemStartDate > viewEnd) {
       return { left: 0, width: 0 };
     }
-    
-    // Calculate start position
-    const effectiveStart = itemStartDate < viewStart ? viewStart : itemStartDate;
+
+    const effectiveStart =
+      itemStartDate < viewStart ? viewStart : itemStartDate;
     const daysFromViewStart = differenceInDays(effectiveStart, viewStart);
     const leftPosition = daysFromViewStart * getDayWidth();
-    
-    // Calculate width
+
     const effectiveEnd = itemEndDate > viewEnd ? viewEnd : itemEndDate;
-    const itemDuration = differenceInDays(effectiveEnd, effectiveStart) + 1; // +1 because end date is inclusive
+    const itemDuration = differenceInDays(effectiveEnd, effectiveStart) + 1;
     const width = itemDuration * getDayWidth();
-    
+
     return { left: leftPosition, width: width };
   } catch (error) {
-    console.error('Error calculating bar position:', error);
+    console.error("Error calculating bar position:", error);
     return { left: 0, width: 0 };
   }
 }
@@ -758,17 +958,16 @@ function getBarPosition(item) {
 function getTodayPosition() {
   try {
     const today = new Date();
-    // Use effectiveDateRange.value.start directly
     const viewStart = effectiveDateRange.value.start;
-    
+
     if (!viewStart || isNaN(viewStart.getTime())) {
       return 0;
     }
-    
+
     const daysFromViewStart = differenceInDays(today, viewStart);
     return Math.max(0, daysFromViewStart * getDayWidth());
   } catch (error) {
-    console.error('Error calculating today position:', error);
+    console.error("Error calculating today position:", error);
     return 0;
   }
 }
@@ -777,81 +976,68 @@ function getTodayPosition() {
 function moveTimelinePrev() {
   try {
     isInternalNavigation.value = true;
-    
-    // Update the internal startDate
-    if (viewMode.value === 'month') {
+
+    if (viewMode.value === "month") {
       startDate.value = subMonths(startDate.value, 1);
-    } else if (viewMode.value === 'week') {
+    } else if (viewMode.value === "week") {
       startDate.value = subWeeks(startDate.value, 1);
-    } else { // day view
+    } else {
       startDate.value = subDays(startDate.value, 14);
     }
-    
-    // Calculate the new date range
+
     const range = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(range.start, 'yyyy-MM-dd'),
-      end: format(range.end, 'yyyy-MM-dd')
+
+    emit("update:dateRange", {
+      start: format(range.start, "yyyy-MM-dd"),
+      end: format(range.end, "yyyy-MM-dd"),
     });
-    
-    // Fetch projects with the new date range
+
     fetchProjects();
   } catch (error) {
-    console.error('Error navigating to previous period:', error);
+    console.error("Error navigating to previous period:", error);
   }
 }
 
 function moveTimelineNext() {
   try {
     isInternalNavigation.value = true;
-    
-    // Update the internal startDate
-    if (viewMode.value === 'month') {
+
+    if (viewMode.value === "month") {
       startDate.value = addMonths(startDate.value, 1);
-    } else if (viewMode.value === 'week') {
+    } else if (viewMode.value === "week") {
       startDate.value = addWeeks(startDate.value, 1);
-    } else { // day view
+    } else {
       startDate.value = addDays(startDate.value, 14);
     }
-    
-    // Calculate the new date range
+
     const range = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(range.start, 'yyyy-MM-dd'),
-      end: format(range.end, 'yyyy-MM-dd')
+
+    emit("update:dateRange", {
+      start: format(range.start, "yyyy-MM-dd"),
+      end: format(range.end, "yyyy-MM-dd"),
     });
-    
-    // Fetch projects with the new date range
+
     fetchProjects();
   } catch (error) {
-    console.error('Error navigating to next period:', error);
+    console.error("Error navigating to next period:", error);
   }
 }
 
 function resetTimeline() {
   try {
     isInternalNavigation.value = true;
-    
-    // Reset to current date
     startDate.value = new Date();
-    
-    // Calculate the new date range based on current date
+
     const newRange = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
+
+    emit("update:dateRange", {
+      start: format(newRange.start, "yyyy-MM-dd"),
+      end: format(newRange.end, "yyyy-MM-dd"),
     });
-    
-    // Fetch projects with the new date range
+
     fetchProjects();
   } catch (error) {
-    console.error('Error resetting timeline:', error);
+    console.error("Error resetting timeline:", error);
   } finally {
     isInternalNavigation.value = false;
   }
@@ -859,27 +1045,21 @@ function resetTimeline() {
 
 function setViewMode(mode) {
   try {
-    // Don't do anything if the mode is already set
     if (viewMode.value === mode) return;
-    
+
     isInternalNavigation.value = true;
-    
-    // Update the view mode
     viewMode.value = mode;
-    
-    // Calculate the new date range based on new view mode
+
     const newRange = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
+
+    emit("update:dateRange", {
+      start: format(newRange.start, "yyyy-MM-dd"),
+      end: format(newRange.end, "yyyy-MM-dd"),
     });
-    
-    // Fetch projects with the new view mode and date range
+
     fetchProjects();
   } catch (error) {
-    console.error('Error changing view mode:', error);
+    console.error("Error changing view mode:", error);
   } finally {
     isInternalNavigation.value = false;
   }
@@ -899,265 +1079,236 @@ function decreaseZoom() {
 }
 
 // Project and task interaction
-// function toggleProject(projectIndex) {
-//   projects.value[projectIndex].expanded = !projects.value[projectIndex].expanded;
-  
-//   // Check if all projects are now expanded
-//   allExpanded.value = projects.value.every(project => project.expanded);
-// }
+function toggleProject(projectIndex) {
+  projects.value[projectIndex].expanded =
+    !projects.value[projectIndex].expanded;
+  allExpanded.value = projects.value.every((project) => project.expanded);
+
+  nextTick(() => {
+    syncRowHeights();
+  });
+}
 
 function toggleExpandAll() {
   allExpanded.value = !allExpanded.value;
-  projects.value.forEach(project => {
+  projects.value.forEach((project) => {
     project.expanded = allExpanded.value;
+  });
+
+  nextTick(() => {
+    syncRowHeights();
   });
 }
 
 function handleProjectClick(project) {
-  // Add defensive validation
   if (!project || !project.id) {
-    console.warn('Attempted to view invalid project');
+    console.warn("Attempted to view invalid project");
     return;
   }
-  
-  // Emit event to parent component
-  emit('view-project-detail', project);
+
+  emit("view-project-detail", project);
 }
 
 function handleTaskClick(task) {
   if (!task || !task.id) {
-    console.warn('Attempted to view invalid task');
+    console.warn("Attempted to view invalid task");
     return;
   }
-  
-  // Hanya tampilkan modal tanpa navigasi halaman
-  selectedTaskId.value = task.id;
-  showTaskModal.value = true;
-  
-  // Jangan memancarkan event view-task-detail
-  // ATAU ubah penanganan event di komponen induk
+
+  emit("edit-task", task);
 }
 
-function closeTaskModal() {
-  showTaskModal.value = false;
-  selectedTaskId.value = null;
+// Helper methods for formatting and tooltips
+function formatState(state) {
+  return state
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
-function handleEditTask(task) {
-  // Close modal
-  closeTaskModal();
-  
-  // Emit edit event to parent component
-  emit('edit-task', task);
+function formatDateRange() {
+  const start = props.startDateFilter;
+  const end = props.endDateFilter;
+
+  if (start && end) {
+    return `${start} to ${end}`;
+  } else if (start) {
+    return `From ${start}`;
+  } else if (end) {
+    return `Until ${end}`;
+  }
+
+  return "Date Range";
 }
 
-// Helper methods for tooltips and formatting
 function getProjectTooltip(project) {
-  if (!project) return '';
-  
-  let tooltip = `Project: ${project.name || 'Unnamed Project'}\n`;
-  
+  if (!project) return "";
+
+  let tooltip = `Project: ${project.name || "Unnamed Project"}\n`;
+
   try {
     if (project.startDate) {
-      tooltip += `Start: ${format(parseISO(project.startDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `Start: ${format(
+        parseISO(project.startDate),
+        "MMMM d, yyyy"
+      )}\n`;
     }
   } catch (e) {
-    tooltip += 'Start: Not set\n';
+    tooltip += "Start: Not set\n";
   }
-  
+
   try {
     if (project.endDate) {
-      tooltip += `End: ${format(parseISO(project.endDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `End: ${format(parseISO(project.endDate), "MMMM d, yyyy")}\n`;
     }
   } catch (e) {
-    tooltip += 'End: Not set\n';
+    tooltip += "End: Not set\n";
   }
-  
+
   tooltip += `Progress: ${project.progress || 0}%\n`;
-  tooltip += `Status: ${formatState(project.state)}`;
-  
+  tooltip += `Status: ${formatState(project.state)}\n`;
+  tooltip += `Tasks: ${project.task_count || 0}`;
+
   return tooltip;
 }
 
 function getTaskTooltip(task, project) {
-  if (!task) return '';
-  
-  let tooltip = `Task: ${task.name || 'Unnamed Task'}\n`;
-  
+  if (!task) return "";
+
+  let tooltip = `Task: ${task.name || "Unnamed Task"}\n`;
+
   if (project) {
-    tooltip += `Project: ${project.name || 'Unnamed Project'}\n`;
+    tooltip += `Project: ${project.name || "Unnamed Project"}\n`;
   }
-  
+
+  tooltip += `Type: ${task.content_type || "Other"}\n`;
+
   try {
     if (task.startDate) {
-      tooltip += `Start: ${format(parseISO(task.startDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `Start: ${format(parseISO(task.startDate), "MMMM d, yyyy")}\n`;
     }
   } catch (e) {
-    tooltip += 'Start: Not set\n';
+    tooltip += "Start: Not set\n";
   }
-  
+
   try {
     if (task.endDate) {
-      tooltip += `End: ${format(parseISO(task.endDate), 'MMMM d, yyyy')}\n`;
+      tooltip += `End: ${format(parseISO(task.endDate), "MMMM d, yyyy")}\n`;
     }
   } catch (e) {
-    tooltip += 'End: Not set\n';
+    tooltip += "End: Not set\n";
   }
-  
+
   tooltip += `Progress: ${task.progress || 0}%\n`;
   tooltip += `Status: ${formatState(task.state)}`;
-  
-  if (task.assigned_to && task.assigned_to.length > 0) {
-    tooltip += `\nAssigned to: ${task.assigned_to.map(u => u.name).join(', ')}`;
-  }
-  
-  return tooltip;
-}
 
-function formatState(state) {
-  // Convert snake_case to Title Case
-  return state
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  if (task.assigned_to && task.assigned_to.length > 0) {
+    tooltip += `\nAssigned to: ${task.assigned_to
+      .map((u) => u.name)
+      .join(", ")}`;
+  }
+
+  return tooltip;
 }
 
 // Visual styling helper methods
 function getInitials(name) {
-  if (!name) return '?';
+  if (!name) return "?";
   return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
     .substring(0, 2)
     .toUpperCase();
 }
 
 function getRemainingUsersTitle(users, shown) {
-  if (!users || users.length <= shown) return '';
-  return users.slice(shown).map(u => u.name).join(', ');
+  if (!users || users.length <= shown) return "";
+  return users
+    .slice(shown)
+    .map((u) => u.name)
+    .join(", ");
 }
 
-function getStatusIndicatorClass(state) {
+function getStatusClass(state) {
+  return state || "draft";
+}
+
+function getProgressColorClass(progress) {
+  if (progress >= 100) return "complete";
+  if (progress >= 66) return "high";
+  if (progress >= 33) return "medium";
+  return "low";
+}
+
+function getProjectBarClass(state) {
+  return state || "draft";
+}
+
+function getTaskBarClass(state) {
+  return state || "draft";
+}
+
+function getProgressFillClass(state) {
+  return state || "draft";
+}
+
+function getContentTypeClass(contentType) {
   const classes = {
-    'draft': 'bg-gray-400',
-    'planning': 'bg-blue-400',
-    'in_progress': 'bg-green-400',
-    'on_hold': 'bg-yellow-400',
-    'review': 'bg-purple-400',
-    'completed': 'bg-indigo-400',
-    'done': 'bg-indigo-400',
-    'cancelled': 'bg-red-400'
+    video: "bg-purple-100 text-purple-800",
+    design: "bg-blue-100 text-blue-800",
+    copy: "bg-green-100 text-green-800",
+    social: "bg-pink-100 text-pink-800",
+    blog: "bg-yellow-100 text-yellow-800",
+    other: "bg-gray-100 text-gray-800",
   };
-  
-  return classes[state] || 'bg-gray-400';
+
+  return classes[contentType] || classes["other"];
 }
 
-function getProjectStatusClass(state) {
-  // Return appropriate CSS classes for project bars based on state
-  const classes = {
-    'draft': 'bg-gray-100 border-gray-300 text-gray-800',
-    'planning': 'bg-blue-100 border-blue-300 text-blue-800',
-    'in_progress': 'bg-green-100 border-green-300 text-green-800',
-    'on_hold': 'bg-yellow-100 border-yellow-300 text-yellow-800',
-    'completed': 'bg-indigo-100 border-indigo-300 text-indigo-800',
-    'cancelled': 'bg-red-100 border-red-300 text-red-800'
-  };
-  
-  return classes[state] || 'bg-gray-100 border-gray-300 text-gray-800';
-}
-
-function getTaskStatusClass(state) {
-  // Return appropriate CSS classes for task bars based on state
-  const classes = {
-    'draft': 'bg-gray-50 border-gray-200 text-gray-700',
-    'planned': 'bg-blue-50 border-blue-200 text-blue-700',
-    'in_progress': 'bg-green-50 border-green-200 text-green-700',
-    'review': 'bg-purple-50 border-purple-200 text-purple-700',
-    'done': 'bg-indigo-50 border-indigo-200 text-indigo-700',
-    'cancelled': 'bg-red-50 border-red-200 text-red-700'
-  };
-  
-  return classes[state] || 'bg-gray-50 border-gray-200 text-gray-700';
-}
-
-function getProgressBarClass(state, progress) {
-  const baseClasses = {
-    'draft': 'bg-gray-300',
-    'planning': 'bg-blue-300',
-    'in_progress': 'bg-green-300',
-    'on_hold': 'bg-yellow-300',
-    'review': 'bg-purple-300',
-    'completed': 'bg-indigo-300',
-    'done': 'bg-indigo-300',
-    'cancelled': 'bg-red-300',
-    'planned': 'bg-blue-300'
-  };
-  
-  const baseClass = baseClasses[state] || 'bg-gray-300';
-  
-  // Add opacity based on progress
-  const opacity = progress >= 100 ? '' : (progress >= 50 ? ' bg-opacity-90' : ' bg-opacity-70');
-  
-  return `${baseClass}${opacity}`;
-}
-
-function getProgressBarColorClass(progress) {
-  if (progress >= 100) {
-    return 'bg-green-500'; // Completed - Green
-  } else if (progress >= 75) {
-    return 'bg-green-400'; // Almost done - Light Green
-  } else if (progress >= 50) {
-    return 'bg-yellow-400'; // Half way - Yellow
-  } else if (progress >= 25) {
-    return 'bg-orange-400'; // Started - Orange
-  } else {
-    return 'bg-red-400'; // Just started - Red
-  }
-}
-
-// Reference untuk container dan elemen-elemen penting
+// References and scroll handling
 const scrollContainer = ref(null);
 const timelineHeader = ref(null);
 const projectsList = ref(null);
 const timelineChart = ref(null);
 
-// Function untuk handle scroll event
 function handleScroll(e) {
-  // Sync horizontal scroll timeline header
   if (timelineHeader.value) {
     timelineHeader.value.scrollLeft = e.target.scrollLeft;
   }
 }
 
-// Menambahkan resize observer untuk menyesuaikan tinggi baris
-let resizeObserver = null;
-
-// Function untuk synchronize row heights
 function syncRowHeights() {
-  // Wait for DOM to be updated
   nextTick(() => {
-    // For all projects
-    projects.value.forEach(project => {
-      // Get project rows
+    projects.value.forEach((project) => {
       const leftRow = document.getElementById(`project-row-${project.id}`);
-      const rightRow = document.getElementById(`project-timeline-row-${project.id}`);
-      
-      // If both rows exist, synchronize their heights
+      const rightRow = document.getElementById(
+        `project-timeline-row-${project.id}`
+      );
+
       if (leftRow && rightRow) {
-        const height = Math.max(leftRow.scrollHeight, rightRow.scrollHeight, 48);
+        const height = Math.max(
+          leftRow.scrollHeight,
+          rightRow.scrollHeight,
+          48
+        );
         leftRow.style.height = `${height}px`;
         rightRow.style.height = `${height}px`;
       }
-      
-      // If project is expanded, sync task rows too
+
       if (project.expanded) {
-        project.tasks.forEach(task => {
+        project.tasks.forEach((task) => {
           const leftTaskRow = document.getElementById(`task-row-${task.id}`);
-          const rightTaskRow = document.getElementById(`task-timeline-row-${task.id}`);
-          
+          const rightTaskRow = document.getElementById(
+            `task-timeline-row-${task.id}`
+          );
+
           if (leftTaskRow && rightTaskRow) {
-            const taskHeight = Math.max(leftTaskRow.scrollHeight, rightTaskRow.scrollHeight, 40);
+            const taskHeight = Math.max(
+              leftTaskRow.scrollHeight,
+              rightTaskRow.scrollHeight,
+              40
+            );
             leftTaskRow.style.height = `${taskHeight}px`;
             rightTaskRow.style.height = `${taskHeight}px`;
           }
@@ -1167,39 +1318,12 @@ function syncRowHeights() {
   });
 }
 
-// Tambahkan fungsi untuk get class berdasarkan status
-function getStatusClass(state) {
-  return state || 'draft';
-}
+// Lifecycle hooks
+let resizeObserver = null;
 
-function getProgressColorClass(progress) {
-  if (progress >= 100) return 'complete';
-  if (progress >= 66) return 'high';
-  if (progress >= 33) return 'medium';
-  return 'low';
-}
-
-function getProjectBarClass(state) {
-  return state || 'draft';
-}
-
-function getTaskBarClass(state) {
-  return state || 'draft';
-}
-
-function getProgressFillClass(state) {
-  return state || 'draft';
-}
-
-
-// Lifecycle hooks and watches
-
-// On component mount, initialize and fetch data
 onMounted(() => {
-  console.log('Gantt Chart component mounted');
-  console.log('Department ID from props:', props.departmentId);
-  
-  // Initialize startDate from props if available, but only once
+  console.log("Content Gantt Chart component mounted");
+
   if (props.startDateFilter) {
     try {
       const date = parseISO(props.startDateFilter);
@@ -1207,69 +1331,64 @@ onMounted(() => {
         startDate.value = date;
       }
     } catch (e) {
-      console.error('Error parsing initial startDateFilter:', e);
+      console.error("Error parsing initial startDateFilter:", e);
     }
   }
-  
-  // Initial data fetch (only once)
+
   fetchProjects();
 
-  // Setup ResizeObserver
-  resizeObserver = new ResizeObserver(entries => {
-    // Run syncRowHeights when resize is detected
+  resizeObserver = new ResizeObserver((entries) => {
     syncRowHeights();
   });
-  
-  // Observe the scrollable container
+
   if (scrollContainer.value) {
     resizeObserver.observe(scrollContainer.value);
   }
-  
-  // Initial sync
+
   syncRowHeights();
-  
-  // Add toggle project watcher
-  watch(() => projects.value.map(p => p.expanded), () => {
-    // When expansion state changes, sync heights after DOM update
-    nextTick(() => {
-      syncRowHeights();
-    });
-  }, { deep: true });
-  
-  // Add window resize listener
-  window.addEventListener('resize', syncRowHeights);
+
+  watch(
+    () => projects.value.map((p) => p.expanded),
+    () => {
+      nextTick(() => {
+        syncRowHeights();
+      });
+    },
+    { deep: true }
+  );
+
+  window.addEventListener("resize", syncRowHeights);
 });
 
 onUnmounted(() => {
-  // Cleanup
   if (resizeObserver) {
     resizeObserver.disconnect();
   }
-  
-  window.removeEventListener('resize', syncRowHeights);
+
+  window.removeEventListener("resize", syncRowHeights);
 });
 
-// Toggle project expansion method
-function toggleProject(projectIndex) {
-  projects.value[projectIndex].expanded = !projects.value[projectIndex].expanded;
-  
-  // Check if all projects are now expanded
-  allExpanded.value = projects.value.every(project => project.expanded);
-  
-  // Sync row heights after toggling (will be handled by watcher)
-}
-
-// Watch for prop changes to refresh data
+// Watch for prop changes
 watch(
-  [() => props.startDateFilter, () => props.endDateFilter, () => props.departmentId],
-  ([newStart, newEnd, newDept], [oldStart, oldEnd, oldDept]) => {
-    console.log('Filter change detected:');
-    console.log('Department ID changed:', oldDept, '->', newDept);
-    console.log('Date range changed:', oldStart, oldEnd, '->', newStart, newEnd);
-    
-    // Only react to actual changes from parent, not self-triggered ones
-    if ((newStart !== oldStart || newEnd !== oldEnd || newDept !== oldDept) && !isInternalNavigation.value) {
-      // If date filters change, update starting point
+  [
+    () => props.startDateFilter,
+    () => props.endDateFilter,
+    () => props.stateFilter,
+    () => props.projectManagerFilter,
+  ],
+  (
+    [newStart, newEnd, newState, newManager],
+    [oldStart, oldEnd, oldState, oldManager]
+  ) => {
+    console.log("Content Gantt filter change detected");
+
+    if (
+      (newStart !== oldStart ||
+        newEnd !== oldEnd ||
+        newState !== oldState ||
+        newManager !== oldManager) &&
+      !isInternalNavigation.value
+    ) {
       if (newStart && newStart !== oldStart) {
         try {
           const date = parseISO(newStart);
@@ -1277,28 +1396,25 @@ watch(
             startDate.value = date;
           }
         } catch (e) {
-          console.error('Error parsing startDateFilter:', e);
+          console.error("Error parsing startDateFilter:", e);
         }
       }
-      
-      // Fetch projects with updated filters
+
       fetchProjects();
     }
   }
 );
 
-// Reset internal navigation flag when loading finishes
 watch(loading, (newVal, oldVal) => {
   if (oldVal === true && newVal === false) {
     isInternalNavigation.value = false;
   }
 });
-
-// Export methods for use in template
 </script>
 
-/* Add these styles to your component */
+<!-- Same styles as TeamProject Gantt Chart but with some content-specific additions -->
 <style scoped>
+/* Import all the same styles from TeamProject Gantt Chart */
 /* Base layout */
 .gantt-main {
   height: calc(100vh - 180px);
@@ -1310,15 +1426,40 @@ watch(loading, (newVal, oldVal) => {
   background-color: white;
 }
 
-::v-deep(.modal-overlay),
-::v-deep(.filter-modal),
-::v-deep([role="dialog"]) {
-  z-index: 1000 !important;
+/* Content-specific additions */
+.content-type-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-::v-deep(.modal-backdrop) {
-  z-index: 999 !important;
+.content-type-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
 }
+
+.project-meta,
+.task-meta {
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* All other styles from TeamProject Gantt Chart... */
+/* (Copy all the existing styles from ProjectGanttChart.vue) */
 
 /* Headers styling */
 .gantt-headers {
@@ -1332,7 +1473,6 @@ watch(loading, (newVal, oldVal) => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Project header - Responsive width */
 .project-header {
   width: 320px;
   min-width: 320px;
@@ -1345,13 +1485,6 @@ watch(loading, (newVal, oldVal) => {
   flex-shrink: 0;
 }
 
-.project-header h3 {
-  color: #334155;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-/* Medium screens */
 @media (min-width: 768px) {
   .project-header {
     width: 380px;
@@ -1359,7 +1492,6 @@ watch(loading, (newVal, oldVal) => {
   }
 }
 
-/* Large screens */
 @media (min-width: 1024px) {
   .project-header {
     width: 420px;
@@ -1367,7 +1499,6 @@ watch(loading, (newVal, oldVal) => {
   }
 }
 
-/* Extra large screens */
 @media (min-width: 1280px) {
   .project-header {
     width: 480px;
@@ -1397,11 +1528,6 @@ watch(loading, (newVal, oldVal) => {
   background-color: white;
 }
 
-.month-cell span {
-  color: #475569;
-  font-weight: 600;
-}
-
 .day-row {
   display: flex;
   height: 32px;
@@ -1417,10 +1543,6 @@ watch(loading, (newVal, oldVal) => {
   background-color: #f8fafc;
 }
 
-.day-cell span {
-  color: #64748b;
-}
-
 .day-cell.weekend {
   background-color: #f1f5f9;
 }
@@ -1431,7 +1553,6 @@ watch(loading, (newVal, oldVal) => {
   font-weight: 600;
 }
 
-/* Scrollable container */
 .gantt-scroll-container {
   flex: 1;
   overflow: auto;
@@ -1439,13 +1560,11 @@ watch(loading, (newVal, oldVal) => {
   background-color: white;
 }
 
-/* Table structure */
 .gantt-table {
   display: flex;
   min-height: 100%;
 }
 
-/* Projects list (left panel) */
 .projects-list {
   width: 320px;
   min-width: 320px;
@@ -1457,7 +1576,6 @@ watch(loading, (newVal, oldVal) => {
   flex-shrink: 0;
 }
 
-/* Medium screens */
 @media (min-width: 768px) {
   .projects-list {
     width: 380px;
@@ -1465,7 +1583,6 @@ watch(loading, (newVal, oldVal) => {
   }
 }
 
-/* Large screens */
 @media (min-width: 1024px) {
   .projects-list {
     width: 420px;
@@ -1473,7 +1590,6 @@ watch(loading, (newVal, oldVal) => {
   }
 }
 
-/* Extra large screens */
 @media (min-width: 1280px) {
   .projects-list {
     width: 480px;
@@ -1481,14 +1597,13 @@ watch(loading, (newVal, oldVal) => {
   }
 }
 
-/* Timeline chart */
 .timeline-chart {
   flex: 1;
   background-color: white;
 }
 
 /* Row styling */
-.project-row, 
+.project-row,
 .project-timeline-row {
   min-height: 48px;
   height: auto;
@@ -1517,7 +1632,7 @@ watch(loading, (newVal, oldVal) => {
   gap: 8px;
 }
 
-.task-row, 
+.task-row,
 .task-timeline-row {
   min-height: 40px;
   height: auto;
@@ -1587,17 +1702,33 @@ watch(loading, (newVal, oldVal) => {
   flex-shrink: 0;
 }
 
-.status-indicator.draft { background-color: #94a3b8; }
-.status-indicator.planning { background-color: #3b82f6; }
-.status-indicator.in_progress { background-color: #10b981; }
-.status-indicator.on_hold { background-color: #f59e0b; }
-.status-indicator.review { background-color: #8b5cf6; }
-.status-indicator.completed { background-color: #6366f1; }
-.status-indicator.done { background-color: #6366f1; }
-.status-indicator.cancelled { background-color: #ef4444; }
+.status-indicator.draft {
+  background-color: #94a3b8;
+}
+.status-indicator.planning {
+  background-color: #3b82f6;
+}
+.status-indicator.in_progress {
+  background-color: #10b981;
+}
+.status-indicator.on_hold {
+  background-color: #f59e0b;
+}
+.status-indicator.review {
+  background-color: #8b5cf6;
+}
+.status-indicator.completed {
+  background-color: #6366f1;
+}
+.status-indicator.done {
+  background-color: #6366f1;
+}
+.status-indicator.cancelled {
+  background-color: #ef4444;
+}
 
-/* Text containers */
-.project-name-container, .task-name-container {
+.project-name-container,
+.task-name-container {
   flex-grow: 1;
   min-width: 0;
   display: flex;
@@ -1619,39 +1750,6 @@ watch(loading, (newVal, oldVal) => {
   font-weight: 500;
 }
 
-/* Responsive text handling */
-@media (max-width: 767px) {
-  .project-name,
-  .task-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-@media (min-width: 768px) {
-  .project-name,
-  .task-name {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 2.8em;
-  }
-}
-
-@media (min-width: 1024px) {
-  .project-name,
-  .task-name {
-    -webkit-line-clamp: 3;
-    max-height: 4.2em;
-  }
-}
-
-/* Progress container */
 .progress-container {
   width: 48px;
   flex-shrink: 0;
@@ -1675,10 +1773,18 @@ watch(loading, (newVal, oldVal) => {
   transition: width 0.3s ease;
 }
 
-.progress-bar-fill.low { background-color: #ef4444; }
-.progress-bar-fill.medium { background-color: #f59e0b; }
-.progress-bar-fill.high { background-color: #10b981; }
-.progress-bar-fill.complete { background-color: #059669; }
+.progress-bar-fill.low {
+  background-color: #ef4444;
+}
+.progress-bar-fill.medium {
+  background-color: #f59e0b;
+}
+.progress-bar-fill.high {
+  background-color: #10b981;
+}
+.progress-bar-fill.complete {
+  background-color: #059669;
+}
 
 .progress-text {
   font-size: 0.75rem;
@@ -1713,7 +1819,6 @@ watch(loading, (newVal, oldVal) => {
   background-color: #fef2f2;
 }
 
-/* Timeline bars */
 .timeline-bar {
   position: absolute;
   top: 50%;
@@ -1742,70 +1847,69 @@ watch(loading, (newVal, oldVal) => {
 }
 
 /* Project bar colors */
-.project-bar.draft { 
-  background-color: #f8fafc; 
-  border-color: #cbd5e1; 
-  color: #475569; 
+.project-bar.draft {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #475569;
 }
-.project-bar.planning { 
-  background-color: #eff6ff; 
-  border-color: #93c5fd; 
-  color: #1d4ed8; 
+.project-bar.planning {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
 }
-.project-bar.in_progress { 
-  background-color: #f0fdf4; 
-  border-color: #86efac; 
-  color: #16a34a; 
+.project-bar.in_progress {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+  color: #16a34a;
 }
-.project-bar.on_hold { 
-  background-color: #fefce8; 
-  border-color: #fde047; 
-  color: #ca8a04; 
+.project-bar.on_hold {
+  background-color: #fefce8;
+  border-color: #fde047;
+  color: #ca8a04;
 }
-.project-bar.completed { 
-  background-color: #f0f9ff; 
-  border-color: #7dd3fc; 
-  color: #0284c7; 
+.project-bar.completed {
+  background-color: #f0f9ff;
+  border-color: #7dd3fc;
+  color: #0284c7;
 }
-.project-bar.cancelled { 
-  background-color: #fef2f2; 
-  border-color: #fca5a5; 
-  color: #dc2626; 
+.project-bar.cancelled {
+  background-color: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
 }
 
 /* Task bar colors */
-.task-bar.draft { 
-  background-color: #fafbfc; 
-  border-color: #e2e8f0; 
-  color: #64748b; 
+.task-bar.draft {
+  background-color: #fafbfc;
+  border-color: #e2e8f0;
+  color: #64748b;
 }
-.task-bar.planned { 
-  background-color: #f0f9ff; 
-  border-color: #bae6fd; 
-  color: #0369a1; 
+.task-bar.planned {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
 }
-.task-bar.in_progress { 
-  background-color: #ecfdf5; 
-  border-color: #bbf7d0; 
-  color: #15803d; 
+.task-bar.in_progress {
+  background-color: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #15803d;
 }
-.task-bar.review { 
-  background-color: #faf5ff; 
-  border-color: #ddd6fe; 
-  color: #7c3aed; 
+.task-bar.review {
+  background-color: #faf5ff;
+  border-color: #ddd6fe;
+  color: #7c3aed;
 }
-.task-bar.done { 
-  background-color: #eef2ff; 
-  border-color: #c7d2fe; 
-  color: #4338ca; 
+.task-bar.done {
+  background-color: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
 }
-.task-bar.cancelled { 
-  background-color: #fef2f2; 
-  border-color: #fecaca; 
-  color: #dc2626; 
+.task-bar.cancelled {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 
-/* Progress fill */
 .progress-fill {
   position: absolute;
   top: 0;
@@ -1815,17 +1919,34 @@ watch(loading, (newVal, oldVal) => {
   transition: width 0.3s ease;
 }
 
-.progress-fill.draft { background-color: #94a3b8; }
-.progress-fill.planning { background-color: #60a5fa; }
-.progress-fill.in_progress { background-color: #34d399; }
-.progress-fill.on_hold { background-color: #fbbf24; }
-.progress-fill.review { background-color: #a78bfa; }
-.progress-fill.completed { background-color: #38bdf8; }
-.progress-fill.done { background-color: #818cf8; }
-.progress-fill.cancelled { background-color: #f87171; }
-.progress-fill.planned { background-color: #7dd3fc; }
+.progress-fill.draft {
+  background-color: #94a3b8;
+}
+.progress-fill.planning {
+  background-color: #60a5fa;
+}
+.progress-fill.in_progress {
+  background-color: #34d399;
+}
+.progress-fill.on_hold {
+  background-color: #fbbf24;
+}
+.progress-fill.review {
+  background-color: #a78bfa;
+}
+.progress-fill.completed {
+  background-color: #38bdf8;
+}
+.progress-fill.done {
+  background-color: #818cf8;
+}
+.progress-fill.cancelled {
+  background-color: #f87171;
+}
+.progress-fill.planned {
+  background-color: #7dd3fc;
+}
 
-/* Bar labels */
 .bar-label {
   position: relative;
   z-index: 10;
@@ -1843,22 +1964,6 @@ watch(loading, (newVal, oldVal) => {
   color: inherit;
 }
 
-@media (max-width: 1023px) {
-  .bar-label span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-@media (min-width: 1024px) {
-  .bar-label span {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-  }
-}
-
-/* Assigned users */
 .assigned-users {
   position: absolute;
   bottom: -6px;
@@ -1898,7 +2003,6 @@ watch(loading, (newVal, oldVal) => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Today indicator */
 .today-indicator {
   position: absolute;
   top: 0;
@@ -1907,18 +2011,19 @@ watch(loading, (newVal, oldVal) => {
   background-color: #dc2626;
   z-index: 10;
   box-shadow: 0 0 4px rgba(220, 38, 38, 0.5);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.today-indicator {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Row alternating colors */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .project-timeline-row:nth-child(odd) {
   background-color: #fafbfc;
 }
@@ -1927,23 +2032,12 @@ watch(loading, (newVal, oldVal) => {
   background-color: #f8fafc;
 }
 
-/* Hover effects */
-.project-row:hover {
-  background-color: #f1f5f9;
-}
-
-.task-row:hover {
-  background-color: #e2e8f0;
-}
-
-/* Empty states */
 .empty-tasks-timeline-row {
   min-height: 40px;
   background-color: #fafbfc;
   border-bottom: 1px solid #f1f5f9;
 }
 
-/* Scrollbar styling */
 .gantt-scroll-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1968,17 +2062,19 @@ watch(loading, (newVal, oldVal) => {
   background-color: #f8fafc;
 }
 
-/* Loading and animations */
 .animate-spin {
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   .timeline-bar,
   .progress-bar-fill,
@@ -1989,7 +2085,6 @@ watch(loading, (newVal, oldVal) => {
   }
 }
 
-/* Focus states */
 .expand-button:focus,
 .timeline-bar:focus,
 .project-row:focus,

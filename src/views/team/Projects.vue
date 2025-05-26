@@ -430,6 +430,10 @@
           :department-name="filters.department_id ? getDepartmentName(filters.department_id) : ''"
           :start-date-filter="filters.date_start"
           :end-date-filter="filters.date_end"
+          :state-filter="filters.state"
+          :project-id="filters.project_id ? parseInt(filters.project_id) : null"
+          :sort-field="sortOptions.field"
+          :sort-order="sortOptions.order"
           @view-task-detail="handleViewTaskDetail"
           @view-project-detail="handleViewProjectDetail"
           @edit-task="handleEditTask"
@@ -453,6 +457,7 @@
       :show="showFilterModal"
       :filters="filters"
       :departments="departments"
+      :projects="allProjects"
       @close="showFilterModal = false"
       @apply="handleFilterApply"
       @reset="resetFilters"
@@ -545,8 +550,12 @@ const filters = ref({
   state: '',
   date_start: '',
   date_end: '',
-  project_manager_id: ''
+  project_manager_id: '',
+  project_id: '' // Add this
 });
+
+const projectsForFilter = ref([]);
+const allProjects = ref([]);
 
 // Fungsi untuk menangani pengiriman form
 const handleTaskSubmit = (taskData) => {
@@ -677,6 +686,25 @@ const handleFilterApply = (newFilters) => {
   }
 };
 
+const fetchAllProjects = async () => {
+  try {
+    const response = await apiClient.post('/web/v2/team/projects/list', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        limit: 100, // Fetch a reasonable number
+        include_archived: false
+      }
+    });
+
+    if (response.data.result?.status === 'success') {
+      allProjects.value = response.data.result.data;
+    }
+  } catch (error) {
+    console.error('Error fetching all projects:', error);
+  }
+};
+
 // 3. Update fetchProjects function untuk menangani notifikasi auto-archive
 // Modifikasi function fetchProjects yang sudah ada
 
@@ -713,11 +741,16 @@ const fetchProjects = async (isInitialLoad = false) => {
     } else {
       // Jika bukan load awal, gunakan filter yang dipilih pengguna
       if (filters.value.department_id) {
-        params.params.department_id = parseInt(filters.value.department_id);
+        params.params.department_ids = [parseInt(filters.value.department_id)]; // Change here
       }
       
       if (filters.value.state) {
         params.params.state = filters.value.state;
+      }
+      
+      // Add project_id filter
+      if (filters.value.project_id) {
+        params.params.project_id = parseInt(filters.value.project_id);
       }
       
       // Selalu gunakan filter tanggal, baik dari filter pengguna atau default
@@ -1158,6 +1191,9 @@ onMounted(() => {
   
   // Ambil data departemen terlebih dahulu
   fetchDepartments();
+  
+  // Ambil semua proyek untuk dropdown filter
+  fetchAllProjects();
   
   // Kemudian ambil data proyek
   fetchProjects(true);
