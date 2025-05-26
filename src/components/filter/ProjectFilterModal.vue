@@ -44,9 +44,24 @@
                     </option>
                   </select>
                 </div>
+
+                <!-- In TeamProjectFilterModal.vue, replace the Status Filter with: -->
+                <!-- Project Filter -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                  <select
+                    v-model="localFilters.project_id"
+                    class="px-3 py-2 w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                  >
+                    <option value="">All Projects</option>
+                    <option v-for="project in projects" :key="project.id" :value="project.id">
+                      {{ project.name }}
+                    </option>
+                  </select>
+                </div>
                 
                 <!-- Status Filter -->
-                <div>
+                <!-- <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     v-model="localFilters.state"
@@ -60,7 +75,7 @@
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
-                </div>
+                </div> -->
                 
                 <!-- Date Range Filter -->
                 <div class="space-y-2">
@@ -148,15 +163,17 @@ import {
 const props = defineProps({
   show: Boolean,
   filters: Object,
-  departments: Array
+  departments: Array,
+  projects: Array // Add this prop to receive projects list
 })
+
 
 const emit = defineEmits(['close', 'apply', 'reset'])
 
 // Create a local copy of filters to work with
 const localFilters = reactive({
   department_id: '',
-  state: '',
+  project_id: '', // Replace state with project_id
   date_start: '',
   date_end: '',
   project_manager_id: ''

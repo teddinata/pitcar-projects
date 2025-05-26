@@ -1,90 +1,76 @@
-<!-- src/components/team/ImprovedGanttChart.vue -->
+<!-- src/components/charts/ModernGanttChart.vue -->
 <template>
   <div class="bg-white shadow rounded-lg overflow-hidden flex flex-col h-full">
-    <!-- Header dengan filter dan kontrol -->
+    <!-- Header with controls -->
     <div class="p-4 border-b border-gray-200">
       <div class="flex flex-col space-y-3 md:flex-row md:items-center md:justify-between">
-        <!-- Judul dengan indikator filter -->
+        <!-- Title with filter indicators -->
         <div class="flex flex-col">
-          <h2 class="text-xl font-semibold text-gray-900">Timeline Proyek</h2>
+          <h2 class="text-xl font-semibold text-gray-900">Task Timeline</h2>
           
-          <!-- Indikator filter aktif -->
+          <!-- Active filters indication -->
           <div class="flex flex-wrap gap-2 mt-2 items-center text-sm text-gray-600">
-            <span v-if="departmentName" class="bg-red-50 border border-red-200 text-red-700 text-xs rounded-full px-2.5 py-1 flex items-center">
-              {{ departmentName }}
-              <XMarkIcon 
-                @click="$emit('clearFilter', 'department_id')" 
-                class="ml-1 h-3.5 w-3.5 cursor-pointer hover:text-red-800" 
-              />
+            <span v-if="activeFiltersCount > 0" class="text-gray-500 text-xs">
+              {{ activeFiltersCount }} filter(s) applied
             </span>
-            <span v-if="dateRangeLabel" class="bg-blue-50 border border-blue-200 text-blue-700 text-xs rounded-full px-2.5 py-1 flex items-center">
-              {{ dateRangeLabel }}
-            </span>
-            <span v-if="!departmentName && !dateRangeLabel" class="text-gray-500 text-xs">
-              Menampilkan semua proyek
+            <span v-else class="text-gray-500 text-xs">
+              Showing all tasks
             </span>
           </div>
         </div>
 
-        <!-- Kontrol -->
+        <!-- Controls -->
         <div class="flex flex-wrap gap-2 items-center">
-          <!-- Navigasi rentang waktu -->
+          <!-- Time range navigation -->
           <div class="inline-flex items-center rounded-md shadow-sm">
             <button
               @click="moveTimelinePrev"
               class="px-2.5 py-1.5 border border-gray-300 rounded-l-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-              title="Periode Sebelumnya"
+              title="Previous Period"
             >
               <ChevronLeftIcon class="h-4 w-4" />
             </button>
             <button
               @click="resetTimeline"
               class="px-3 py-1.5 border-t border-b border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-              title="Kembali ke hari ini"
+              title="Reset to current period"
             >
-              Hari Ini
+              Today
             </button>
             <button
               @click="moveTimelineNext"
               class="px-2.5 py-1.5 border border-gray-300 rounded-r-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-              title="Periode Berikutnya"
+              title="Next Period"
             >
               <ChevronRightIcon class="h-4 w-4" />
             </button>
           </div>
 
-          <!-- Pemilih skala waktu -->
+          <!-- Time scale selector -->
           <div class="inline-flex rounded-md shadow-sm">
             <button
-              @click="setViewMode('day')"
-              class="px-3 py-1.5 text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500"
-              :class="viewMode === 'day' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
-            >
-              Hari
-            </button>
-            <button
               @click="setViewMode('week')"
-              class="px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-red-500"
-              :class="viewMode === 'week' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border-t border-b border-gray-300 hover:bg-gray-50'"
+              class="px-3 py-1.5 text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500"
+              :class="viewMode === 'week' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
             >
-              Minggu
+              Week
             </button>
             <button
               @click="setViewMode('month')"
               class="px-3 py-1.5 text-sm font-medium rounded-r-md focus:outline-none focus:ring-1 focus:ring-red-500"
               :class="viewMode === 'month' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
             >
-              Bulan
+              Month
             </button>
           </div>
 
-          <!-- Kontrol zoom -->
+          <!-- Zoom controls -->
           <div class="inline-flex rounded-md shadow-sm">
             <button
               @click="decreaseZoom"
               class="px-2.5 py-1.5 border border-gray-300 rounded-l-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50"
               :disabled="zoomLevel <= minZoomLevel"
-              title="Perkecil"
+              title="Zoom Out"
             >
               <MinusIcon class="h-4 w-4" />
             </button>
@@ -95,172 +81,48 @@
               @click="increaseZoom"
               class="px-2.5 py-1.5 border border-gray-300 rounded-r-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50"
               :disabled="zoomLevel >= maxZoomLevel"
-              title="Perbesar"
+              title="Zoom In"
             >
               <PlusIcon class="h-4 w-4" />
             </button>
           </div>
-
-          <!-- Expand/Collapse All -->
-          <button
-            @click="toggleExpandAll"
-            class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-            :title="allExpanded ? 'Ciutkan Semua' : 'Perluas Semua'"
-          >
-            <ChevronRightIcon
-              class="h-4 w-4 mr-1 transform transition-transform"
-              :class="{ 'rotate-90': allExpanded }"
-            />
-            {{ allExpanded ? 'Ciutkan Semua' : 'Perluas Semua' }}
-          </button>
         </div>
       </div>
     </div>
 
-    <!-- Container Gantt Chart -->
-    <div class="flex-grow overflow-auto">
-      <!-- Project Gantt Chart -->
-      <div class="gantt-container grid grid-cols-[minmax(250px,auto)_1fr]" style="min-width: 1000px; min-height: 400px">
-        <!-- Sisi kiri: Nama proyek & tugas dengan header sticky -->
-        <div class="project-names bg-white">
-          <!-- Header -->
-          <div class="h-16 sticky top-0 z-10 border-b border-gray-200 bg-gray-50 px-4 flex items-end">
-            <h3 class="font-medium text-gray-700 pb-2">Proyek & Tugas</h3>
+    <!-- Gantt Chart Container -->
+    <div class="flex-grow overflow-hidden">
+      <div class="gantt-wrapper">
+        <!-- Headers (Fixed) -->
+        <div class="gantt-headers">
+          <!-- Left header -->
+          <div class="project-header">
+            <h3 class="font-medium text-gray-700 pb-2">Tasks</h3>
           </div>
-
-          <!-- Daftar proyek -->
-          <div class="project-list divide-y divide-gray-200">
-            <div
-              v-for="(project, projectIndex) in projects"
-              :key="project.id"
-              class="project-item"
-            >
-              <!-- Baris proyek -->
-              <div 
-                class="project-row group flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer"
-                @click="toggleProject(projectIndex)"
-                :class="{'bg-gray-50': project.expanded}"
-              >
-                <!-- Ikon expand/collapse -->
-                <button class="mr-2 flex-shrink-0 text-gray-400">
-                  <ChevronRightIcon 
-                    class="h-4.5 w-4.5 transform transition-transform" 
-                    :class="{ 'rotate-90': project.expanded, 'text-gray-600': project.expanded }"
-                  />
-                </button>
-                
-                <!-- Indikator status proyek dengan warna -->
-                <div class="w-2 h-2 rounded-full mr-2 flex-shrink-0" :class="getStatusIndicatorClass(project.state)"></div>
-                
-                <!-- Nama proyek -->
-                <div class="flex-grow mr-3">
-                  <div class="font-medium text-gray-900 truncate">{{ project.name }}</div>
-                </div>
-                
-                <!-- Tanggal proyek - fitur baru -->
-                <!-- <div class="mr-4 text-xs text-gray-500 hidden sm:flex items-center">
-                  <CalendarIcon class="h-3.5 w-3.5 mr-1 text-gray-400" />
-                  <span>{{ formatDateShort(project.start) }} - {{ formatDateShort(project.end) }}</span>
-                </div> -->
-                
-                <!-- Indikator progres proyek -->
-                <div class="w-14 flex-shrink-0">
-                  <div class="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      class="h-1.5 rounded-full" 
-                      :class="getProgressBarColorClass(project.progress)"
-                      :style="{ width: `${project.progress || 0}%` }"
-                    ></div>
-                  </div>
-                  <div class="text-xs text-center text-gray-500 mt-0.5">{{ project.progress || 0 }}%</div>
-                </div>
-              </div>
-
-              <!-- Baris tugas (ketika diperluas) -->
-              <div v-if="project.expanded" class="task-list bg-gray-50">
-                <div
-                  v-for="task in project.tasks"
-                  :key="task.id"
-                  class="task-row flex items-center px-4 py-2.5 hover:bg-gray-100 pl-10 border-t border-gray-100 cursor-pointer"
-                  @click.stop="handleTaskClick(task)"
-                >
-                  <!-- Indikator status tugas -->
-                  <div class="w-2 h-2 rounded-full mr-2" :class="getStatusIndicatorClass(task.state)"></div>
-                  
-                  <!-- Nama tugas -->
-                  <div class="flex-grow mr-3">
-                    <div class="text-sm text-gray-900 truncate">{{ task.name }}</div>
-                  </div>
-                  
-                  <!-- Due date tugas - fitur baru -->
-                  <!-- <div class="mr-3 text-xs text-gray-500 hidden sm:flex items-center">
-                    <CalendarIcon class="h-3.5 w-3.5 mr-1 text-gray-400" />
-                    <span>{{ formatDateShort(task.end) }}</span>
-                  </div> -->
-                  
-                  <!-- Avatar pengguna yang ditugaskan - fitur baru -->
-                  <div v-if="task.assigned_to && task.assigned_to.length > 0" class="mr-3 flex -space-x-1.5">
-                    <div 
-                      v-for="(user, index) in task.assigned_to.slice(0, 2)" 
-                      :key="index"
-                      class="h-6 w-6 rounded-full bg-blue-100 border border-white text-blue-600 font-medium flex items-center justify-center text-xs overflow-hidden"
-                      :title="user.name"
-                    >
-                      {{ getInitials(user.name) }}
-                    </div>
-                    <div 
-                      v-if="task.assigned_to.length > 2" 
-                      class="h-6 w-6 rounded-full bg-gray-100 border border-white text-gray-600 font-medium flex items-center justify-center text-xs"
-                    >
-                      +{{ task.assigned_to.length - 2 }}
-                    </div>
-                  </div>
-                  
-                  <!-- Indikator progres tugas -->
-                  <div class="w-12 flex-shrink-0">
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                      <div
-                        class="h-1.5 rounded-full" 
-                        :class="getProgressBarColorClass(task.progress)"
-                        :style="{ width: `${task.progress || 0}%` }"
-                      ></div>
-                    </div>
-                    <div class="text-xs text-center text-gray-500 mt-0.5">{{ task.progress || 0 }}%</div>
-                  </div>
-                </div>
-                <div v-if="project.tasks.length === 0" class="task-row flex items-center px-4 py-2.5 pl-10 italic text-gray-400 text-sm">
-                  Tidak ada tugas ditemukan
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sisi kanan: Grafik timeline -->
-        <div class="gantt-timeline relative">
-          <!-- Header timeline (sticky) -->
-          <div class="timeline-header h-16 sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-            <!-- Unit waktu tingkat atas (bulan atau minggu) -->
-            <div class="h-8 flex border-b border-gray-200">
+          
+          <!-- Right header (Timeline) -->
+          <div class="timeline-header" ref="timelineHeader">
+            <!-- Top-level time units (months or weeks) -->
+            <div class="month-row">
               <div
                 v-for="timeUnit in timeUnits.major"
                 :key="timeUnit.key"
-                class="border-r border-gray-300 relative flex items-center justify-center"
+                class="month-cell"
                 :style="{ width: `${timeUnit.width}px` }"
               >
                 <span class="text-xs font-medium text-gray-700">{{ timeUnit.label }}</span>
               </div>
             </div>
             
-            <!-- Unit waktu detail (hari) -->
-            <div class="h-8 flex">
+            <!-- Detail time units (days) -->
+            <div class="day-row">
               <div
                 v-for="timeUnit in timeUnits.minor"
                 :key="timeUnit.key"
                 :class="[
-                  'border-r border-gray-200 relative flex items-center justify-center',
-                  timeUnit.isWeekend ? 'bg-gray-100' : '',
-                  timeUnit.isToday ? 'bg-red-50' : ''
+                  'day-cell',
+                  timeUnit.isWeekend ? 'weekend' : '',
+                  timeUnit.isToday ? 'today' : ''
                 ]"
                 :style="{ width: `${getDayWidth()}px` }"
               >
@@ -268,220 +130,214 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Area batang Gantt -->
-          <div class="timeline-content">
-            <!-- Batang proyek dan tugas -->
-            <div class="gantt-bars">
-              <div
-                v-for="(project) in projects"
-                :key="project.id"
-                class="project-bar-container"
-              >
-                <!-- Baris timeline proyek -->
+        <!-- Scrollable Content Area -->
+        <div class="gantt-scrollable-content" @scroll="syncHeaderScroll" ref="scrollContainer">
+          <!-- Tasks Grid -->
+          <div class="gantt-grid">
+            <!-- Left side: Task names -->
+            <div class="project-names" ref="projectsList">
+              <template v-for="(task, taskIndex) in displayedTasks" :key="task.id">
+                <!-- Task Row -->
                 <div 
-                  class="project-timeline-row relative h-12 hover:bg-gray-50"
-                  :class="{ 'bg-gray-50': project.expanded, 'border-b border-gray-100': !project.expanded }"
+                  :id="`task-row-${task.id}`"
+                  class="task-row"
+                  :data-row-id="task.id"
+                  @click="selectTask(task)"
                 >
-                  <!-- Latar belakang grid tanggal -->
-                  <div class="absolute inset-0 grid-background">
-                    <div
-                      v-for="timeUnit in timeUnits.minor"
-                      :key="timeUnit.key"
-                      :class="[
-                        'absolute top-0 bottom-0 border-r border-gray-200',
-                        timeUnit.isWeekend ? 'bg-gray-100' : '',
-                        timeUnit.isToday ? 'bg-red-50' : ''
-                      ]"
-                      :style="{ 
-                        left: `${getTimeUnitPosition(timeUnit)}px`,
-                        width: `${getDayWidth()}px`
-                      }"
-                    ></div>
-                  </div>
-                  
-                  <!-- Batang timeline proyek -->
-                  <div
-                    v-if="getBarPosition(project).width > 0"
-                    class="absolute top-1/2 transform -translate-y-1/2 h-8 rounded-md shadow-sm cursor-pointer border z-10"
-                    :class="getProjectStatusClass(project.state)"
-                    :style="{
-                      left: `${getBarPosition(project).left}px`,
-                      width: `${getBarPosition(project).width}px`
-                    }"
-                    @click.stop="handleProjectClick(project)"
-                    :title="getProjectTooltip(project)"
-                  >
-                    <!-- Indikator progres -->
-                    <div 
-                      class="absolute top-0 left-0 bottom-0 rounded-l-md transition-all duration-300"
-                      :class="getProgressBarClass(project.state, project.progress)"
-                      :style="{ width: `${project.progress || 0}%` }"
-                    ></div>
+                  <div class="task-row-content">
+                    <!-- Priority indicator -->
+                    <div class="priority-indicator" :class="getPriorityClass(task.priority)">
+                      <FlagIcon class="h-3 w-3" />
+                    </div>
                     
-                    <!-- Label teks (hanya jika cukup ruang) -->
-                    <div v-if="getBarPosition(project).width > 80" class="px-2 py-1.5 flex items-center h-full z-20 relative">
-                      <span class="text-xs font-medium truncate text-current">{{ project.name }}</span>
+                    <!-- Status indicator -->
+                    <div class="status-indicator" :class="getStatusClass(task.state)"></div>
+                    
+                    <!-- Task info -->
+                    <div class="task-name-container">
+                      <div class="task-name">{{ task.name }}</div>
+                      <div class="project-name">{{ task.project?.name || 'No project' }}</div>
+                    </div>
+                    
+                    <!-- Assigned users -->
+                    <div v-if="task.assigned_to && task.assigned_to.length > 0" class="assigned-users-list">
+                      <div 
+                        v-for="(user, index) in task.assigned_to.slice(0, 2)" 
+                        :key="index"
+                        class="user-avatar"
+                        :title="user.name"
+                      >
+                        <span>{{ getInitials(user.name) }}</span>
+                      </div>
+                      <div 
+                        v-if="task.assigned_to.length > 2"
+                        class="more-users"
+                        :title="getRemainingUsersTitle(task.assigned_to, 2)"
+                      >
+                        <span>+{{ task.assigned_to.length - 2 }}</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Progress -->
+                    <div class="progress-container">
+                      <div class="progress-bar-bg">
+                        <div
+                          class="progress-bar-fill" 
+                          :class="getProgressColorClass(task.progress)"
+                          :style="{ width: `${task.progress || 0}%` }"
+                        ></div>
+                      </div>
+                      <div class="progress-text">{{ task.progress || 0 }}%</div>
                     </div>
                   </div>
-                    
-                  <!-- Indikator hari ini (garis vertikal) -->
-                  <div
-                    v-if="isTodayVisible"
-                    class="absolute top-0 bottom-0 w-px bg-red-500 z-20"
-                    :style="{ left: `${getTodayPosition()}px` }"
-                  ></div>
                 </div>
-                
-                <!-- Batang timeline tugas (ketika proyek diperluas) -->
-                <div v-if="project.expanded">
-                  <div
-                    v-for="task in project.tasks"
-                    :key="task.id"
-                    class="task-timeline-row relative h-10 hover:bg-gray-100 border-t border-gray-100"
-                  >
-                    <!-- Latar belakang grid tanggal -->
-                    <div class="absolute inset-0 grid-background">
+              </template>
+              
+              <!-- Empty state -->
+              <div v-if="displayedTasks.length === 0" class="empty-tasks-row">
+                <div class="empty-tasks-message">No tasks with dates found for timeline view</div>
+              </div>
+            </div>
+
+            <!-- Right side: Timeline chart -->
+            <div class="gantt-timeline" ref="timelineChart">
+              <template v-for="(task, taskIndex) in displayedTasks" :key="task.id">
+                <!-- Task Timeline Row -->
+                <div 
+                  :id="`task-timeline-row-${task.id}`"
+                  class="task-timeline-row"
+                  :data-row-id="task.id"
+                >
+                  <!-- Background grid -->
+                  <div class="grid-background">
+                    <template v-for="timeUnit in timeUnits.minor" :key="timeUnit.key">
                       <div
-                        v-for="timeUnit in timeUnits.minor"
-                        :key="timeUnit.key"
+                        class="grid-cell"
                         :class="[
-                          'absolute top-0 bottom-0 border-r border-gray-200',
-                          timeUnit.isWeekend ? 'bg-gray-100' : '',
-                          timeUnit.isToday ? 'bg-red-50' : ''
+                          timeUnit.isWeekend ? 'weekend' : '',
+                          timeUnit.isToday ? 'today' : ''
                         ]"
                         :style="{ 
                           left: `${getTimeUnitPosition(timeUnit)}px`,
                           width: `${getDayWidth()}px`
                         }"
                       ></div>
+                    </template>
+                  </div>
+                  
+                  <!-- Task Bar -->
+                  <div
+                    v-if="getBarPosition(task).width > 0"
+                    class="timeline-bar task-bar"
+                    :class="getTaskBarClass(task.state)"
+                    :style="{
+                      left: `${getBarPosition(task).left}px`,
+                      width: `${getBarPosition(task).width}px`
+                    }"
+                    @click.stop="handleTaskClick(task)"
+                    :title="getTaskTooltip(task)"
+                  >
+                    <!-- Progress fill -->
+                    <div 
+                      class="progress-fill"
+                      :class="getProgressFillClass(task.state)"
+                      :style="{ width: `${task.progress || 0}%` }"
+                    ></div>
+                      
+                    <!-- Bar label -->
+                    <div v-if="getBarPosition(task).width > 60" class="bar-label">
+                      <span>{{ task.name }}</span>
                     </div>
                     
-                    <!-- Batang timeline tugas yang ditingkatkan -->
-                    <div
-                      v-if="getBarPosition(task).width > 0"
-                      class="absolute top-1/2 transform -translate-y-1/2 h-7 rounded-md shadow-sm cursor-pointer border z-10"
-                      :class="getTaskStatusClass(task.state)"
-                      :style="{
-                        left: `${getBarPosition(task).left}px`,
-                        width: `${getBarPosition(task).width}px`
-                      }"
-                      @click.stop="handleTaskClick(task)"
-                      :title="getTaskTooltip(task, project)"
+                    <!-- Priority badge -->
+                    <div 
+                      v-if="getBarPosition(task).width > 80"
+                      class="priority-badge"
+                      :class="getPriorityBadgeClass(task.priority)"
                     >
-                      <!-- Indikator progres -->
-                      <div 
-                        class="absolute top-0 left-0 bottom-0 rounded-l-md transition-all duration-300"
-                        :class="getProgressBarClass(task.state, task.progress)"
-                        :style="{ width: `${task.progress || 0}%` }"
-                      ></div>
-                        
-                      <!-- Label teks (hanya jika cukup ruang) -->
-                      <div v-if="getBarPosition(task).width > 60" class="px-2 py-1 flex items-center h-full z-20 relative">
-                        <span class="text-xs truncate text-current">{{ task.name }}</span>
-                      </div>
-                      
-                      <!-- Avatar pengguna yang ditugaskan (jika ada ruang) dengan badge baru -->
-                      <div 
-                        v-if="task.assigned_to && task.assigned_to.length > 0 && getBarPosition(task).width > 80"
-                        class="absolute -bottom-1.5 right-1.5 flex -space-x-1.5"
-                      >
-                        <div 
-                          v-for="(user, index) in task.assigned_to.slice(0, 2)" 
-                          :key="index"
-                          class="h-5 w-5 rounded-full bg-blue-100 border border-white text-blue-600 text-xs flex items-center justify-center overflow-hidden shadow-sm"
-                          :title="user.name"
-                        >
-                          {{ getInitials(user.name) }}
-                        </div>
-                        <div 
-                          v-if="task.assigned_to.length > 2"
-                          class="h-5 w-5 rounded-full bg-gray-100 border border-white text-xs flex items-center justify-center shadow-sm"
-                          :title="getRemainingUsersTitle(task.assigned_to, 2)"
-                        >
-                          +{{ task.assigned_to.length - 2 }}
-                        </div>
-                      </div>
-                      
-                      <!-- Badge due date (fitur baru) -->
-                      <!-- <div 
-                        v-if="getBarPosition(task).width > 100"
-                        class="absolute -top-1.5 right-1.5 bg-white text-xs rounded-full px-1.5 py-0.5 border border-gray-200 shadow-sm flex items-center"
-                      >
-                        <CalendarIcon class="h-3 w-3 mr-0.5 text-gray-500" />
-                        {{ formatDateShort(task.end) }}
-                      </div> -->
+                      <FlagIcon class="h-3 w-3" />
                     </div>
-                      
-                    <!-- Indikator hari ini (garis vertikal) -->
-                    <div
-                      v-if="isTodayVisible"
-                      class="absolute top-0 bottom-0 w-px bg-red-500 z-20"
-                      :style="{ left: `${getTodayPosition()}px` }"
-                    ></div>
+                    
+                    <!-- Assigned Users -->
+                    <div 
+                      v-if="task.assigned_to && task.assigned_to.length > 0 && getBarPosition(task).width > 120"
+                      class="assigned-users"
+                    >
+                      <div 
+                        v-for="(user, index) in task.assigned_to.slice(0, 3)" 
+                        :key="index"
+                        class="user-avatar"
+                        :title="user.name"
+                      >
+                        <span>{{ getInitials(user.name) }}</span>
+                      </div>
+                      <div 
+                        v-if="task.assigned_to.length > 3"
+                        class="more-users"
+                        :title="getRemainingUsersTitle(task.assigned_to, 3)"
+                      >
+                        <span>+{{ task.assigned_to.length - 3 }}</span>
+                      </div>
+                    </div>
                   </div>
+                    
+                  <!-- Today indicator -->
+                  <div
+                    v-if="isTodayVisible"
+                    class="today-indicator"
+                    :style="{ left: `${getTodayPosition()}px` }"
+                  ></div>
                 </div>
-              </div>
+              </template>
+              
+              <!-- Empty state timeline -->
+              <div v-if="displayedTasks.length === 0" class="empty-tasks-timeline-row"></div>
             </div>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- Keadaan Loading -->
+    <!-- Loading State -->
     <div 
       v-if="loading" 
       class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-30"
     >
       <div class="flex flex-col items-center">
         <div class="animate-spin rounded-full h-10 w-10 border-2 border-red-600 border-t-transparent"></div>
-        <p class="mt-2 text-sm text-gray-600">Memuat timeline...</p>
+        <p class="mt-2 text-sm text-gray-600">Loading timeline...</p>
       </div>
     </div>
 
-    <!-- Keadaan Kosong -->
+    <!-- Empty State -->
     <div 
-      v-if="!loading && projects.length === 0" 
+      v-if="!loading && displayedTasks.length === 0" 
       class="flex flex-col items-center justify-center p-10 flex-grow"
     >
       <CalendarIcon class="h-12 w-12 text-gray-400" />
-      <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada proyek ditemukan</h3>
-      <p v-if="departmentId" class="mt-1 text-sm text-gray-500">
-        Tidak ada proyek ditemukan di departemen atau rentang tanggal yang dipilih.
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No tasks with dates found</h3>
+      <p class="mt-1 text-sm text-gray-500">
+        Tasks need at least a start or end date to appear in timeline view.
       </p>
-      <p v-else class="mt-1 text-sm text-gray-500">
-        Buat beberapa proyek dengan tugas untuk melihatnya di timeline.
+      <p class="mt-2 text-xs text-gray-400">
+        Total tasks available: {{ props.tasks.length }} | 
+        Tasks with dates: {{ displayedTasks.length }}
       </p>
-      <button
-        v-if="departmentId || startDateFilter || endDateFilter"
-        @click="$emit('resetFilters')"
-        class="mt-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-      >
-        <ArrowPathIcon class="h-4 w-4 mr-1.5" />
-        Reset Filter
-      </button>
     </div>
-
-    <!-- Modal Detail Tugas -->
-    <TaskDetailPopup
-      :show="showTaskModal"
-      :task-id="selectedTaskId"
-      @close="closeTaskModal"
-      @edit-task="handleEditTask"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { 
   ChevronLeftIcon, 
   ChevronRightIcon, 
   MinusIcon, 
   PlusIcon, 
   CalendarIcon,
-  XMarkIcon,
-  ArrowPathIcon
+  FlagIcon
 } from '@heroicons/vue/24/outline';
 import { 
   format, 
@@ -500,143 +356,127 @@ import {
   addWeeks,
   subWeeks,
   differenceInDays,
-  isSameMonth
+  isWithinInterval
 } from 'date-fns';
-import apiClient from '@/config/api';
-import TaskDetailPopup from '@/components/team/TaskDetailPopup.vue';
 
 const props = defineProps({
-  departmentId: {
-    type: [Number, String],
-    default: null
+  // Gunakan data yang sama dengan view lainnya
+  tasks: {
+    type: Array,
+    default: () => []
   },
-  projectId: {
-    type: [Number, String],
-    default: null
-  },
-  singleProject: {
+  loading: {
     type: Boolean,
     default: false
   },
-  startDateFilter: {
-    type: String,
-    default: null
-  },
-  endDateFilter: {
-    type: String,
-    default: null
-  },
-  departmentName: {
-    type: String,
-    default: ''
+  // Filter yang sudah diterapkan
+  activeFiltersCount: {
+    type: Number,
+    default: 0
   }
 });
 
 const emit = defineEmits([
-  'view-task-detail', 
-  'view-project-detail',
-  'edit-task',
-  'update:dateRange',
-  'clearFilter',
-  'resetFilters'
+  'view-task-detail',
+  'edit-task'
 ]);
 
 // State
-const projects = ref([]);
-const loading = ref(false);
 const startDate = ref(new Date());
-const viewMode = ref('month'); // 'day', 'week', 'month'
+const viewMode = ref('month'); // 'week', 'month'
 const zoomLevel = ref(1);
 const minZoomLevel = ref(0.5);
 const maxZoomLevel = ref(3);
-const allExpanded = ref(false);
-const error = ref(null);
-const showTaskModal = ref(false);
-const selectedTaskId = ref(null);
-const isInternalNavigation = ref(false);
 
-// Format rentang tanggal untuk tampilan
-const dateRangeLabel = computed(() => {
-  if (props.startDateFilter && props.endDateFilter) {
-    try {
-      const start = format(parseISO(props.startDateFilter), 'dd MMM yyyy');
-      const end = format(parseISO(props.endDateFilter), 'dd MMM yyyy');
-      return `${start} - ${end}`;
-    } catch (e) {
-      return `${props.startDateFilter} - ${props.endDateFilter}`;
+// References
+const scrollContainer = ref(null);
+const timelineHeader = ref(null);
+const projectsList = ref(null);
+const timelineChart = ref(null);
+
+// Filter dan transform tasks untuk timeline
+const displayedTasks = computed(() => {
+  console.log('Total tasks received:', props.tasks.length);
+  
+  const tasksWithDates = props.tasks.filter(task => {
+    // Tampilkan task yang memiliki minimal salah satu tanggal
+    // Atau bisa disesuaikan: hanya yang memiliki kedua tanggal
+    const hasStartDate = task.dates?.planned_start;
+    const hasEndDate = task.dates?.planned_end;
+    
+    // Opsi 1: Hanya yang memiliki kedua tanggal (lebih ketat)
+    // return hasStartDate && hasEndDate;
+    
+    // Opsi 2: Yang memiliki minimal salah satu tanggal (lebih fleksibel)
+    const hasAnyDate = hasStartDate || hasEndDate;
+    
+    if (!hasAnyDate) {
+      console.log('Task without dates:', task.name);
     }
-  }
-  return '';
+    
+    return hasAnyDate;
+  }).map(task => {
+    // Transform untuk memudahkan penggunaan
+    let startDate = null;
+    let endDate = null;
+    
+    try {
+      if (task.dates?.planned_start) {
+        startDate = parseISO(task.dates.planned_start);
+      }
+      if (task.dates?.planned_end) {
+        endDate = parseISO(task.dates.planned_end);
+      }
+      
+      // Jika hanya ada satu tanggal, buat estimasi untuk yang lain
+      if (startDate && !endDate) {
+        // Jika hanya ada start date, buat end date 1 minggu kemudian
+        endDate = addDays(startDate, 7);
+      } else if (!startDate && endDate) {
+        // Jika hanya ada end date, buat start date 1 minggu sebelumnya
+        startDate = subDays(endDate, 7);
+      }
+    } catch (error) {
+      console.error('Error parsing dates for task:', task.name, error);
+    }
+    
+    return {
+      ...task,
+      start: startDate,
+      end: endDate,
+      startDate: task.dates?.planned_start,
+      endDate: task.dates?.planned_end
+    };
+  });
+  
+  console.log('Tasks with dates for Gantt:', tasksWithDates.length);
+  return tasksWithDates;
 });
 
-// Computed properties
-const timelinePeriodLabel = computed(() => {
-  if (viewMode.value === 'month') {
-    const monthStart = startOfMonth(startDate.value);
-    const monthEnd = endOfMonth(startDate.value);
-    return `${format(monthStart, 'MMMM yyyy')}`;
-  } else if (viewMode.value === 'week') {
-    const weekStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
-    return `${format(weekStart, 'dd MMM')} - ${format(weekEnd, 'dd MMM yyyy')}`;
-  } else { // day view
-    const dayStart = startDate.value;
-    const dayEnd = addDays(startDate.value, 14); // Show 2 weeks in day view
-    return `${format(dayStart, 'dd MMM')} - ${format(dayEnd, 'dd MMM yyyy')}`;
-  }
-});
-
-// Rentang tanggal efektif berdasarkan mode tampilan dan filter
+// Effective date range based on view mode
 const effectiveDateRange = computed(() => {
-  // Generate date range based on view mode and current startDate
   let rangeStart, rangeEnd;
   
   if (viewMode.value === 'month') {
     rangeStart = startOfMonth(startDate.value);
     rangeEnd = endOfMonth(startDate.value);
-  } else if (viewMode.value === 'week') {
+  } else { // week
     rangeStart = startOfWeek(startDate.value, { weekStartsOn: 1 });
     rangeEnd = endOfWeek(startDate.value, { weekStartsOn: 1 });
-  } else { // day view
-    rangeStart = startDate.value;
-    rangeEnd = addDays(startDate.value, 14); // 2 weeks default
-  }
-  
-  // If props provide date filters and not in internal navigation mode,
-  // use them for display but DON'T update internal startDate
-  if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
-    try {
-      const start = parseISO(props.startDateFilter);
-      const end = parseISO(props.endDateFilter);
-      // Make sure both dates are valid
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        return { start, end };
-      }
-    } catch (e) {
-      console.error('Error parsing date filters:', e);
-    }
-  }
-  
-  // Ensure both dates are valid
-  if (isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
-    const today = new Date();
-    rangeStart = startOfMonth(today);
-    rangeEnd = endOfMonth(today);
+    // Extend to show 4 weeks for better view
+    rangeEnd = addWeeks(rangeEnd, 3);
   }
   
   return { start: rangeStart, end: rangeEnd };
 });
 
-// Unit waktu untuk tampilan timeline
+// Time units for the timeline display
 const timeUnits = computed(() => {
   try {
-    // Get date range safely
     const rangeStart = effectiveDateRange.value.start;
     const rangeEnd = effectiveDateRange.value.end;
     
-    // Validate dates
-    if (!rangeStart || !rangeEnd || isNaN(rangeStart.getTime()) || isNaN(rangeEnd.getTime())) {
-      console.error('Invalid date range for time units calculation');
+    if (!rangeStart || !rangeEnd) {
       return { major: [], minor: [] };
     }
     
@@ -651,14 +491,11 @@ const timeUnits = computed(() => {
     days.forEach((day, index) => {
       const month = format(day, 'yyyy-MM');
       
-      // If new month or first day
       if (month !== currentMonth || index === 0) {
-        // Finish previous month if exists
         if (currentMonth && currentMonthDays > 0) {
           majorUnits[majorUnits.length - 1].width = currentMonthDays * getDayWidth();
         }
         
-        // Start new month
         currentMonth = month;
         currentMonthDays = 1;
         
@@ -666,17 +503,13 @@ const timeUnits = computed(() => {
           key: month,
           label: format(day, 'MMMM yyyy'),
           start: day,
-          end: null, // Will be set later
-          width: 0 // Will be updated later
+          width: 0
         });
       } else {
-        // Still in same month
         currentMonthDays++;
         
-        // If last day, update width of last month
         if (index === days.length - 1) {
           majorUnits[majorUnits.length - 1].width = currentMonthDays * getDayWidth();
-          majorUnits[majorUnits.length - 1].end = day;
         }
       }
     });
@@ -687,9 +520,7 @@ const timeUnits = computed(() => {
       label: format(day, 'd'),
       date: day,
       isWeekend: isWeekend(day),
-      isToday: isToday(day),
-      monthLabel: format(day, 'MMM'),
-      position: 0 // Will be calculated in getTimeUnitPosition
+      isToday: isToday(day)
     }));
     
     return {
@@ -702,145 +533,16 @@ const timeUnits = computed(() => {
   }
 });
 
-// Memeriksa apakah hari ini terlihat di tampilan saat ini
+// Check if today is visible
 const isTodayVisible = computed(() => {
-  try {
-    // Get today's date
-    const today = new Date();
-    
-    // Get the current view range
-    const viewRange = effectiveDateRange.value;
-    
-    // Check if today falls within the current view range
-    return today >= viewRange.start && today <= viewRange.end;
-  } catch (error) {
-    console.error('Error calculating if today is visible:', error);
-    return false;
-  }
+  const today = new Date();
+  const viewRange = effectiveDateRange.value;
+  return today >= viewRange.start && today <= viewRange.end;
 });
 
-// Method untuk mengambil data proyek
-function fetchProjects() {
-  loading.value = true;
-  error.value = null;
-  
-  // Initialize request parameters
-  const params = {
-    jsonrpc: '2.0',
-    id: new Date().getTime(),
-    params: {}
-  };
-  
-  // Get date range, either from props or from internal state
-  let dateStart, dateEnd;
-  
-  if (props.startDateFilter && props.endDateFilter && !isInternalNavigation.value) {
-    // Use props directly
-    dateStart = props.startDateFilter;
-    dateEnd = props.endDateFilter;
-  } else {
-    // Use the calculated date range from our component
-    const dateRange = effectiveDateRange.value;
-    dateStart = format(dateRange.start, 'yyyy-MM-dd');
-    dateEnd = format(dateRange.end, 'yyyy-MM-dd');
-  }
-  
-  // Add date parameters to the params object
-  params.params.date_start = dateStart;
-  params.params.date_end = dateEnd;
-  
-  // Add department id if present
-  if (props.departmentId) {
-    console.log('Including department filter:', props.departmentId);
-    params.params.department_id = parseInt(props.departmentId);
-  }
-
-  // Debug logging
-  console.log('Fetching Gantt data with params:', JSON.stringify(params));
-
-  // API call
-  apiClient.post('/web/v2/team/dashboard/timeline', params)
-    .then(response => {
-      if (response.data.result?.status === 'success') {
-        console.log('Gantt data fetched successfully');
-        // Transform data to match our component structure
-        const projectsData = response.data.result.data || [];
-        projects.value = projectsData.map(project => {
-          // Safely handle date parsing
-          let startDate, endDate;
-          try {
-            startDate = project.start ? parseISO(project.start) : new Date();
-          } catch (e) {
-            console.warn('Invalid start date for project:', project.id);
-            startDate = new Date();
-          }
-          
-          try {
-            endDate = project.end ? parseISO(project.end) : addDays(new Date(), 30);
-          } catch (e) {
-            console.warn('Invalid end date for project:', project.id);
-            endDate = addDays(new Date(), 30);
-          }
-          
-          return {
-            id: project.id,
-            name: project.name,
-            startDate: project.start || null, // Keep the original string for reference
-            endDate: project.end || null,     // Keep the original string for reference
-            start: startDate,
-            end: endDate,
-            progress: project.progress || 0,
-            state: project.type === 'project' ? (project.state || 'in_progress') : 'task',
-            expanded: false,
-            tasks: (project.children || []).map(task => {
-              // Safely handle task date parsing
-              let taskStartDate, taskEndDate;
-              try {
-                taskStartDate = task.start ? parseISO(task.start) : new Date();
-              } catch (e) {
-                console.warn('Invalid start date for task:', task.id);
-                taskStartDate = new Date();
-              }
-              
-              try {
-                taskEndDate = task.end ? parseISO(task.end) : addDays(new Date(), 7);
-              } catch (e) {
-                console.warn('Invalid end date for task:', task.id);
-                taskEndDate = addDays(new Date(), 7);
-              }
-              
-              return {
-                id: task.id,
-                name: task.name,
-                startDate: task.start || null, // Keep the original string
-                endDate: task.end || null,     // Keep the original string
-                start: taskStartDate,
-                end: taskEndDate,
-                progress: task.progress || 0,
-                state: task.state || 'in_progress',
-                assigned_to: task.assigned_to || []
-              };
-            })
-          };
-        });
-      } else {
-        console.error('Error fetching Gantt data:', response.data.result?.message);
-        error.value = response.data.result?.message || 'Gagal memuat proyek';
-      }
-    })
-    .catch(err => {
-      console.error('API error fetching project timeline data:', err);
-      error.value = 'Error memuat data proyek';
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-}
-
-// Methods navigasi dan kontrol timeline
+// Timeline methods
 function getDayWidth() {
-  // Base day width multiplied by zoom level
-  const baseDayWidth = 30;
+  const baseDayWidth = 40;
   return baseDayWidth * zoomLevel.value;
 }
 
@@ -850,40 +552,36 @@ function getTimeUnitPosition(timeUnit) {
   return daysFromViewStart * getDayWidth();
 }
 
-function getBarPosition(item) {
-  // Check if item or required properties are missing
-  if (!item || !item.start || !item.end) {
+function getBarPosition(task) {
+  if (!task || !task.start || !task.end) {
     return { left: 0, width: 0 };
   }
   
   try {
-    // Use effectiveDateRange instead of view-based range
     const viewStart = effectiveDateRange.value.start;
     const viewEnd = effectiveDateRange.value.end;
     
-    // Safe parsing of dates - ensure they're Date objects
-    const itemStartDate = typeof item.start === 'string' ? parseISO(item.start) : item.start;
-    const itemEndDate = typeof item.end === 'string' ? parseISO(item.end) : item.end;
+    const taskStart = task.start;
+    const taskEnd = task.end;
     
-    // Validate parsed dates
-    if (!itemStartDate || !itemEndDate || isNaN(itemStartDate.getTime()) || isNaN(itemEndDate.getTime())) {
+    if (!taskStart || !taskEnd) {
       return { left: 0, width: 0 };
     }
     
-    // If item is completely outside the view
-    if (itemEndDate < viewStart || itemStartDate > viewEnd) {
+    // If task is completely outside the view
+    if (taskEnd < viewStart || taskStart > viewEnd) {
       return { left: 0, width: 0 };
     }
     
-    // Calculate start position
-    const effectiveStart = itemStartDate < viewStart ? viewStart : itemStartDate;
+    // Calculate position
+    const effectiveStart = taskStart < viewStart ? viewStart : taskStart;
     const daysFromViewStart = differenceInDays(effectiveStart, viewStart);
     const leftPosition = daysFromViewStart * getDayWidth();
     
     // Calculate width
-    const effectiveEnd = itemEndDate > viewEnd ? viewEnd : itemEndDate;
-    const itemDuration = differenceInDays(effectiveEnd, effectiveStart) + 1; // +1 because end date is inclusive
-    const width = itemDuration * getDayWidth();
+    const effectiveEnd = taskEnd > viewEnd ? viewEnd : taskEnd;
+    const taskDuration = differenceInDays(effectiveEnd, effectiveStart) + 1;
+    const width = Math.max(taskDuration * getDayWidth(), getDayWidth() * 0.5);
     
     return { left: leftPosition, width: width };
   } catch (error) {
@@ -895,12 +593,9 @@ function getBarPosition(item) {
 function getTodayPosition() {
   try {
     const today = new Date();
-    // Use effectiveDateRange.value.start directly
     const viewStart = effectiveDateRange.value.start;
     
-    if (!viewStart || isNaN(viewStart.getTime())) {
-      return 0;
-    }
+    if (!viewStart) return 0;
     
     const daysFromViewStart = differenceInDays(today, viewStart);
     return Math.max(0, daysFromViewStart * getDayWidth());
@@ -910,264 +605,111 @@ function getTodayPosition() {
   }
 }
 
-// Metode navigasi
+// Navigation methods
 function moveTimelinePrev() {
-  try {
-    isInternalNavigation.value = true;
-    
-    // Update the internal startDate
-    if (viewMode.value === 'month') {
-      startDate.value = subMonths(startDate.value, 1);
-    } else if (viewMode.value === 'week') {
-      startDate.value = subWeeks(startDate.value, 1);
-    } else { // day view
-      startDate.value = subDays(startDate.value, 14);
-    }
-    
-    // Calculate the new date range
-    const range = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(range.start, 'yyyy-MM-dd'),
-      end: format(range.end, 'yyyy-MM-dd')
-    });
-    
-    // Fetch projects with the new date range
-    fetchProjects();
-  } catch (error) {
-    console.error('Error navigating to previous period:', error);
+  if (viewMode.value === 'month') {
+    startDate.value = subMonths(startDate.value, 1);
+  } else {
+    startDate.value = subWeeks(startDate.value, 4);
   }
 }
 
 function moveTimelineNext() {
-  try {
-    isInternalNavigation.value = true;
-    
-    // Update the internal startDate
-    if (viewMode.value === 'month') {
-      startDate.value = addMonths(startDate.value, 1);
-    } else if (viewMode.value === 'week') {
-      startDate.value = addWeeks(startDate.value, 1);
-    } else { // day view
-      startDate.value = addDays(startDate.value, 14);
-    }
-    
-    // Calculate the new date range
-    const range = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(range.start, 'yyyy-MM-dd'),
-      end: format(range.end, 'yyyy-MM-dd')
-    });
-    
-    // Fetch projects with the new date range
-    fetchProjects();
-  } catch (error) {
-    console.error('Error navigating to next period:', error);
+  if (viewMode.value === 'month') {
+    startDate.value = addMonths(startDate.value, 1);
+  } else {
+    startDate.value = addWeeks(startDate.value, 4);
   }
 }
 
 function resetTimeline() {
-  try {
-    isInternalNavigation.value = true;
-    
-    // Reset to current date
-    startDate.value = new Date();
-    
-    // Calculate the new date range based on current date
-    const newRange = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
-    });
-    
-    // Fetch projects with the new date range
-    fetchProjects();
-  } catch (error) {
-    console.error('Error resetting timeline:', error);
-  } finally {
-    isInternalNavigation.value = false;
-  }
+  startDate.value = new Date();
 }
 
 function setViewMode(mode) {
-  try {
-    // Don't do anything if the mode is already set
-    if (viewMode.value === mode) return;
-    
-    isInternalNavigation.value = true;
-    
-    // Update the view mode
-    viewMode.value = mode;
-    
-    // Calculate the new date range based on new view mode
-    const newRange = effectiveDateRange.value;
-    
-    // Emit the new date range to parent component
-    emit('update:dateRange', {
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
-    });
-    
-    // Fetch projects with the new view mode and date range
-    fetchProjects();
-  } catch (error) {
-    console.error('Error changing view mode:', error);
-  } finally {
-    isInternalNavigation.value = false;
-  }
+  if (viewMode.value === mode) return;
+  viewMode.value = mode;
 }
 
-// Metode zoom
+// Zoom methods
 function increaseZoom() {
   if (zoomLevel.value < maxZoomLevel.value) {
-    zoomLevel.value += 0.5;
+    zoomLevel.value += 0.25;
   }
 }
 
 function decreaseZoom() {
   if (zoomLevel.value > minZoomLevel.value) {
-    zoomLevel.value -= 0.5;
+    zoomLevel.value -= 0.25;
   }
 }
 
-// Interaksi proyek dan tugas
-function toggleProject(projectIndex) {
-  projects.value[projectIndex].expanded = !projects.value[projectIndex].expanded;
-  
-  // Check if all projects are now expanded
-  allExpanded.value = projects.value.every(project => project.expanded);
-}
-
-function toggleExpandAll() {
-  allExpanded.value = !allExpanded.value;
-  projects.value.forEach(project => {
-    project.expanded = allExpanded.value;
-  });
-}
-
-function handleProjectClick(project) {
-  // Add defensive validation
-  if (!project || !project.id) {
-    console.warn('Attempted to view invalid project');
-    return;
-  }
-  
-  // Emit event to parent component
-  emit('view-project-detail', project);
+// Task interaction
+function selectTask(task) {
+  emit('view-task-detail', task);
 }
 
 function handleTaskClick(task) {
-  if (!task || !task.id) {
-    console.warn('Attempted to view invalid task');
-    return;
-  }
-  
-  // Tampilkan modal tanpa navigasi halaman
-  selectedTaskId.value = task.id;
-  showTaskModal.value = true;
+  emit('view-task-detail', task);
 }
 
-function closeTaskModal() {
-  showTaskModal.value = false;
-  selectedTaskId.value = null;
+// Sync header scroll with content
+function syncHeaderScroll(e) {
+  const scrollLeft = e.target.scrollLeft;
+  if (timelineHeader.value) {
+    timelineHeader.value.scrollLeft = scrollLeft;
+  }
 }
 
-function handleEditTask(task) {
-  // Close modal
-  closeTaskModal();
+// Helper methods
+function getTaskTooltip(task) {
+  let tooltip = `Task: ${task.name}\n`;
   
-  // Emit edit event to parent component
-  emit('edit-task', task);
-}
-
-// Helper methods untuk tooltips dan format
-function getProjectTooltip(project) {
-  if (!project) return '';
-  
-  let tooltip = `Proyek: ${project.name || 'Proyek Tanpa Nama'}\n`;
-  
-  try {
-    if (project.startDate) {
-      tooltip += `Mulai: ${format(parseISO(project.startDate), 'd MMMM yyyy')}\n`;
-    }
-  } catch (e) {
-    tooltip += 'Mulai: Belum diatur\n';
+  if (task.project) {
+    tooltip += `Project: ${task.project.name}\n`;
   }
   
-  try {
-    if (project.endDate) {
-      tooltip += `Selesai: ${format(parseISO(project.endDate), 'd MMMM yyyy')}\n`;
-    }
-  } catch (e) {
-    tooltip += 'Selesai: Belum diatur\n';
+  if (task.startDate) {
+    tooltip += `Start: ${format(parseISO(task.startDate), 'MMM d, yyyy')}\n`;
   }
   
-  tooltip += `Progres: ${project.progress || 0}%\n`;
-  tooltip += `Status: ${formatState(project.state)}`;
-  
-  return tooltip;
-}
-
-function getTaskTooltip(task, project) {
-  if (!task) return '';
-  
-  let tooltip = `Tugas: ${task.name || 'Tugas Tanpa Nama'}\n`;
-  
-  if (project) {
-    tooltip += `Proyek: ${project.name || 'Proyek Tanpa Nama'}\n`;
+  if (task.endDate) {
+    tooltip += `Due: ${format(parseISO(task.endDate), 'MMM d, yyyy')}\n`;
   }
   
-  try {
-    if (task.startDate) {
-      tooltip += `Mulai: ${format(parseISO(task.startDate), 'd MMMM yyyy')}\n`;
-    }
-  } catch (e) {
-    tooltip += 'Mulai: Belum diatur\n';
-  }
-  
-  try {
-    if (task.endDate) {
-      tooltip += `Tenggat: ${format(parseISO(task.endDate), 'd MMMM yyyy')}\n`;
-    }
-  } catch (e) {
-    tooltip += 'Tenggat: Belum diatur\n';
-  }
-  
-  tooltip += `Progres: ${task.progress || 0}%\n`;
-  tooltip += `Status: ${formatState(task.state)}`;
+  tooltip += `Progress: ${task.progress || 0}%\n`;
+  tooltip += `Status: ${formatState(task.state)}\n`;
+  tooltip += `Priority: ${formatPriority(task.priority)}`;
   
   if (task.assigned_to && task.assigned_to.length > 0) {
-    tooltip += `\nDitugaskan kepada: ${task.assigned_to.map(u => u.name).join(', ')}`;
+    tooltip += `\nAssigned to: ${task.assigned_to.map(u => u.name).join(', ')}`;
   }
   
   return tooltip;
 }
 
 function formatState(state) {
-  // Convert snake_case to Title Case in Indonesian
   const stateMap = {
     'draft': 'Draft',
-    'planning': 'Perencanaan',
-    'in_progress': 'Sedang Dikerjakan',
-    'on_hold': 'Ditahan',
-    'review': 'Dalam Review',
-    'completed': 'Selesai',
-    'done': 'Selesai',
-    'cancelled': 'Dibatalkan'
+    'planned': 'Planned',
+    'in_progress': 'In Progress',
+    'review': 'In Review',
+    'done': 'Completed',
+    'cancelled': 'Cancelled'
   };
-  
-  return stateMap[state] || state
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return stateMap[state] || state;
 }
 
-// Mendapatkan inisial nama untuk avatar
+function formatPriority(priority) {
+  const priorityMap = {
+    '0': 'Low',
+    '1': 'Medium', 
+    '2': 'High',
+    '3': 'Critical'
+  };
+  return priorityMap[priority] || 'Medium';
+}
+
 function getInitials(name) {
   if (!name) return '?';
   return name
@@ -1178,68 +720,44 @@ function getInitials(name) {
     .toUpperCase();
 }
 
-// Mendapatkan label pengguna tambahan saat ada terlalu banyak untuk ditampilkan
 function getRemainingUsersTitle(users, shown) {
   if (!users || users.length <= shown) return '';
   return users.slice(shown).map(u => u.name).join(', ');
 }
 
-// Format tanggal untuk tampilan
-function formatDate(dateStr) {
-  try {
-    if (!dateStr) return '';
-    const date = parseISO(dateStr);
-    return format(date, 'd MMMM yyyy');
-  } catch (e) {
-    console.error('Error formatting date:', e);
-    return dateStr || '';
-  }
-}
-
-// Format tanggal singkat untuk badges
-function formatDateShort(dateStr) {
-  if (!dateStr) return '';
-  try {
-    const date = parseISO(dateStr);
-    return format(date, 'd/M');
-  } catch (e) {
-    return dateStr;
-  }
-}
-
-// Helper methods untuk kelas CSS dan gaya visual
-function getStatusIndicatorClass(state) {
+function getStatusClass(state) {
   const classes = {
     'draft': 'bg-gray-400',
-    'planning': 'bg-blue-400',
+    'planned': 'bg-blue-400',
     'in_progress': 'bg-green-400',
-    'on_hold': 'bg-yellow-400',
     'review': 'bg-purple-400',
-    'completed': 'bg-indigo-400',
     'done': 'bg-indigo-400',
-    'cancelled': 'bg-red-400',
-    'planned': 'bg-blue-400'
+    'cancelled': 'bg-red-400'
   };
-  
   return classes[state] || 'bg-gray-400';
 }
 
-function getProjectStatusClass(state) {
-  // Return appropriate CSS classes for project bars based on state
+function getPriorityClass(priority) {
   const classes = {
-    'draft': 'bg-gray-100 border-gray-300 text-gray-800',
-    'planning': 'bg-blue-100 border-blue-300 text-blue-800',
-    'in_progress': 'bg-green-100 border-green-300 text-green-800',
-    'on_hold': 'bg-yellow-100 border-yellow-300 text-yellow-800',
-    'completed': 'bg-indigo-100 border-indigo-300 text-indigo-800',
-    'cancelled': 'bg-red-100 border-red-300 text-red-800'
+    '0': 'text-blue-500',
+    '1': 'text-green-500',
+    '2': 'text-yellow-500',
+    '3': 'text-red-500'
   };
-  
-  return classes[state] || 'bg-gray-100 border-gray-300 text-gray-800';
+  return classes[priority] || 'text-green-500';
 }
 
-function getTaskStatusClass(state) {
-  // Return appropriate CSS classes for task bars based on state
+function getPriorityBadgeClass(priority) {
+  const classes = {
+    '0': 'bg-blue-100 text-blue-600',
+    '1': 'bg-green-100 text-green-600',
+    '2': 'bg-yellow-100 text-yellow-600',
+    '3': 'bg-red-100 text-red-600'
+  };
+  return classes[priority] || 'bg-green-100 text-green-600';
+}
+
+function getTaskBarClass(state) {
   const classes = {
     'draft': 'bg-gray-50 border-gray-200 text-gray-700',
     'planned': 'bg-blue-50 border-blue-200 text-blue-700',
@@ -1248,306 +766,677 @@ function getTaskStatusClass(state) {
     'done': 'bg-indigo-50 border-indigo-200 text-indigo-700',
     'cancelled': 'bg-red-50 border-red-200 text-red-700'
   };
-  
   return classes[state] || 'bg-gray-50 border-gray-200 text-gray-700';
 }
 
-function getProgressBarClass(state, progress) {
+function getProgressFillClass(state) {
   const baseClasses = {
     'draft': 'bg-gray-300',
-    'planning': 'bg-blue-300',
+    'planned': 'bg-blue-300',
     'in_progress': 'bg-green-300',
-    'on_hold': 'bg-yellow-300',
     'review': 'bg-purple-300',
-    'completed': 'bg-indigo-300',
     'done': 'bg-indigo-300',
-    'cancelled': 'bg-red-300',
-    'planned': 'bg-blue-300'
+    'cancelled': 'bg-red-300'
   };
-  
-  const baseClass = baseClasses[state] || 'bg-gray-300';
-  
-  // Add opacity based on progress
-  const opacity = progress >= 100 ? '' : (progress >= 50 ? ' bg-opacity-90' : ' bg-opacity-70');
-  
-  return `${baseClass}${opacity}`;
+  return baseClasses[state] || 'bg-gray-300';
 }
 
-function getProgressBarColorClass(progress) {
-  if (progress >= 100) {
-    return 'bg-green-500'; // Completed - Green
-  } else if (progress >= 75) {
-    return 'bg-green-400'; // Almost done - Light Green
-  } else if (progress >= 50) {
-    return 'bg-yellow-400'; // Half way - Yellow
-  } else if (progress >= 25) {
-    return 'bg-orange-400'; // Started - Orange
-  } else {
-    return 'bg-red-400'; // Just started - Red
-  }
+function getProgressColorClass(progress) {
+  if (progress >= 100) return 'bg-green-500';
+  if (progress >= 75) return 'bg-green-400';
+  if (progress >= 50) return 'bg-yellow-400';
+  if (progress >= 25) return 'bg-orange-400';
+  return 'bg-red-400';
 }
 
-// Lifecycle hooks dan watches
-
-// Saat komponen di-mount, inisialisasi dan ambil data
-onMounted(() => {
-  console.log('Gantt Chart component mounted');
-  console.log('Department ID from props:', props.departmentId);
-  
-  // Initialize startDate from props if available, but only once
-  if (props.startDateFilter) {
-    try {
-      const date = parseISO(props.startDateFilter);
-      if (!isNaN(date.getTime())) {
-        startDate.value = date;
+// Synchronize row heights
+function syncRowHeights() {
+  nextTick(() => {
+    displayedTasks.value.forEach(task => {
+      const leftRow = document.getElementById(`task-row-${task.id}`);
+      const rightRow = document.getElementById(`task-timeline-row-${task.id}`);
+      
+      if (leftRow && rightRow) {
+        const height = Math.max(leftRow.scrollHeight, rightRow.scrollHeight, 48);
+        leftRow.style.height = `${height}px`;
+        rightRow.style.height = `${height}px`;
       }
-    } catch (e) {
-      console.error('Error parsing initial startDateFilter:', e);
-    }
-  }
+    });
+  });
+}
+
+// Lifecycle
+onMounted(() => {
+  syncRowHeights();
   
-  // Initial data fetch (only once)
-  fetchProjects();
+  // Watch for task changes
+  watch(() => displayedTasks.value, () => {
+    syncRowHeights();
+  }, { deep: true });
 });
 
-// Watch perubahan props untuk merefresh data
-watch(
-  [() => props.startDateFilter, () => props.endDateFilter, () => props.departmentId],
-  ([newStart, newEnd, newDept], [oldStart, oldEnd, oldDept]) => {
-    console.log('Filter change detected:');
-    console.log('Department ID changed:', oldDept, '->', newDept);
-    console.log('Date range changed:', oldStart, oldEnd, '->', newStart, newEnd);
-    
-    // Only react to actual changes from parent, not self-triggered ones
-    if ((newStart !== oldStart || newEnd !== oldEnd || newDept !== oldDept) && !isInternalNavigation.value) {
-      // If date filters change, update starting point
-      if (newStart && newStart !== oldStart) {
-        try {
-          const date = parseISO(newStart);
-          if (!isNaN(date.getTime())) {
-            startDate.value = date;
-          }
-        } catch (e) {
-          console.error('Error parsing startDateFilter:', e);
-        }
-      }
-      
-      // Fetch projects with updated filters
-      fetchProjects();
-    }
-  }
-);
-
-// Reset internal navigation flag when loading finishes
-watch(loading, (newVal, oldVal) => {
-  if (oldVal === true && newVal === false) {
-    isInternalNavigation.value = false;
-  }
+onUnmounted(() => {
+  // Cleanup if needed
 });
 </script>
 
 <style scoped>
-.gantt-container {
-  height: calc(100vh - 250px);
-  min-height: 500px;
+/* Struktur dasar menggunakan styling yang sama dengan ProjectGanttChart */
+.gantt-wrapper {
+  position: relative;
+  height: calc(100vh - 180px); /* Dikurangi dari 250px ke 180px untuk lebih tinggi */
+  min-height: 600px; /* Ditingkatkan dari 500px ke 600px */
+  width: 100%;
+  min-width: 1000px;
+  overflow: hidden;
 }
 
+/* Headers - fixed di bagian atas */
+.gantt-headers {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  background-color: white;
+  height: 64px;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.project-header {
+  width: 320px;
+  min-width: 320px;
+  padding: 0 16px;
+  display: flex;
+  align-items: flex-end;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.project-header h3 {
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Medium screens */
+@media (min-width: 768px) {
+  .project-header {
+    width: 380px;
+    min-width: 380px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1024px) {
+  .project-header {
+    width: 420px;
+    min-width: 420px;
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1280px) {
+  .project-header {
+    width: 480px;
+    min-width: 480px;
+  }
+}
+
+.timeline-header {
+  flex: 1;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+.month-row {
+  display: flex;
+  height: 32px;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: white;
+}
+
+.month-cell {
+  height: 100%;
+  border-right: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+}
+
+.month-cell span {
+  color: #475569;
+  font-weight: 600;
+}
+
+.day-row {
+  display: flex;
+  height: 32px;
+  background-color: #f8fafc;
+}
+
+.day-cell {
+  height: 100%;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+}
+
+.day-cell span {
+  color: #64748b;
+}
+
+.day-cell.weekend {
+  background-color: #f1f5f9;
+}
+
+.day-cell.today {
+  background-color: #fef2f2;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Scrollable container */
+.gantt-scrollable-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background-color: white;
+}
+
+/* Table structure */
+.gantt-grid {
+  display: flex;
+  min-height: 100%;
+}
+
+/* Projects list (left panel) */
 .project-names {
-  overflow-y: auto;
+  width: 320px;
+  min-width: 320px;
+  background-color: white;
+  border-right: 1px solid #e2e8f0;
   position: sticky;
   left: 0;
-  z-index: 20;
-  border-right: 1px solid #e5e7eb;
-  box-shadow: 4px 0 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  flex-shrink: 0;
 }
 
+/* Medium screens */
+@media (min-width: 768px) {
+  .project-names {
+    width: 380px;
+    min-width: 380px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1024px) {
+  .project-names {
+    width: 420px;
+    min-width: 420px;
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1280px) {
+  .project-names {
+    width: 480px;
+    min-width: 480px;
+  }
+}
+
+/* Timeline chart */
 .gantt-timeline {
-  overflow: auto;
+  flex: 1;
+  background-color: white;
 }
 
-.project-bar-container:nth-child(odd) .project-timeline-row {
-  background-color: #f9fafb;
-}
-
-.project-bar-container:nth-child(odd) .task-timeline-row {
-  background-color: #f3f4f6;
-}
-
-.timeline-content {
+/* Row styling */
+.task-row {
+  min-height: 48px;
+  height: auto;
   position: relative;
-}
-
-/* Transisi smooth saat hover dan expand/collapse */
-.project-row, .task-row {
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: stretch;
+  background-color: white;
+  cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
-.project-timeline-row, .task-timeline-row {
-  transition: background-color 0.15s ease;
+.task-row:hover {
+  background-color: #f8fafc;
 }
 
-/* Gaya scrollbar untuk UX yang lebih baik */
-.gantt-container::-webkit-scrollbar {
+.task-row-content {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-timeline-row {
+  min-height: 48px;
+  height: auto;
+  position: relative;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: stretch;
+}
+
+.empty-tasks-row {
+  background-color: #fafbfc;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.empty-tasks-message {
+  font-style: italic;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+/* Content elements */
+.priority-indicator {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.status-indicator {
   width: 8px;
   height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.gantt-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
+/* Text containers */
+.task-name-container {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.gantt-container::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+.task-name {
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
+  font-size: 0.875rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.project-name {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Responsive text handling */
+@media (max-width: 767px) {
+  .task-name,
+  .project-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (min-width: 768px) {
+  .task-name,
+  .project-name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 2.8em;
+  }
+}
+
+@media (min-width: 1024px) {
+  .task-name,
+  .project-name {
+    -webkit-line-clamp: 3;
+    max-height: 4.2em;
+  }
+}
+
+/* Assigned users list */
+.assigned-users-list {
+  display: flex;
+  gap: -4px;
+  margin-right: 8px;
+}
+
+.user-avatar {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  border: 1px solid white;
+  margin-left: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #475569;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.more-users {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  border: 1px solid white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress container */
+.progress-container {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  text-align: center;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Timeline elements */
+.grid-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.grid-cell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid #f1f5f9;
+}
+
+.grid-cell.weekend {
+  background-color: #f8fafc;
+}
+
+.grid-cell.today {
+  background-color: #fef2f2;
+}
+
+/* Timeline bars */
+.timeline-bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 28px;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid;
+}
+
+.timeline-bar:hover {
+  transform: translateY(-50%) scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Task bar colors */
+.task-bar.draft { 
+  background-color: #fafbfc; 
+  border-color: #e2e8f0; 
+  color: #64748b; 
+}
+.task-bar.planned { 
+  background-color: #f0f9ff; 
+  border-color: #bae6fd; 
+  color: #0369a1; 
+}
+.task-bar.in_progress { 
+  background-color: #ecfdf5; 
+  border-color: #bbf7d0; 
+  color: #15803d; 
+}
+.task-bar.review { 
+  background-color: #faf5ff; 
+  border-color: #ddd6fe; 
+  color: #7c3aed; 
+}
+.task-bar.done { 
+  background-color: #eef2ff; 
+  border-color: #c7d2fe; 
+  color: #4338ca; 
+}
+.task-bar.cancelled { 
+  background-color: #fef2f2; 
+  border-color: #fecaca; 
+  color: #dc2626; 
+}
+
+/* Progress fill */
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  opacity: 0.6;
+  transition: width 0.3s ease;
+}
+
+/* Bar labels */
+.bar-label {
+  position: relative;
+  z-index: 10;
+  padding: 0 8px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.bar-label span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: inherit;
+}
+
+@media (max-width: 1023px) {
+  .bar-label span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bar-label span {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Priority badge on timeline bar */
+.priority-badge {
+  position: absolute;
+  top: -6px;
+  left: 6px;
+  padding: 2px 4px;
   border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.gantt-container::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+/* Assigned users on timeline bar */
+.assigned-users {
+  position: absolute;
+  bottom: -6px;
+  right: 6px;
+  display: flex;
+  gap: -4px;
 }
 
-/* Animasi untuk keadaan loading */
+.assigned-users .user-avatar {
+  height: 20px;
+  width: 20px;
+  font-size: 0.625rem;
+  border: 2px solid white;
+  margin-left: -4px;
+}
+
+.assigned-users .more-users {
+  height: 20px;
+  width: 20px;
+  font-size: 0.625rem;
+  border: 2px solid white;
+}
+
+/* Today indicator dengan z-index yang tepat */
+.today-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #dc2626;
+  z-index: 5; /* Lebih rendah dari timeline bar (10) dan header (20) */
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.5);
+}
+
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Efek pulsing untuk indikator hari ini */
 .today-indicator {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Tooltip kustom untuk detail tugas */
-.task-tooltip {
-  position: absolute;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  z-index: 30;
-  max-width: 250px;
-  font-size: 12px;
+/* Row alternating colors */
+.task-timeline-row:nth-child(odd) {
+  background-color: #fafbfc;
 }
 
-/* Badge profil untuk tugas */
-.avatar-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 24px;
-  width: 24px;
-  border-radius: 50%;
-  background-color: #e5edff;
-  color: #3b82f6;
-  font-size: 10px;
-  font-weight: 600;
-  border: 1.5px solid white;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+/* Hover effects */
+.task-row:hover {
+  background-color: #f1f5f9;
 }
 
-/* Badge tanggal untuk menampilkan due date */
-.date-badge {
-  display: flex;
-  align-items: center;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 2px 6px;
-  font-size: 10px;
-  color: #4b5563;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+/* Empty states */
+.empty-tasks-timeline-row {
+  min-height: 48px;
+  background-color: #fafbfc;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-/* Efek hover pada batang timeline */
-.project-timeline-bar, .task-timeline-bar {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+/* Scrollbar styling */
+.gantt-scrollable-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.project-timeline-bar:hover, .task-timeline-bar:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.gantt-scrollable-content::-webkit-scrollbar-track {
+  background-color: #f8fafc;
+  border-radius: 4px;
 }
 
-/* Status badges untuk tugas */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 6px;
-  border-radius: 9999px;
-  font-size: 10px;
-  font-weight: 500;
+.gantt-scrollable-content::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+  border: 1px solid #f8fafc;
 }
 
-.status-badge-draft {
-  background-color: #f3f4f6;
-  color: #4b5563;
+.gantt-scrollable-content::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
-.status-badge-planned {
-  background-color: #dbeafe;
-  color: #2563eb;
+.gantt-scrollable-content::-webkit-scrollbar-corner {
+  background-color: #f8fafc;
 }
 
-.status-badge-in-progress {
-  background-color: #d1fae5;
-  color: #059669;
+/* Loading and animations */
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-.status-badge-review {
-  background-color: #ede9fe;
-  color: #7c3aed;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.status-badge-done {
-  background-color: #c7d2fe;
-  color: #4f46e5;
-}
-
-.status-badge-cancelled {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-/* Animasi saat elemen dipilih */
-@keyframes highlight {
-  0% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .timeline-bar,
+  .progress-bar-fill,
+  .priority-indicator,
+  .today-indicator {
+    transition: none;
+    animation: none;
   }
 }
 
-.highlight-animation {
-  animation: highlight 1s ease-in-out;
-}
-
-/* Responsive styling for different screen sizes */
-@media (max-width: 768px) {
-  .gantt-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .project-names {
-    position: relative;
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #e5e7eb;
-  }
-  
-  .gantt-timeline {
-    overflow-x: auto;
-  }
+/* Focus states */
+.task-row:focus,
+.timeline-bar:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 </style>
