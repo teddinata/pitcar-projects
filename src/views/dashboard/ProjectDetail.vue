@@ -113,10 +113,9 @@
             <!-- Create Task Button -->
             <button
               @click="showCreateTaskModal = true"
-              class="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-rose-600 to-violet-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+              class="group relative inline-flex items-center px-6 py-3 bg-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:bg-rose-700 transition-all duration-200 font-medium"
             >
-              <div class="absolute inset-0 bg-gradient-to-r from-rose-600 to-violet-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity"></div>
-              <div class="relative flex items-center">
+              <div class="flex items-center">
                 <Plus class="w-4 h-4 mr-2" />
                 New Task
               </div>
