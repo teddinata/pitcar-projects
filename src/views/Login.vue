@@ -21,6 +21,7 @@
               >
                 <option value="" disabled>Select Branch</option>
                 <option value="Pitcar1">Pitcar Service</option>
+                <option value="pitcar_otokits_cilacap">Pitcar Service Cilacap</option>
                 <option value="pitcar.bodyrepair">Pitcar Body Repair</option>
                 <option value="db_test">Pitcar DB Test</option>
               </select>

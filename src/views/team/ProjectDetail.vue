@@ -105,971 +105,134 @@
       </div>
 
       <!-- Desktop layout with 3 columns -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Left Column (Overview) - Only visible in desktop or when overview tab is active -->
-        <!-- Left Column (Overview) Content -->
-        <div v-if="activeTab === 'overview' || !isMobile" class="space-y-6">
-          <!-- Project Overview Card -->
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="border-b border-gray-100 px-5 py-4">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <FileText class="w-5 h-5 mr-2 text-indigo-500" />
-                Project Overview
-              </h2>
+      <!-- Desktop layout with 2 columns -->
+      <!-- Desktop layout with better proportions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Left Column (Project + Tabs) - Desktop: 2/3 width -->
+  <div class="lg:col-span-2 space-y-4">
+    <!-- Project Overview - More compact -->
+    <div v-if="activeTab === 'overview' || !isMobile" class="space-y-4">
+      <!-- Project Overview Card - Compact -->
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 px-4 py-3">
+          <h2 class="text-base font-medium text-gray-800 flex items-center">
+            <FileText class="w-4 h-4 mr-2 text-indigo-500" />
+            Project Overview
+          </h2>
+        </div>
+        
+        <div class="p-4 space-y-4">
+          <!-- Description - Compact -->
+          <div>
+            <h3 class="text-xs font-medium text-gray-600 mb-2 flex items-center">
+              <AlignLeft class="w-3 h-3 mr-1 text-indigo-500" />
+              Description
+            </h3>
+            <div class="bg-gray-50 rounded-md p-3 border border-gray-100">
+              <div v-if="project?.description" class="prose prose-xs max-w-none text-gray-600 text-sm" v-html="project?.description"></div>
+              <div v-else class="text-xs text-gray-400 italic flex items-center justify-center py-2">
+                <Info class="w-3 h-3 mr-1" />
+                No description provided
+              </div>
             </div>
-            
-            <div class="p-5 space-y-5">
-              <!-- Description -->
-              <div>
-                <h3 class="text-sm font-medium text-gray-600 mb-2 flex items-center">
-                  <AlignLeft class="w-4 h-4 mr-1.5 text-indigo-500" />
-                  Description
-                </h3>
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                  <div v-if="project?.description" class="prose prose-sm max-w-none text-gray-600" v-html="project?.description"></div>
-                  <div v-else class="text-sm text-gray-400 italic flex items-center justify-center py-4">
-                    <Info class="w-4 h-4 mr-1" />
-                    No description provided
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Key Details -->
-              <!-- <div class="grid grid-cols-2 gap-4"> -->
-               <!-- Department (Multiple) -->
-               <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <h4 class="text-xs font-medium text-gray-500 uppercase mb-3 flex items-center justify-between">
-                  <div class="flex items-center">
-                    <Users class="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
-                    Departments
-                  </div>
-                  <span v-if="project?.departments && project.departments.length > 3" 
-                        class="text-xs text-indigo-600 cursor-pointer hover:text-indigo-800"
-                        @click="toggleShowAllDepts">
-                    {{ showAllDepts ? 'Show less' : `+${project.departments.length - 3} more` }}
-                  </span>
-                </h4>
-                <div>
-                  <!-- Update the department items to use department ID for color consistency -->
-                  <div v-if="project?.departments && project.departments.length > 0">
-                    <!-- Compact view for many departments -->
-                    <div v-if="project.departments.length > 3 && !showAllDepts" class="flex flex-col space-y-2">
-                      <!-- Show first 3 departments -->
-                      <div v-for="dept in project.departments.slice(0, 3)" 
-                          :key="dept.id" 
-                          class="flex items-center px-3 py-2 rounded-md border transition-colors"
-                          :class="`bg-${getDeptColor(dept.id)}-50 text-${getDeptColor(dept.id)}-700 border-${getDeptColor(dept.id)}-200 hover:bg-${getDeptColor(dept.id)}-100`">
-                        <component :is="getDepartmentIcon(dept.name)" class="w-4 h-4 mr-2" :class="`text-${getDeptColor(dept.id)}-600`" />
-                        <span class="text-sm font-medium">{{ dept.name }}</span>
-                      </div>
-                      <!-- Department count indicator -->
-                      <div class="flex justify-center items-center py-2 bg-white rounded-md border border-dashed border-indigo-200 cursor-pointer hover:bg-indigo-50 transition-colors"
-                          @click="toggleShowAllDepts">
-                        <span class="text-xs font-medium text-indigo-600">
-                          +{{ project.departments.length - 3 }} more departments
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <!-- Expanded view with all departments in a grid -->
-                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div v-for="dept in project.departments" 
-                          :key="dept.id" 
-                          class="flex items-center px-3 py-2 rounded-md border transition-colors"
-                          :class="`bg-${getDeptColor(dept.id)}-50 text-${getDeptColor(dept.id)}-700 border-${getDeptColor(dept.id)}-200 hover:bg-${getDeptColor(dept.id)}-100`">
-                        <component :is="getDepartmentIcon(dept.name)" class="w-4 h-4 mr-2" :class="`text-${getDeptColor(dept.id)}-600`" />
-                        <span class="text-sm font-medium truncate">{{ dept.name }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            <!-- </div> -->
-              
-              <!-- Project Type -->
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <h4 class="text-xs font-medium text-gray-500 uppercase mb-2 flex items-center">
-                  <Hash class="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
-                  Project Type
-                </h4>
+          </div>
+          
+          <!-- Key Details Grid - More efficient space usage -->
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-3">
+            <!-- Departments - Compact -->
+            <div class="bg-gray-50 rounded-md p-3 border border-gray-100">
+              <h4 class="text-xs font-medium text-gray-500 uppercase mb-2 flex items-center justify-between">
                 <div class="flex items-center">
-                  <span 
-                    v-if="project?.project_type" 
-                    class="px-3 py-1.5 text-sm font-medium rounded-md uppercase flex items-center"
-                    :class="{
-                      'bg-gray-100 text-gray-700': project.project_type === 'general' || project.project_type === 'umum',
-                      'bg-blue-50 text-blue-700': project.project_type === 'creation' || project.project_type === 'pembuatan',
-                      'bg-rose-50 text-rose-700': project.project_type === 'development' || project.project_type === 'pengembangan',
-                      'bg-green-50 text-green-700': project.project_type === 'training' || project.project_type === 'pelatihan',
-                      'bg-amber-50 text-amber-700': project.project_type === 'weekly' || project.project_type === 'mingguan',
-                      'bg-purple-50 text-purple-700': project.project_type === 'monthly' || project.project_type === 'bulanan',
-                      'bg-gray-100 text-gray-700': !['general', 'umum', 'creation', 'pembuatan', 'development', 'pengembangan', 'training', 'pelatihan', 'weekly', 'mingguan', 'monthly', 'bulanan'].includes(project.project_type)
-                    }"
-                  >
-                    {{ project.project_type }}
-                  </span>
-                  <span v-else class="text-sm text-gray-500">N/A</span>
+                  <Users class="w-3 h-3 mr-1 text-indigo-500" />
+                  Departments
                 </div>
-              </div>
-              
-              <!-- Project Status -->
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Project Status</h4>
-                <div class="flex flex-wrap justify-between items-center gap-4">
-                  <!-- Status Indicator -->
-                  <div class="flex items-center">
-                    <div 
-                      class="w-2.5 h-2.5 rounded-full mr-2"
-                      :class="{
-                        'bg-amber-500': project?.state === 'in_progress',
-                        'bg-emerald-500': project?.state === 'completed',
-                        'bg-gray-400': project?.state === 'draft',
-                        'bg-rose-500': project?.state === 'planning',
-                        'bg-orange-500': project?.state === 'on_hold',
-                        'bg-rose-500': project?.state === 'cancelled'
-                      }"
-                    ></div>
-                    <span class="text-sm font-medium text-gray-700">{{ formatState(project?.state) }}</span>
-                  </div>
-                  
-                  <!-- Priority Badge -->
-                  <div 
-                    class="px-2.5 py-1 rounded-md text-xs font-medium"
-                    :class="{
-                      'bg-slate-50 text-slate-700 border border-slate-200': project?.priority === '0',
-                      'bg-emerald-50 text-emerald-700 border border-emerald-200': project?.priority === '1',
-                      'bg-amber-50 text-amber-700 border border-amber-200': project?.priority === '2',
-                      'bg-rose-50 text-rose-700 border border-rose-200': project?.priority === '3'
-                    }"
-                  >
-                    <div class="flex items-center">
-                      <Flag class="w-3 h-3 mr-1" />
-                      {{ formatProjectPriority(project?.priority) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Project Progress Card -->
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="border-b border-gray-100 px-5 py-4">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <BarChart2 class="w-5 h-5 mr-2 text-indigo-500" />
-                Progress Overview
-              </h2>
-            </div>
-            
-            <div class="p-5 space-y-4">
-              <!-- Overall Progress -->
+                <span v-if="project?.departments && project.departments.length > 2" 
+                      class="text-xs text-indigo-600 cursor-pointer hover:text-indigo-800"
+                      @click="toggleShowAllDepts">
+                  {{ showAllDepts ? 'Less' : `+${project.departments.length - 2}` }}
+                </span>
+              </h4>
               <div>
-                <div class="flex justify-between mb-2">
-                  <span class="text-sm text-gray-600">Overall Progress</span>
-                  <span class="text-sm font-medium text-gray-800">{{ project?.progress }}%</span>
+                <div v-if="project?.departments && project.departments.length > 0">
+                  <!-- Compact department view -->
+                  <div v-if="project.departments.length > 2 && !showAllDepts" class="space-y-1">
+                    <div v-for="dept in project.departments.slice(0, 2)" 
+                        :key="dept.id" 
+                        class="flex items-center px-2 py-1 rounded text-xs"
+                        :class="`bg-${getDeptColor(dept.id)}-50 text-${getDeptColor(dept.id)}-700`">
+                      <component :is="getDepartmentIcon(dept.name)" class="w-3 h-3 mr-1" />
+                      <span class="font-medium truncate">{{ dept.name }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- All departments -->
+                  <div v-else class="space-y-1">
+                    <div v-for="dept in project.departments" 
+                        :key="dept.id" 
+                        class="flex items-center px-2 py-1 rounded text-xs"
+                        :class="`bg-${getDeptColor(dept.id)}-50 text-${getDeptColor(dept.id)}-700`">
+                      <component :is="getDepartmentIcon(dept.name)" class="w-3 h-3 mr-1" />
+                      <span class="font-medium truncate">{{ dept.name }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-100 rounded-full h-2">
-                  <div
-                    class="h-2 rounded-full bg-rose-500"
-                    :style="{ width: `${project?.progress}%` }"
+              </div>
+            </div>
+            
+            <!-- Project Type - Compact -->
+            <div class="bg-gray-50 rounded-md p-3 border border-gray-100">
+              <h4 class="text-xs font-medium text-gray-500 uppercase mb-2 flex items-center">
+                <Hash class="w-3 h-3 mr-1 text-indigo-500" />
+                Type
+              </h4>
+              <span 
+                v-if="project?.project_type" 
+                class="inline-block px-2 py-1 text-xs font-medium rounded uppercase"
+                :class="{
+                  'bg-gray-100 text-gray-700': project.project_type === 'general' || project.project_type === 'umum',
+                  'bg-blue-50 text-blue-700': project.project_type === 'creation' || project.project_type === 'pembuatan',
+                  'bg-rose-50 text-rose-700': project.project_type === 'development' || project.project_type === 'pengembangan',
+                  'bg-green-50 text-green-700': project.project_type === 'training' || project.project_type === 'pelatihan',
+                  'bg-amber-50 text-amber-700': project.project_type === 'weekly' || project.project_type === 'mingguan',
+                  'bg-purple-50 text-purple-700': project.project_type === 'monthly' || project.project_type === 'bulanan'
+                }"
+              >
+                {{ project.project_type }}
+              </span>
+              <span v-else class="text-xs text-gray-500">N/A</span>
+            </div>
+            
+            <!-- Project Status - Compact -->
+            <div class="bg-gray-50 rounded-md p-3 border border-gray-100">
+              <h4 class="text-xs font-medium text-gray-500 uppercase mb-2">Status</h4>
+              <div class="space-y-2">
+                <!-- Status Indicator -->
+                <div class="flex items-center">
+                  <div 
+                    class="w-2 h-2 rounded-full mr-2"
+                    :class="{
+                      'bg-amber-500': project?.state === 'in_progress',
+                      'bg-emerald-500': project?.state === 'completed',
+                      'bg-gray-400': project?.state === 'draft',
+                      'bg-rose-500': project?.state === 'planning',
+                      'bg-orange-500': project?.state === 'on_hold'
+                    }"
                   ></div>
-                </div>
-              </div>
-
-              <!-- Completion Stats -->
-              <div class="grid grid-cols-2 gap-4">
-                <div class="bg-gray-50 rounded-lg p-3">
-                  <div class="flex items-center space-x-2 text-gray-600 mb-1.5">
-                    <CheckSquare class="w-4 h-4 text-indigo-500" />
-                    <span class="text-xs font-medium">Tasks Completed</span>
-                  </div>
-                  <div class="text-sm font-medium text-gray-800">
-                    {{ completedTasks }}/{{ totalTasks }}
-                  </div>
+                  <span class="text-xs font-medium text-gray-700">{{ formatState(project?.state) }}</span>
                 </div>
                 
-                <div class="bg-gray-50 rounded-lg p-3">
-                  <div class="flex items-center space-x-2 text-gray-600 mb-1.5">
-                    <Clock class="w-4 h-4 text-indigo-500" />
-                    <span class="text-xs font-medium">Time Tracked</span>
-                  </div>
-                  <div class="text-sm font-medium text-gray-800">
-                    {{ project?.actual_hours || 0 }}/{{ project?.planned_hours || 0 }} hours
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Project Files Section - Visible on files tab or desktop -->
-          <div v-if="activeTab === 'files' || !isMobile" class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <Paperclip class="w-5 h-5 mr-2 text-indigo-500" />
-                Project Files
-              </h2>
-              <button
-                @click="handleFileUpload"
-                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-              >
-                <UploadCloud class="w-4 h-4 mr-1.5" />
-                Upload
-              </button>
-              <input
-                ref="fileInputRef"
-                type="file"
-                @change="onFileChange"
-                class="hidden"
-              />
-            </div>
-
-            <div class="p-5">
-              <!-- Loading state -->
-              <div v-if="loadingAttachments" class="flex justify-center py-4">
-                <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
-              </div>
-
-              <!-- Empty state -->
-              <div v-else-if="!projectAttachments.length" class="text-center py-6">
-                <div class="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200">
-                  <UploadCloud class="mx-auto h-10 w-10 text-gray-300" />
-                  <h3 class="mt-2 text-sm font-medium text-gray-700">No files uploaded</h3>
-                  <p class="mt-1 text-sm text-gray-500">Upload files to this project</p>
-                  <div class="mt-4">
-                    <button
-                      @click="handleFileUpload"
-                      class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-                    >
-                      <UploadCloud class="w-4 h-4 mr-1.5" />
-                      Upload File
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Attachment List -->
-              <div v-else class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                <div
-                  v-for="file in projectAttachments" 
-                  :key="file.id"
-                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+                <!-- Priority Badge -->
+                <div 
+                  class="inline-flex items-center px-2 py-1 rounded text-xs font-medium"
+                  :class="{
+                    'bg-slate-50 text-slate-700': project?.priority === '0',
+                    'bg-emerald-50 text-emerald-700': project?.priority === '1',
+                    'bg-amber-50 text-amber-700': project?.priority === '2',
+                    'bg-rose-50 text-rose-700': project?.priority === '3'
+                  }"
                 >
-                  <!-- File icon and details -->
-                  <div class="flex items-center overflow-hidden">
-                    <!-- Icon based on file type -->
-                    <div class="flex-shrink-0 mr-3 p-2 rounded-lg" :class="getFileIconClass(file.mimetype)">
-                      <FileText v-if="!file.is_image" class="h-5 w-5" :class="getFileIconColor(file.mimetype)" />
-                      <Image v-else class="h-5 w-5 text-blue-500" />
-                    </div>
-                    
-                    <!-- File details -->
-                    <div class="min-w-0">
-                      <div class="text-sm font-medium text-gray-700 truncate max-w-[200px]">{{ file.name }}</div>
-                      <div class="text-xs text-gray-500 flex">
-                        <span>{{ formatFileSize(file.size) }}</span>
-                        <span class="mx-1">•</span>
-                        <span>{{ formatTimestamp(file.create_date) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Action buttons -->
-                  <div class="flex shrink-0 space-x-1">
-                    <!-- Preview button - show only for files that can be previewed -->
-                    <button
-                      v-if="canPreviewFile(file)"
-                      @click="openFilePreview(file)"
-                      class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                      title="Preview"
-                    >
-                      <Eye class="h-4 w-4" />
-                    </button>
-                    
-                    <button
-                      @click="downloadFile(file)"
-                      class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                      title="Download"
-                    >
-                      <Download class="h-4 w-4" />
-                    </button>
-                    
-                    <button
-                      @click="confirmDeleteFile(file)"
-                      class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                      title="Delete"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Daily Activities Section - Visible on activities tab or desktop -->
-          <div v-if="activeTab === 'activities' || !isMobile" class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <ClipboardList class="w-5 h-5 mr-2 text-indigo-500" />
-                Daily Activities
-              </h2>
-              <button
-                @click="showCreateBAUModal = true"
-                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-              >
-                <Plus class="w-4 h-4 mr-1.5" />
-                Add Activity
-              </button>
-            </div>
-            
-            <div class="p-5">
-              <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                <div
-                  v-for="activity in project?.bau_activities"
-                  :key="activity.id"
-                  class="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                >
-                  <div class="flex justify-between">
-                    <div class="font-medium text-sm text-gray-700">{{ activity.name }}</div>
-                    <div 
-                      class="text-xs font-medium px-2 py-0.5 rounded-full"
-                      :class="{
-                        'bg-emerald-50 text-emerald-700 border border-emerald-100': activity.state === 'done',
-                        'bg-gray-50 text-gray-700 border border-gray-100': activity.state === 'planned',
-                        'bg-rose-50 text-rose-700 border border-rose-100': activity.state === 'not_done'
-                      }"
-                    >
-                      {{ formatBAUState(activity.state) }}
-                    </div>
-                  </div>
-                  <div class="text-xs text-gray-500 mt-1 flex justify-between">
-                    <span>{{ formatDate(activity.date) }}</span>
-                    <span>{{ activity.hours_spent }} hours</span>
-                  </div>
-                </div>
-                
-                <div v-if="!project?.bau_activities || project.bau_activities.length === 0" class="text-center py-6">
-                  <ClipboardList class="mx-auto h-8 w-8 text-gray-300" />
-                  <p class="mt-1 text-sm text-gray-500">No daily activities recorded</p>
-                  <button
-                    @click="showCreateBAUModal = true"
-                    class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100transition"
-                  >
-                    <Plus class="w-3 h-3 mr-1.5" />
-                    Add Activity
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Center Column (Tasks) - Only visible in desktop or when tasks tab is active -->
-        <!-- Center Column (Tasks) Content -->
-        <div v-if="activeTab === 'tasks' || !isMobile" class="space-y-6">
-          <!-- Tasks Card -->
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <CheckSquare class="w-5 h-5 mr-2 text-indigo-500" />
-                Project Tasks
-              </h2>
-
-              <button
-                @click="showCreateTaskModal = true"
-                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-              >
-                <Plus class="w-4 h-4 mr-1.5" />
-                Add Task
-              </button>
-            </div>
-            
-            <div class="p-5">
-              <!-- Task actions toolbar - Combines filters, archive options and selection tools -->
-              <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-4">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <!-- Left side: Task filters -->
-                  <div class="flex items-center gap-1 flex-wrap">
-                    <span class="text-xs font-medium text-gray-500 mr-1">Filter:</span>
-                    <div class="flex bg-white rounded-md border border-gray-200 p-0.5">
-                      <button 
-                        @click="taskFilter = 'all'" 
-                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
-                        :class="taskFilter === 'all' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
-                      >
-                        All
-                      </button>
-                      <button 
-                        @click="taskFilter = 'in_progress'" 
-                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
-                        :class="taskFilter === 'in_progress' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
-                      >
-                        In Progress
-                      </button>
-                      <button 
-                        @click="taskFilter = 'planned'" 
-                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
-                        :class="taskFilter === 'planned' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
-                      >
-                        Planned
-                      </button>
-                      <button 
-                        @click="taskFilter = 'done'" 
-                        class="px-2 py-1 rounded text-xs font-medium transition-colors"
-                        :class="taskFilter === 'done' ? 'bg-emerald-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
-                      >
-                        Completed
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <!-- Right side: Archive options and Selection tools -->
-                  <div class="flex items-center gap-4">
-                    <!-- Archive options -->
-                    <div class="flex items-center gap-1">
-                      <input 
-                        id="show-archived-tasks" 
-                        type="checkbox" 
-                        v-model="showArchivedTasks"
-                        @change="fetchTasks"
-                        class="h-4 w-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500" 
-                      />
-                      <label for="show-archived-tasks" class="text-xs text-gray-700">
-                        Show archived
-                      </label>
-                    </div>
-                    
-                    <!-- Selection tools - Only show when tasks present -->
-                    <div v-if="filteredTasks.length > 0" class="flex items-center gap-1">
-                      <button
-                        @click="toggleAllTasks"
-                        class="text-xs text-gray-700 hover:text-rose-600 transition-colors flex items-center"
-                      >
-                        <span v-if="isAllTasksSelected">Deselect all</span>
-                        <span v-else>Select all</span>
-                      </button>
-                    </div>
-                    
-                    <!-- Sort dropdown -->
-                    <select 
-                      id="task-sort" 
-                      v-model="taskSort" 
-                      class="text-xs bg-white border border-gray-200 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500"
-                    >
-                      <option disabled value="">Sort by</option>
-                      <option value="priority_desc">Priority (High to Low)</option>
-                      <option value="priority_asc">Priority (Low to High)</option>
-                      <option value="name_asc">Name (A-Z)</option>
-                      <option value="name_desc">Name (Z-A)</option>
-                      <option value="date_desc">Due Date (Newest)</option>
-                      <option value="date_asc">Due Date (Oldest)</option>
-                      <option value="progress_desc">Progress (High to Low)</option>
-                      <option value="progress_asc">Progress (Low to High)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Selected tasks actions bar -->
-              <div v-if="selectedTaskIds.length > 0" class="bg-rose-50 p-3 rounded-lg mb-3 flex items-center justify-between">
-                <div class="text-sm text-rose-700 font-medium">
-                  {{ selectedTaskIds.length }} task(s) selected
-                </div>
-                <div class="flex gap-2">
-                  <button
-                    @click="confirmMultiArchiveTasks(false)"
-                    class="px-3 py-1.5 text-xs font-medium bg-white text-rose-600 border border-rose-300 rounded-md hover:bg-rose-50 transition-colors"
-                  >
-                    <Archive class="w-3.5 h-3.5 mr-1.5 inline-block" />
-                    Archive Selected
-                  </button>
-                  <button
-                    @click="confirmMultiArchiveTasks(true)"
-                    class="px-3 py-1.5 text-xs font-medium bg-white text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors"
-                  >
-                    <RefreshCw class="w-3.5 h-3.5 mr-1.5 inline-block" />
-                    Unarchive Selected
-                  </button>
-                  <button
-                    @click="selectedTaskIds = []"
-                    class="px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-              
-              <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                <!-- Task Cards -->
-                <div
-                  v-for="task in filteredTasks"
-                  :key="task.id"
-                  class="border rounded-lg transition-all duration-200 overflow-hidden group relative"
-                  :class="[
-                    selectedTaskIds.includes(task.id) 
-                      ? 'border-rose-500 bg-rose-50/30' 
-                      : 'border-gray-200 hover:border-rose-300 hover:shadow-sm'
-                  ]"
-                >
-                  <!-- Task Header with selection controls that don't overlap content -->
-                  <div class="px-4 pt-4 pb-2 flex items-start justify-between gap-2">
-                    <!-- Checkbox moved to left side of content, not overlapping -->
-                    <div class="flex items-start gap-3">
-                      <!-- Checkbox container -->
-                      <div 
-                        class="mt-0.5 flex-shrink-0"
-                        @click.stop
-                      >
-                        <div 
-                          class="h-5 w-5 rounded border transition-colors flex items-center justify-center cursor-pointer"
-                          :class="[
-                            selectedTaskIds.includes(task.id) 
-                              ? 'bg-rose-600 border-rose-600 hover:bg-rose-700 hover:border-rose-700' 
-                              : 'bg-white border-gray-300 hover:border-rose-400'
-                          ]"
-                          @click="toggleTaskSelection(task.id)"
-                        >
-                          <Check 
-                            v-if="selectedTaskIds.includes(task.id)" 
-                            class="h-3.5 w-3.5 text-white" 
-                          />
-                        </div>
-                      </div>
-                      
-                      <!-- Task Name and Basic Info -->
-                      <div class="min-w-0 cursor-pointer" @click="showTaskDetail(task)">
-                        <!-- Judul tugas yang diperbarui dengan tampilan yang lebih responsif -->
-                        <h3 class="font-medium text-gray-800 line-clamp-2 group-hover:text-rose-600 transition break-words">
-                          {{ task.name }}
-                        </h3>
-                        <!-- Tambahkan tooltip untuk nama lengkap saat judul dipotong -->
-                        <div v-if="task.name.length > 50" class="absolute invisible group-hover:visible bg-gray-800 text-white text-xs rounded py-1 px-2 -mt-1 max-w-xs z-10 break-words">
-                          {{ task.name }}
-                        </div>
-                        <!-- Menampilkan indikator archived jika tugas di-archive -->
-                        <div v-if="task.active === false" class="inline-flex items-center text-xs text-gray-500 mt-1">
-                          <Archive class="w-3 h-3 mr-1" />
-                          <span>Diarsipkan</span>
-                        </div>
-                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                          <span v-if="task.type?.name" class="flex items-center">
-                            <Bookmark class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                            {{ task.type?.name }}
-                          </span>
-                          <span class="flex items-center">
-                            <Calendar class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                            {{ formatDate(task.dates?.planned_end) }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- Status Badge -->
-                    <div
-                      class="shrink-0 px-2 py-1 text-xs font-medium rounded-md border cursor-pointer"
-                      :class="{
-                        'bg-amber-50 text-amber-700 border-amber-200': task.state === 'in_progress',
-                        'bg-emerald-50 text-emerald-700 border-emerald-200': task.state === 'done',
-                        'bg-gray-50 text-gray-600 border-gray-200': task.state === 'draft',
-                        'bg-rose-50 text-rose-700 border-rose-200': task.state === 'planned',
-                        'bg-blue-50 text-blue-700 border-blue-200': task.state === 'review'
-                      }"
-                      @click="showTaskDetail(task)"
-                    >
-                      {{ formatState(task.state) }}
-                    </div>
-                  </div>
-                  
-                  <!-- Task Content -->
-                  <div class="px-4 py-3 border-t border-gray-100 cursor-pointer" @click="showTaskDetail(task)">
-                    <!-- Priority Badge and Assignees -->
-                    <div class="flex justify-between">
-                      <!-- Priority Badge -->
-                      <div
-                        class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border"
-                        :class="{
-                          'bg-blue-50 text-blue-700 border-blue-200': task.priority === '0',
-                          'bg-emerald-50 text-emerald-700 border-emerald-200': task.priority === '1',
-                          'bg-amber-50 text-amber-700 border-amber-200': task.priority === '2',
-                          'bg-rose-50 text-rose-700 border-rose-200': task.priority === '3'
-                        }"
-                      >
-                        <Flag class="w-3 h-3 mr-1" />
-                        {{ formatPriority(task.priority) }}
-                      </div>                     
-                      
-                      <!-- Assigned Users -->
-                      <div class="flex -space-x-2 overflow-hidden">
-                        <template v-if="task.assigned_to && task.assigned_to.length">
-                          <div 
-                            v-for="(person, index) in task.assigned_to.slice(0, 3)" 
-                            :key="person.id"
-                            class="inline-flex h-6 w-6 rounded-full ring-2 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
-                            :title="person.name"
-                          >
-                            {{ getInitials(person.name) }}
-                          </div>
-                          <div 
-                            v-if="task.assigned_to.length > 3" 
-                            class="inline-flex h-6 w-6 rounded-full ring-2 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
-                            :title="`${task.assigned_to.length - 3} more`"
-                          >
-                            +{{ task.assigned_to.length - 3 }}
-                          </div>
-                        </template>
-                        <div v-else class="text-xs text-gray-500 py-1">
-                          Not assigned
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- Task Progress -->
-                    <div class="mt-3">
-                      <div class="flex justify-between text-xs mb-1">
-                        <span class="text-gray-500">Progress</span>
-                        <span class="font-medium text-gray-700">{{ task.progress }}%</span>
-                      </div>
-                      <div class="w-full bg-gray-100 rounded-full h-1.5">
-                        <div
-                          class="h-1.5 rounded-full"
-                          :class="{
-                            'bg-rose-500': task.progress < 30,
-                            'bg-amber-500': task.progress >= 30 && task.progress < 70,
-                            'bg-emerald-500': task.progress >= 70
-                          }"
-                          :style="{ width: `${task.progress}%` }"
-                        ></div>
-                      </div>
-                    </div>
-                    
-                    <!-- View Details Indicator -->
-                    <div class="mt-2 text-xs text-center text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Click to view details
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Empty State for Tasks -->
-                <div v-if="!filteredTasks.length" class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                  <CheckSquare class="mx-auto h-10 w-10 text-gray-300" />
-                  <h3 class="mt-2 text-sm font-medium text-gray-700">No tasks found</h3>
-                  <p class="mt-1 text-sm text-gray-500">
-                    {{ project?.tasks && project.tasks.length ? 'No tasks match the current filter' : 'Get started by creating your first task' }}
-                  </p>
-                  <div class="mt-4">
-                    <button
-                      @click="showCreateTaskModal = true"
-                      class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
-                    >
-                      <Plus class="w-4 h-4 mr-1.5" />
-                      Add Task
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Meetings Card -->
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <CalendarClock class="w-5 h-5 mr-2 text-indigo-500" />
-                Meetings
-              </h2>
-              <button
-                @click="showCreateMeetingModal = true"
-                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-              >
-                <Plus class="w-4 h-4 mr-1.5" />
-                Schedule
-              </button>
-            </div>
-
-            <div class="p-5">
-              <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                <div
-                  v-for="meeting in project?.meetings"
-                  :key="meeting.id"
-                  class="border border-gray-200 rounded-lg hover:border-rose-300 hover:shadow-sm p-3 transition-all duration-200"
-                  @click="showMeetingDetail(meeting)"
-                >
-                  <div class="flex items-start justify-between gap-2">
-                    <!-- Meeting Title and Details -->
-                    <div class="min-w-0">
-                      <h3 class="font-medium text-gray-800">{{ meeting.name }}</h3>
-                      <div class="mt-1 text-xs text-gray-500">
-                        {{ formatDateTime(meeting.dates?.start) }} - {{ formatTime(meeting.dates?.end) }}
-                      </div>
-                      <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                        <div class="flex items-center">
-                          <User class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                          <span>{{ meeting.organizer?.name || 'No organizer' }}</span>
-                        </div>
-                        
-                        <div v-if="meeting.location" class="flex items-center">
-                          <MapPin class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                          <span>{{ meeting.location }}</span>
-                        </div>
-                        
-                        <div v-if="meeting.virtual_location" class="flex items-center">
-                          <Video class="w-3.5 h-3.5 mr-1 text-gray-400" />
-                          <span class="truncate max-w-[150px]">{{ meeting.virtual_location }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- Meeting Status & Actions -->
-                    <div class="flex flex-col items-end gap-2">
-                      <div
-                        class="shrink-0 px-2 py-1 text-xs font-medium rounded-full border"
-                        :class="{
-                          'bg-amber-50 text-amber-700 border-amber-200': meeting.state === 'in_progress',
-                          'bg-emerald-50 text-emerald-700 border-emerald-200': meeting.state === 'done',
-                          'bg-gray-50 text-gray-600 border-gray-200': meeting.state === 'planned',
-                          'bg-rose-50 text-rose-700 border-rose-200': meeting.state === 'cancelled'
-                        }"
-                      >
-                        {{ formatState(meeting.state) }}
-                      </div>
-                      
-                      <!-- Action buttons (shown on hover) -->
-                      <div class="flex opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
-                        <button
-                          @click.stop="editMeeting(meeting)"
-                          class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                          title="Edit"
-                        >
-                          <Edit class="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          @click.stop="confirmDeleteMeeting(meeting)"
-                          class="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition ml-1"
-                          title="Delete"
-                        >
-                          <Trash2 class="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Empty State for Meetings -->
-                <div v-if="!project?.meetings || project.meetings.length === 0" class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                  <CalendarIcon class="mx-auto h-8 w-8 text-gray-300" />
-                  <p class="mt-1 text-sm text-gray-500">No meetings scheduled</p>
-                  <button
-                    @click="showCreateMeetingModal = true"
-                    class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100transition"
-                  >
-                    <Plus class="w-3 h-3 mr-1.5" />
-                    Schedule Meeting
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column (Communication) - Only visible in desktop or when communication tab is active -->
-        <!-- Right Column (Communication) Content -->
-        <div v-if="activeTab === 'communication' || !isMobile" class="space-y-6">
-          <!-- Team Chat Card -->
-          <div class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-[800px]">
-            <div class="border-b border-gray-100 px-5 py-4">
-              <h2 class="text-lg font-medium text-gray-800 flex items-center">
-                <MessageSquare class="w-5 h-5 mr-2 text-indigo-500" />
-                Team Chat
-              </h2>
-            </div>
-            
-            <div class="flex-1 flex flex-col overflow-hidden">
-              <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                <div v-if="project?.group_id" class="space-y-4">
-                  <!-- Chat Messages -->
-                  <div v-for="message in groupMessages" :key="message.id" class="flex gap-3">
-                    <!-- Avatar -->
-                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center">
-                      <span class="text-sm font-medium text-rose-600">
-                        {{ getInitials(message.author?.name) }}
-                      </span>
-                    </div>
-                    
-                    <!-- Message Content -->
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-baseline flex-wrap gap-x-2">
-                        <span class="text-sm font-medium text-gray-800">{{ message.author?.name }}</span>
-                        <span class="text-xs text-gray-500">{{ formatDateTime(message.date) }}</span>
-                      </div>
-                      <!-- <div class="mt-1 text-sm text-gray-700 break-words" v-html="formatMessageContent(message.content)"></div> -->
-                      <!-- Replace the existing message content div with this -->
-                      <div class="mt-1 text-sm text-gray-700">
-                        <div v-if="message.content && message.content.length > 300" class="message-content">
-                          <div v-if="expandedMessages[message.id]">
-                            <div class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content)"></div>
-                            <button @click="toggleMessageExpand(message.id)" class="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1">
-                              Show less
-                            </button>
-                          </div>
-                          <div v-else>
-                            <div class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content.substring(0, 300) + '...')"></div>
-                            <button @click="toggleMessageExpand(message.id)" class="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1">
-                              Read more
-                            </button>
-                          </div>
-                        </div>
-                        <div v-else class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content)"></div>
-                      </div>
-                      <!-- Message Attachments -->
-                      <div v-if="message.attachments && message.attachments.length" class="mt-2 space-y-2">
-                        <div 
-                          v-for="attachment in message.attachments" 
-                          :key="attachment.id"
-                          class="flex items-center p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
-                        >
-                          <!-- File icon -->
-                          <div 
-                            class="flex-shrink-0 mr-2 p-1.5 rounded-lg"
-                            :class="getFileIconClass(attachment.mimetype)"
-                          >
-                            <FileText v-if="!attachment.is_image" class="h-4 w-4" :class="getFileIconColor(attachment.mimetype)" />
-                            <Image v-else class="h-4 w-4 text-blue-500" />
-                          </div>
-                          
-                          <!-- File details -->
-                          <div class="flex-1 min-w-0">
-                            <p class="text-xs font-medium text-gray-700 truncate">{{ attachment.name }}</p>
-                            <p class="text-xs text-gray-500">{{ formatFileSize(attachment.size) }}</p>
-                          </div>
-                          
-                          <!-- Action buttons -->
-                          <div class="flex space-x-1">
-                            <button
-                              v-if="canPreviewFile(attachment)"
-                              @click.stop="openFilePreview(attachment)"
-                              class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                              title="Preview"
-                            >
-                              <Eye class="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              @click.stop="downloadFile(attachment)"
-                              class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                              title="Download"
-                            >
-                              <Download class="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Loading Messages Indicator -->
-                  <div v-if="loadingMessages" class="flex justify-center my-4">
-                    <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
-                  </div>
-                  
-                  <!-- Empty State for Messages -->
-                  <div v-if="groupMessages.length === 0 && !loadingMessages" class="text-center py-12">
-                    <MessageSquare class="mx-auto h-10 w-10 text-gray-300" />
-                    <p class="mt-2 text-sm text-gray-500">No messages yet</p>
-                    <p class="text-xs text-gray-400">Send a message to start the conversation</p>
-                  </div>
-                </div>
-                
-                <!-- No Group Created State -->
-                <div v-else class="text-center py-16">
-                  <MessageSquare class="mx-auto h-12 w-12 text-gray-300" />
-                  <p class="mt-2 text-sm text-gray-700">No chat group available</p>
-                  <p class="mt-1 text-xs text-gray-500">A group needs to be created for this project first</p>
-                </div>
-              </div>
-              
-              <!-- Message Input -->
-              <!-- Message Input -->
-              <div v-if="project?.group_id" class="p-3 border-t bg-white">
-                <!-- File Preview Area (when file is selected) -->
-                <div v-if="chatAttachment" class="mb-2 p-2 bg-rose-50 rounded-lg flex items-center justify-between">
-                  <div class="flex items-center">
-                    <div 
-                      class="flex-shrink-0 mr-2 p-1.5 rounded-lg" 
-                      :class="getFileIconClass(chatAttachment.type)"
-                    >
-                      <FileText v-if="!chatAttachment.isImage" class="h-3.5 w-3.5" :class="getFileIconColor(chatAttachment.type)" />
-                      <Image v-else class="h-3.5 w-3.5 text-blue-500" />
-                    </div>
-                    <div class="text-xs font-medium text-gray-700 truncate max-w-xs">{{ chatAttachment.name }}</div>
-                  </div>
-                  <button 
-                    @click="removeChatAttachment" 
-                    class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                  >
-                    <X class="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                
-                <!-- Main Input Area with Improved Responsiveness -->
-                <div class="flex flex-col sm:flex-row gap-2">
-                  <!-- TeamMentionInput -->
-                  <div class="flex-grow">
-                    <TeamMentionInput 
-                      ref="mentionInputRef"
-                      v-model="newMessage" 
-                      :members="allProjectMembers"
-                      placeholder="Type a message... (use @ to mention)"
-                      @submit="sendMessage"
-                      class="w-full"
-                    />
-                  </div>
-                  
-                  <!-- Action Buttons - Move below on mobile, to the side on larger screens -->
-                  <div class="flex sm:flex-col justify-end gap-1 sm:ml-2">
-                    <!-- File Upload Button -->
-                    <button 
-                      @click="handleChatFileUpload" 
-                      class="p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
-                      title="Attach file"
-                    >
-                      <Paperclip class="h-5 w-5" />
-                    </button>
-                    
-                    <!-- Hidden File Input -->
-                    <input
-                      ref="chatFileInputRef"
-                      type="file"
-                      @change="onChatFileChange"
-                      class="hidden"
-                    />
-                    
-                    <!-- Emoji Button -->
-                    <div class="relative">
-                      <button 
-                        @click.stop="toggleEmojiPicker" 
-                        class="emoji-button p-2 rounded-full text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition"
-                        title="Add emoji"
-                      >
-                        <Smile class="h-5 w-5" />
-                      </button>
-                      
-                      <!-- Emoji Picker -->
-                      <div 
-                        v-if="showEmojiPicker" 
-                        class="emoji-picker absolute bottom-full right-0 mb-2 z-50 bg-white shadow-lg rounded-lg border border-gray-200"
-                        style="max-height: 350px; width: 300px;"
-                      >
-                        <EmojiPicker @select="addEmoji" />
-                      </div>
-                    </div>
-                    
-                    <!-- Send Button -->
-                    <button 
-                      @click="sendMessage" 
-                      class="p-2 rounded-full text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
-                      >
-                      <Send class="h-4 w-4" />
-                    </button>
-                  </div>
+                  <Flag class="w-3 h-3 mr-1" />
+                  {{ formatProjectPriority(project?.priority) }}
                 </div>
               </div>
             </div>
@@ -1077,6 +240,1526 @@
         </div>
       </div>
 
+      <!-- Progress Overview - Compact -->
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 px-4 py-3">
+          <h2 class="text-base font-medium text-gray-800 flex items-center">
+            <BarChart2 class="w-4 h-4 mr-2 text-indigo-500" />
+            Progress Overview
+          </h2>
+        </div>
+        
+        <div class="p-4 space-y-3">
+          <!-- Overall Progress -->
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-xs text-gray-600">Overall Progress</span>
+              <span class="text-sm font-medium text-gray-800">{{ project?.progress }}%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2">
+              <div
+                class="h-2 rounded-full bg-rose-500 transition-all duration-300"
+                :style="{ width: `${project?.progress}%` }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Completion Stats -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-gray-50 rounded-md p-2">
+              <div class="flex items-center space-x-1 text-gray-600 mb-1">
+                <CheckSquare class="w-3 h-3 text-indigo-500" />
+                <span class="text-xs font-medium">Tasks</span>
+              </div>
+              <div class="text-sm font-medium text-gray-800">
+                {{ completedTasks }}/{{ totalTasks }}
+              </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded-md p-2">
+              <div class="flex items-center space-x-1 text-gray-600 mb-1">
+                <Clock class="w-3 h-3 text-indigo-500" />
+                <span class="text-xs font-medium">Hours</span>
+              </div>
+              <div class="text-sm font-medium text-gray-800">
+                {{ project?.actual_hours || 0 }}/{{ project?.planned_hours || 0 }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Tabs Navigation - Compact -->
+    <div class="hidden lg:block">
+      <div class="border-b border-gray-200 bg-white rounded-t-lg shadow-sm">
+        <nav class="-mb-px flex space-x-6 px-4 py-3" aria-label="Tabs">
+          <button 
+            @click="activeDesktopTab = 'tasks'" 
+            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center"
+            :class="activeDesktopTab === 'tasks' 
+              ? 'border-rose-500 text-rose-600' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            <CheckSquare class="w-4 h-4 mr-1.5" />
+            Tasks
+          </button>
+          <button 
+            @click="activeDesktopTab = 'documents'" 
+            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center"
+            :class="activeDesktopTab === 'documents' 
+              ? 'border-rose-500 text-rose-600' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            <Paperclip class="w-4 h-4 mr-1.5" />
+            Documents
+          </button>
+          <button 
+            @click="activeDesktopTab = 'meetings'" 
+            class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center"
+            :class="activeDesktopTab === 'meetings' 
+              ? 'border-rose-500 text-rose-600' 
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          >
+            <CalendarClock class="w-4 h-4 mr-1.5" />
+            Meetings & Activities
+          </button>
+        </nav>
+      </div>
+
+      <!-- Desktop Tab Content - Compact -->
+      <div class="bg-white rounded-b-lg shadow-sm">
+        <!-- Tasks Tab Content -->
+        <div v-if="activeDesktopTab === 'tasks'" class="p-4">
+          <!-- Task actions toolbar - Compact -->
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <!-- Left side: Task filters -->
+              <div class="flex items-center gap-1 flex-wrap">
+                <span class="text-xs font-medium text-gray-500 mr-1">Filter:</span>
+                <div class="flex bg-white rounded border border-gray-200 p-0.5">
+                  <button 
+                    @click="taskFilter = 'all'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'all' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    All
+                  </button>
+                  <button 
+                    @click="taskFilter = 'in_progress'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'in_progress' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    Progress
+                  </button>
+                  <button 
+                    @click="taskFilter = 'planned'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'planned' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    Planned
+                  </button>
+                  <button 
+                    @click="taskFilter = 'done'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'done' ? 'bg-emerald-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Right side: Controls -->
+              <div class="flex items-center gap-2">
+                <!-- Archive toggle -->
+                <label class="flex items-center text-xs text-gray-700 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    v-model="showArchivedTasks"
+                    @change="fetchTasks"
+                    class="h-3 w-3 text-rose-600 border-gray-300 rounded focus:ring-rose-500 mr-1" 
+                  />
+                  Archived
+                </label>
+                
+                <!-- Sort -->
+                <select 
+                  v-model="taskSort" 
+                  class="text-xs bg-white border border-gray-200 rounded py-1 pl-2 pr-6 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                >
+                  <option value="priority_desc">Priority ↓</option>
+                  <option value="priority_asc">Priority ↑</option>
+                  <option value="name_asc">Name A-Z</option>
+                  <option value="date_desc">Due Date</option>
+                  <option value="progress_desc">Progress</option>
+                </select>
+                
+                <!-- Add Task -->
+                <button
+                  @click="showCreateTaskModal = true"
+                  class="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
+                >
+                  <Plus class="w-3 h-3 mr-1" />
+                  Add Task
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected tasks actions bar -->
+          <div v-if="selectedTaskIds.length > 0" class="bg-rose-50 p-2 rounded-lg mb-3 flex items-center justify-between">
+            <div class="text-sm text-rose-700 font-medium">
+              {{ selectedTaskIds.length }} task(s) selected
+            </div>
+            <div class="flex gap-1">
+              <button
+                @click="confirmMultiArchiveTasks(false)"
+                class="px-2 py-1 text-xs font-medium bg-white text-rose-600 border border-rose-300 rounded hover:bg-rose-50 transition-colors"
+              >
+                <Archive class="w-3 h-3 mr-1 inline-block" />
+                Archive
+              </button>
+              <button
+                @click="confirmMultiArchiveTasks(true)"
+                class="px-2 py-1 text-xs font-medium bg-white text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50 transition-colors"
+              >
+                <RefreshCw class="w-3 h-3 mr-1 inline-block" />
+                Unarchive
+              </button>
+              <button
+                @click="selectedTaskIds = []"
+                class="px-2 py-1 text-xs font-medium bg-white text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          
+          <!-- Task Cards - Compact -->
+          <div class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <div
+              v-for="task in filteredTasks"
+              :key="task.id"
+              class="border rounded-lg transition-all duration-200 overflow-hidden group relative"
+              :class="[
+                selectedTaskIds.includes(task.id) 
+                  ? 'border-rose-500 bg-rose-50/30' 
+                  : 'border-gray-200 hover:border-rose-300 hover:shadow-sm'
+              ]"
+            >
+              <!-- Task Header -->
+              <div class="px-3 pt-3 pb-2 flex items-start justify-between gap-2">
+                <div class="flex items-start gap-2">
+                  <!-- Checkbox -->
+                  <div 
+                    class="mt-0.5 flex-shrink-0"
+                    @click.stop
+                  >
+                    <div 
+                      class="h-4 w-4 rounded border transition-colors flex items-center justify-center cursor-pointer"
+                      :class="[
+                        selectedTaskIds.includes(task.id) 
+                          ? 'bg-rose-600 border-rose-600 hover:bg-rose-700 hover:border-rose-700' 
+                          : 'bg-white border-gray-300 hover:border-rose-400'
+                      ]"
+                      @click="toggleTaskSelection(task.id)"
+                    >
+                      <Check 
+                        v-if="selectedTaskIds.includes(task.id)" 
+                        class="h-3 w-3 text-white" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <!-- Task Name and Info -->
+                  <div class="min-w-0 cursor-pointer" @click="showTaskDetail(task)">
+                    <h3 class="font-medium text-gray-800 line-clamp-2 group-hover:text-rose-600 transition break-words text-sm">
+                      {{ task.name }}
+                    </h3>
+                    <div v-if="task.active === false" class="inline-flex items-center text-xs text-gray-500 mt-1">
+                      <Archive class="w-3 h-3 mr-1" />
+                      <span>Archived</span>
+                    </div>
+                    <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                      <span v-if="task.type?.name" class="flex items-center">
+                        <Bookmark class="w-3 h-3 mr-1 text-gray-400" />
+                        {{ task.type?.name }}
+                      </span>
+                      <span class="flex items-center">
+                        <Calendar class="w-3 h-3 mr-1 text-gray-400" />
+                        {{ formatDate(task.dates?.planned_end) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Status Badge -->
+                <div
+                  class="shrink-0 px-2 py-1 text-xs font-medium rounded border cursor-pointer"
+                  :class="{
+                    'bg-amber-50 text-amber-700 border-amber-200': task.state === 'in_progress',
+                    'bg-emerald-50 text-emerald-700 border-emerald-200': task.state === 'done',
+                    'bg-gray-50 text-gray-600 border-gray-200': task.state === 'draft',
+                    'bg-rose-50 text-rose-700 border-rose-200': task.state === 'planned',
+                    'bg-blue-50 text-blue-700 border-blue-200': task.state === 'review'
+                  }"
+                  @click="showTaskDetail(task)"
+                >
+                  {{ formatState(task.state) }}
+                </div>
+              </div>
+              
+              <!-- Task Content -->
+              <div class="px-3 py-2 border-t border-gray-100 cursor-pointer" @click="showTaskDetail(task)">
+                <div class="flex justify-between items-center">
+                  <!-- Priority Badge -->
+                  <div
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded border"
+                    :class="{
+                      'bg-blue-50 text-blue-700 border-blue-200': task.priority === '0',
+                      'bg-emerald-50 text-emerald-700 border-emerald-200': task.priority === '1',
+                      'bg-amber-50 text-amber-700 border-amber-200': task.priority === '2',
+                      'bg-rose-50 text-rose-700 border-rose-200': task.priority === '3'
+                    }"
+                  >
+                    <Flag class="w-3 h-3 mr-1" />
+                    {{ formatPriority(task.priority) }}
+                  </div>
+                  
+                  <!-- Assigned Users -->
+                  <div class="flex -space-x-1 overflow-hidden">
+                    <template v-if="task.assigned_to && task.assigned_to.length">
+                      <div 
+                        v-for="(person, index) in task.assigned_to.slice(0, 3)" 
+                        :key="person.id"
+                        class="inline-flex h-5 w-5 rounded-full ring-1 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
+                        :title="person.name"
+                      >
+                        {{ getInitials(person.name) }}
+                      </div>
+                      <div 
+                        v-if="task.assigned_to.length > 3" 
+                        class="inline-flex h-5 w-5 rounded-full ring-1 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
+                        :title="`${task.assigned_to.length - 3} more`"
+                      >
+                        +{{ task.assigned_to.length - 3 }}
+                      </div>
+                    </template>
+                    <div v-else class="text-xs text-gray-500 py-1">
+                      Not assigned
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Task Progress -->
+                <div class="mt-2">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-500">Progress</span>
+                    <span class="font-medium text-gray-700">{{ task.progress }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-100 rounded-full h-1">
+                    <div
+                      class="h-1 rounded-full"
+                      :class="{
+                        'bg-rose-500': task.progress < 30,
+                        'bg-amber-500': task.progress >= 30 && task.progress < 70,
+                        'bg-emerald-500': task.progress >= 70
+                      }"
+                      :style="{ width: `${task.progress}%` }"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Empty State for Tasks -->
+            <div v-if="!filteredTasks.length" class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+              <CheckSquare class="mx-auto h-8 w-8 text-gray-300" />
+              <h3 class="mt-2 text-sm font-medium text-gray-700">No tasks found</h3>
+              <p class="mt-1 text-xs text-gray-500">
+                {{ project?.tasks && project.tasks.length ? 'No tasks match the current filter' : 'Get started by creating your first task' }}
+              </p>
+              <div class="mt-3">
+                <button
+                  @click="showCreateTaskModal = true"
+                  class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
+                >
+                  <Plus class="w-4 h-4 mr-1.5" />
+                  Add Task
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents Tab Content -->
+        <div v-if="activeDesktopTab === 'documents'" class="p-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-medium text-gray-800 flex items-center">
+              <Paperclip class="w-4 h-4 mr-2 text-indigo-500" />
+              Project Files
+            </h3>
+            <button
+              @click="handleFileUpload"
+              class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 transition"
+            >
+              <UploadCloud class="w-4 h-4 mr-1.5" />
+              Upload
+            </button>
+            <input
+              ref="fileInputRef"
+              type="file"
+              @change="onFileChange"
+              class="hidden"
+            />
+          </div>
+
+          <!-- Loading state -->
+          <div v-if="loadingAttachments" class="flex justify-center py-4">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
+          </div>
+
+          <!-- Empty state -->
+          <div v-else-if="!projectAttachments.length" class="text-center py-6">
+            <div class="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200">
+              <UploadCloud class="mx-auto h-10 w-10 text-gray-300" />
+              <h3 class="mt-2 text-sm font-medium text-gray-700">No files uploaded</h3>
+              <p class="mt-1 text-sm text-gray-500">Upload files to this project</p>
+              <div class="mt-4">
+                <button
+                  @click="handleFileUpload"
+                  class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 transition"
+                >
+                  <UploadCloud class="w-4 h-4 mr-1.5" />
+                  Upload File
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attachment List -->
+          <div v-else class="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <div
+              v-for="file in projectAttachments" 
+              :key="file.id"
+              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+            >
+              <!-- File icon and details -->
+              <div class="flex items-center overflow-hidden">
+                <div class="flex-shrink-0 mr-3 p-2 rounded-lg" :class="getFileIconClass(file.mimetype)">
+                  <FileText v-if="!file.is_image" class="h-4 w-4" :class="getFileIconColor(file.mimetype)" />
+                  <Image v-else class="h-4 w-4 text-blue-500" />
+                </div>
+                
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-gray-700 truncate max-w-[300px]">{{ file.name }}</div>
+                  <div class="text-xs text-gray-500 flex">
+                    <span>{{ formatFileSize(file.size) }}</span>
+                    <span class="mx-1">•</span>
+                    <span>{{ formatTimestamp(file.create_date) }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Action buttons -->
+              <div class="flex shrink-0 space-x-1">
+                <button
+                  v-if="canPreviewFile(file)"
+                  @click="openFilePreview(file)"
+                  class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                  title="Preview"
+                >
+                  <Eye class="h-4 w-4" />
+                </button>
+                
+                <button
+                @click="downloadFile(file)"
+                 class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                 title="Download"
+               >
+                 <Download class="h-4 w-4" />
+               </button>
+               
+               <button
+                 @click="confirmDeleteFile(file)"
+                 class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                 title="Delete"
+               >
+                 <Trash2 class="h-4 w-4" />
+               </button>
+             </div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Meetings & Activities Tab Content -->
+       <div v-if="activeDesktopTab === 'meetings'" class="p-4 space-y-4">
+         <!-- Meetings Section -->
+         <div>
+           <div class="flex justify-between items-center mb-3">
+             <h3 class="text-base font-medium text-gray-800 flex items-center">
+               <CalendarClock class="w-4 h-4 mr-2 text-indigo-500" />
+               Meetings
+             </h3>
+             <button
+               @click="showCreateMeetingModal = true"
+               class="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
+             >
+               <Plus class="w-3 h-3 mr-1" />
+               Schedule
+             </button>
+           </div>
+
+           <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+             <div
+               v-for="meeting in project?.meetings"
+               :key="meeting.id"
+               class="border border-gray-200 rounded-lg hover:border-rose-300 hover:shadow-sm p-3 transition-all duration-200 group cursor-pointer"
+               @click="showMeetingDetail(meeting)"
+             >
+               <div class="flex items-start justify-between gap-2">
+                 <div class="min-w-0">
+                   <h4 class="font-medium text-gray-800 text-sm">{{ meeting.name }}</h4>
+                   <div class="mt-1 text-xs text-gray-500">
+                     {{ formatDateTime(meeting.dates?.start) }} - {{ formatTime(meeting.dates?.end) }}
+                   </div>
+                   <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                     <div class="flex items-center">
+                       <User class="w-3 h-3 mr-1 text-gray-400" />
+                       <span>{{ meeting.organizer?.name || 'No organizer' }}</span>
+                     </div>
+                     
+                     <div v-if="meeting.location" class="flex items-center">
+                       <MapPin class="w-3 h-3 mr-1 text-gray-400" />
+                       <span class="truncate max-w-[100px]">{{ meeting.location }}</span>
+                     </div>
+                     
+                     <div v-if="meeting.virtual_location" class="flex items-center">
+                       <Video class="w-3 h-3 mr-1 text-gray-400" />
+                       <span class="truncate max-w-[100px]">{{ meeting.virtual_location }}</span>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <div class="flex flex-col items-end gap-1">
+                   <div
+                     class="shrink-0 px-2 py-1 text-xs font-medium rounded border"
+                     :class="{
+                       'bg-amber-50 text-amber-700 border-amber-200': meeting.state === 'in_progress',
+                       'bg-emerald-50 text-emerald-700 border-emerald-200': meeting.state === 'done',
+                       'bg-gray-50 text-gray-600 border-gray-200': meeting.state === 'planned',
+                       'bg-rose-50 text-rose-700 border-rose-200': meeting.state === 'cancelled'
+                     }"
+                   >
+                     {{ formatState(meeting.state) }}
+                   </div>
+                   
+                   <div class="flex opacity-0 group-hover:opacity-100 transition-opacity" @click.stop>
+                     <button
+                       @click.stop="editMeeting(meeting)"
+                       class="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition"
+                       title="Edit"
+                     >
+                       <Edit class="h-3 w-3" />
+                     </button>
+                     <button
+                       @click.stop="confirmDeleteMeeting(meeting)"
+                       class="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded transition ml-1"
+                       title="Delete"
+                     >
+                       <Trash2 class="h-3 w-3" />
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+
+             <!-- Empty State for Meetings -->
+             <div v-if="!project?.meetings || project.meetings.length === 0" class="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+               <CalendarIcon class="mx-auto h-6 w-6 text-gray-300" />
+               <p class="mt-1 text-xs text-gray-500">No meetings scheduled</p>
+               <button
+                 @click="showCreateMeetingModal = true"
+                 class="mt-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+               >
+                 <Plus class="w-3 h-3 mr-1" />
+                 Schedule Meeting
+               </button>
+             </div>
+           </div>
+         </div>
+
+         <!-- Activities Section -->
+         <div class="border-t pt-4">
+           <div class="flex justify-between items-center mb-3">
+             <h3 class="text-base font-medium text-gray-800 flex items-center">
+               <ClipboardList class="w-4 h-4 mr-2 text-indigo-500" />
+               Daily Activities
+             </h3>
+             <button
+               @click="showCreateBAUModal = true"
+               class="inline-flex items-center px-2 py-1 rounded text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
+             >
+               <Plus class="w-3 h-3 mr-1" />
+               Add Activity
+             </button>
+           </div>
+           
+           <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+             <div
+               v-for="activity in project?.bau_activities"
+               :key="activity.id"
+               class="bg-gray-50 rounded-lg p-3 border border-gray-100"
+             >
+               <div class="flex justify-between items-start">
+                 <div class="font-medium text-sm text-gray-700">{{ activity.name }}</div>
+                 <div 
+                   class="text-xs font-medium px-2 py-0.5 rounded border"
+                   :class="{
+                     'bg-emerald-50 text-emerald-700 border-emerald-100': activity.state === 'done',
+                     'bg-gray-50 text-gray-700 border-gray-100': activity.state === 'planned',
+                     'bg-rose-50 text-rose-700 border-rose-100': activity.state === 'not_done'
+                   }"
+                 >
+                   {{ formatBAUState(activity.state) }}
+                 </div>
+               </div>
+               <div class="text-xs text-gray-500 mt-1 flex justify-between">
+                 <span>{{ formatDate(activity.date) }}</span>
+                 <span>{{ activity.hours_spent }} hours</span>
+               </div>
+             </div>
+             
+             <div v-if="!project?.bau_activities || project.bau_activities.length === 0" class="text-center py-4">
+               <ClipboardList class="mx-auto h-6 w-6 text-gray-300" />
+               <p class="mt-1 text-xs text-gray-500">No daily activities recorded</p>
+               <button
+                 @click="showCreateBAUModal = true"
+                 class="mt-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+               >
+                 <Plus class="w-3 h-3 mr-1" />
+                 Add Activity
+               </button>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+   <!-- Mobile Sections - Keep existing conditional rendering -->
+   <!-- Mobile Sections - Keep existing conditional rendering -->
+    <!-- Tasks for Mobile -->
+    <div v-if="activeTab === 'tasks' && isMobile" class="space-y-6">
+      <!-- Tasks Card -->
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+          <h2 class="text-lg font-medium text-gray-800 flex items-center">
+            <CheckSquare class="w-5 h-5 mr-2 text-indigo-500" />
+            Project Tasks
+          </h2>
+
+          <button
+            @click="showCreateTaskModal = true"
+            class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
+          >
+            <Plus class="w-4 h-4 mr-1.5" />
+            Add Task
+          </button>
+        </div>
+        
+        <div class="p-5">
+          <!-- Task actions toolbar -->
+          <div class="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <!-- Left side: Task filters -->
+              <div class="flex items-center gap-1 flex-wrap">
+                <span class="text-xs font-medium text-gray-500 mr-1">Filter:</span>
+                <div class="flex bg-white rounded-md border border-gray-200 p-0.5">
+                  <button 
+                    @click="taskFilter = 'all'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'all' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    All
+                  </button>
+                  <button 
+                    @click="taskFilter = 'in_progress'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'in_progress' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    In Progress
+                  </button>
+                  <button 
+                    @click="taskFilter = 'planned'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'planned' ? 'bg-rose-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    Planned
+                  </button>
+                  <button 
+                    @click="taskFilter = 'done'" 
+                    class="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    :class="taskFilter === 'done' ? 'bg-emerald-500 text-white' : 'text-gray-600 hover:bg-gray-50'"
+                  >
+                    Completed
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Right side: Archive options and Selection tools -->
+              <div class="flex items-center gap-4">
+                <!-- Archive options -->
+                <div class="flex items-center gap-1">
+                  <input 
+                    id="show-archived-tasks-mobile" 
+                    type="checkbox" 
+                    v-model="showArchivedTasks"
+                    @change="fetchTasks"
+                    class="h-4 w-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500" 
+                  />
+                  <label for="show-archived-tasks-mobile" class="text-xs text-gray-700">
+                    Show archived
+                  </label>
+                </div>
+                
+                <!-- Selection tools -->
+                <div v-if="filteredTasks.length > 0" class="flex items-center gap-1">
+                  <button
+                    @click="toggleAllTasks"
+                    class="text-xs text-gray-700 hover:text-rose-600 transition-colors flex items-center"
+                  >
+                    <span v-if="isAllTasksSelected">Deselect all</span>
+                    <span v-else>Select all</span>
+                  </button>
+                </div>
+                
+                <!-- Sort dropdown -->
+                <select 
+                  id="task-sort-mobile" 
+                  v-model="taskSort" 
+                  class="text-xs bg-white border border-gray-200 rounded-md py-1 pl-2 pr-8 focus:outline-none focus:ring-1 focus:ring-rose-500 focus:border-rose-500"
+                >
+                  <option disabled value="">Sort by</option>
+                  <option value="priority_desc">Priority (High to Low)</option>
+                  <option value="priority_asc">Priority (Low to High)</option>
+                  <option value="name_asc">Name (A-Z)</option>
+                  <option value="name_desc">Name (Z-A)</option>
+                  <option value="date_desc">Due Date (Newest)</option>
+                  <option value="date_asc">Due Date (Oldest)</option>
+                  <option value="progress_desc">Progress (High to Low)</option>
+                  <option value="progress_asc">Progress (Low to High)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected tasks actions bar -->
+          <div v-if="selectedTaskIds.length > 0" class="bg-rose-50 p-3 rounded-lg mb-3 flex items-center justify-between">
+            <div class="text-sm text-rose-700 font-medium">
+              {{ selectedTaskIds.length }} task(s) selected
+            </div>
+            <div class="flex gap-2">
+              <button
+                @click="confirmMultiArchiveTasks(false)"
+                class="px-3 py-1.5 text-xs font-medium bg-white text-rose-600 border border-rose-300 rounded-md hover:bg-rose-50 transition-colors"
+              >
+                <Archive class="w-3.5 h-3.5 mr-1.5 inline-block" />
+                Archive Selected
+              </button>
+              <button
+                @click="confirmMultiArchiveTasks(true)"
+                class="px-3 py-1.5 text-xs font-medium bg-white text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition-colors"
+              >
+                <RefreshCw class="w-3.5 h-3.5 mr-1.5 inline-block" />
+                Unarchive Selected
+              </button>
+              <button
+                @click="selectedTaskIds = []"
+                class="px-3 py-1.5 text-xs font-medium bg-white text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          
+          <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            <!-- Task Cards -->
+            <div
+              v-for="task in filteredTasks"
+              :key="task.id"
+              class="border rounded-lg transition-all duration-200 overflow-hidden group relative"
+              :class="[
+                selectedTaskIds.includes(task.id) 
+                  ? 'border-rose-500 bg-rose-50/30' 
+                  : 'border-gray-200 hover:border-rose-300 hover:shadow-sm'
+              ]"
+            >
+              <!-- Task Header -->
+              <div class="px-4 pt-4 pb-2 flex items-start justify-between gap-2">
+                <div class="flex items-start gap-3">
+                  <!-- Checkbox -->
+                  <div 
+                    class="mt-0.5 flex-shrink-0"
+                    @click.stop
+                  >
+                    <div 
+                      class="h-5 w-5 rounded border transition-colors flex items-center justify-center cursor-pointer"
+                      :class="[
+                        selectedTaskIds.includes(task.id) 
+                          ? 'bg-rose-600 border-rose-600 hover:bg-rose-700 hover:border-rose-700' 
+                          : 'bg-white border-gray-300 hover:border-rose-400'
+                      ]"
+                      @click="toggleTaskSelection(task.id)"
+                    >
+                      <Check 
+                        v-if="selectedTaskIds.includes(task.id)" 
+                        class="h-3.5 w-3.5 text-white" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <!-- Task Name and Basic Info -->
+                  <div class="min-w-0 cursor-pointer" @click="showTaskDetail(task)">
+                    <h3 class="font-medium text-gray-800 line-clamp-2 group-hover:text-rose-600 transition break-words">
+                      {{ task.name }}
+                    </h3>
+                    <div v-if="task.active === false" class="inline-flex items-center text-xs text-gray-500 mt-1">
+                      <Archive class="w-3 h-3 mr-1" />
+                      <span>Archived</span>
+                    </div>
+                    <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                      <span v-if="task.type?.name" class="flex items-center">
+                        <Bookmark class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                        {{ task.type?.name }}
+                      </span>
+                      <span class="flex items-center">
+                        <Calendar class="w-3.5 h-3.5 mr-1 text-gray-400" />
+                        {{ formatDate(task.dates?.planned_end) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Status Badge -->
+                <div
+                  class="shrink-0 px-2 py-1 text-xs font-medium rounded-md border cursor-pointer"
+                  :class="{
+                    'bg-amber-50 text-amber-700 border-amber-200': task.state === 'in_progress',
+                    'bg-emerald-50 text-emerald-700 border-emerald-200': task.state === 'done',
+                    'bg-gray-50 text-gray-600 border-gray-200': task.state === 'draft',
+                    'bg-rose-50 text-rose-700 border-rose-200': task.state === 'planned',
+                    'bg-blue-50 text-blue-700 border-blue-200': task.state === 'review'
+                  }"
+                  @click="showTaskDetail(task)"
+                >
+                  {{ formatState(task.state) }}
+                </div>
+              </div>
+              
+              <!-- Task Content -->
+              <div class="px-4 py-3 border-t border-gray-100 cursor-pointer" @click="showTaskDetail(task)">
+                <!-- Priority Badge and Assignees -->
+                <div class="flex justify-between">
+                  <!-- Priority Badge -->
+                  <div
+                    class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border"
+                    :class="{
+                      'bg-blue-50 text-blue-700 border-blue-200': task.priority === '0',
+                      'bg-emerald-50 text-emerald-700 border-emerald-200': task.priority === '1',
+                      'bg-amber-50 text-amber-700 border-amber-200': task.priority === '2',
+                      'bg-rose-50 text-rose-700 border-rose-200': task.priority === '3'
+                    }"
+                  >
+                    <Flag class="w-3 h-3 mr-1" />
+                    {{ formatPriority(task.priority) }}
+                  </div>                     
+                  
+                  <!-- Assigned Users -->
+                  <div class="flex -space-x-2 overflow-hidden">
+                    <template v-if="task.assigned_to && task.assigned_to.length">
+                      <div 
+                        v-for="(person, index) in task.assigned_to.slice(0, 3)" 
+                        :key="person.id"
+                        class="inline-flex h-6 w-6 rounded-full ring-2 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
+                        :title="person.name"
+                      >
+                        {{ getInitials(person.name) }}
+                      </div>
+                      <div 
+                        v-if="task.assigned_to.length > 3" 
+                        class="inline-flex h-6 w-6 rounded-full ring-2 ring-white items-center justify-center bg-gray-100 text-xs font-medium text-gray-800"
+                        :title="`${task.assigned_to.length - 3} more`"
+                      >
+                        +{{ task.assigned_to.length - 3 }}
+                      </div>
+                    </template>
+                    <div v-else class="text-xs text-gray-500 py-1">
+                      Not assigned
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Task Progress -->
+                <div class="mt-3">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-500">Progress</span>
+                    <span class="font-medium text-gray-700">{{ task.progress }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-100 rounded-full h-1.5">
+                    <div
+                      class="h-1.5 rounded-full"
+                      :class="{
+                        'bg-rose-500': task.progress < 30,
+                        'bg-amber-500': task.progress >= 30 && task.progress < 70,
+                        'bg-emerald-500': task.progress >= 70
+                      }"
+                      :style="{ width: `${task.progress}%` }"
+                    ></div>
+                  </div>
+                </div>
+                
+                <!-- View Details Indicator -->
+                <div class="mt-2 text-xs text-center text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Click to view details
+                </div>
+              </div>
+            </div>
+            
+            <!-- Empty State for Tasks -->
+            <div v-if="!filteredTasks.length" class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+              <CheckSquare class="mx-auto h-10 w-10 text-gray-300" />
+              <h3 class="mt-2 text-sm font-medium text-gray-700">No tasks found</h3>
+              <p class="mt-1 text-sm text-gray-500">
+                {{ project?.tasks && project.tasks.length ? 'No tasks match the current filter' : 'Get started by creating your first task' }}
+              </p>
+              <div class="mt-4">
+                <button
+                  @click="showCreateTaskModal = true"
+                  class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 transition"
+                >
+                  <Plus class="w-4 h-4 mr-1.5" />
+                  Add Task
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Files for Mobile -->
+    <div v-if="activeTab === 'files' && isMobile" class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+        <h2 class="text-lg font-medium text-gray-800 flex items-center">
+          <Paperclip class="w-5 h-5 mr-2 text-indigo-500" />
+          Project Files
+        </h2>
+        <button
+          @click="handleFileUpload"
+          class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
+        >
+          <UploadCloud class="w-4 h-4 mr-1.5" />
+          Upload
+        </button>
+        <input
+          ref="fileInputRef"
+          type="file"
+          @change="onFileChange"
+          class="hidden"
+        />
+      </div>
+
+      <div class="p-5">
+        <!-- Loading state -->
+        <div v-if="loadingAttachments" class="flex justify-center py-4">
+          <div class="animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 border-t-transparent"></div>
+        </div>
+
+        <!-- Empty state -->
+        <div v-else-if="!projectAttachments.length" class="text-center py-6">
+          <div class="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200">
+            <UploadCloud class="mx-auto h-10 w-10 text-gray-300" />
+            <h3 class="mt-2 text-sm font-medium text-gray-700">No files uploaded</h3>
+            <p class="mt-1 text-sm text-gray-500">Upload files to this project</p>
+            <div class="mt-4">
+              <button
+                @click="handleFileUpload"
+                class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
+              >
+                <UploadCloud class="w-4 h-4 mr-1.5" />
+                Upload File
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attachment List -->
+        <div v-else class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div
+            v-for="file in projectAttachments" 
+            :key="file.id"
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
+          >
+            <!-- File icon and details -->
+            <div class="flex items-center overflow-hidden">
+              <!-- Icon based on file type -->
+              <div class="flex-shrink-0 mr-3 p-2 rounded-lg" :class="getFileIconClass(file.mimetype)">
+                <FileText v-if="!file.is_image" class="h-5 w-5" :class="getFileIconColor(file.mimetype)" />
+                <Image v-else class="h-5 w-5 text-blue-500" />
+              </div>
+              
+              <!-- File details -->
+              <div class="min-w-0">
+                <div class="text-sm font-medium text-gray-700 truncate max-w-[200px]">{{ file.name }}</div>
+                <div class="text-xs text-gray-500 flex">
+                  <span>{{ formatFileSize(file.size) }}</span>
+                  <span class="mx-1">•</span>
+                  <span>{{ formatTimestamp(file.create_date) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="flex shrink-0 space-x-1">
+              <!-- Preview button -->
+              <button
+                v-if="canPreviewFile(file)"
+                @click="openFilePreview(file)"
+                class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                title="Preview"
+              >
+                <Eye class="h-4 w-4" />
+              </button>
+              
+              <button
+                @click="downloadFile(file)"
+                class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                title="Download"
+              >
+                <Download class="h-4 w-4" />
+              </button>
+              
+              <button
+                @click="confirmDeleteFile(file)"
+                class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                title="Delete"
+              >
+                <Trash2 class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activities for Mobile -->
+    <div v-if="activeTab === 'activities' && isMobile" class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div class="border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+        <h2 class="text-lg font-medium text-gray-800 flex items-center">
+          <ClipboardList class="w-5 h-5 mr-2 text-indigo-500" />
+          Daily Activities
+        </h2>
+        <button
+          @click="showCreateBAUModal = true"
+          class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition"
+        >
+          <Plus class="w-4 h-4 mr-1.5" />
+          Add Activity
+        </button>
+      </div>
+      
+      <div class="p-5">
+        <div class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+          <div
+            v-for="activity in project?.bau_activities"
+            :key="activity.id"
+            class="bg-gray-50 rounded-lg p-3 border border-gray-100"
+          >
+            <div class="flex justify-between">
+              <div class="font-medium text-sm text-gray-700">{{ activity.name }}</div>
+              <div 
+                class="text-xs font-medium px-2 py-0.5 rounded-full"
+                :class="{
+                  'bg-emerald-50 text-emerald-700 border border-emerald-100': activity.state === 'done',
+                  'bg-gray-50 text-gray-700 border border-gray-100': activity.state === 'planned',
+                  'bg-rose-50 text-rose-700 border border-rose-100': activity.state === 'not_done'
+                }"
+              >
+                {{ formatBAUState(activity.state) }}
+              </div>
+            </div>
+            <div class="text-xs text-gray-500 mt-1 flex justify-between">
+              <span>{{ formatDate(activity.date) }}</span>
+              <span>{{ activity.hours_spent }} hours</span>
+            </div>
+          </div>
+          
+          <div v-if="!project?.bau_activities || project.bau_activities.length === 0" class="text-center py-6">
+            <ClipboardList class="mx-auto h-8 w-8 text-gray-300" />
+            <p class="mt-1 text-sm text-gray-500">No daily activities recorded</p>
+            <button
+              @click="showCreateBAUModal = true"
+              class="mt-3 inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 transition"
+            >
+              <Plus class="w-3 h-3 mr-1.5" />
+              Add Activity
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+ </div>
+
+  <!-- Right Column (Communication) - Desktop: 1/3 width -->
+  <!-- Right Column (Communication) - Desktop: 1/3 width -->
+  <!-- Right Column (Communication) - Desktop: 1/3 width -->
+  <!-- Right Column (Communication) - Desktop: 1/3 width -->
+  <div v-if="activeTab === 'communication' || !isMobile" class="lg:col-span-1">
+    <!-- Team Chat Card - Increased height for better message space -->
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-[750px]">
+      <div class="border-b border-gray-100 px-4 py-3">
+        <h2 class="text-base font-medium text-gray-800 flex items-center">
+          <MessageSquare class="w-4 h-4 mr-2 text-indigo-500" />
+          Team Chat
+        </h2>
+      </div>
+      
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Chat Messages Area - Expanded space -->
+        <div class="flex-1 overflow-y-auto p-3 custom-scrollbar">
+          <div v-if="project?.group_id" class="space-y-3">
+            <!-- Chat Messages -->
+            <div 
+              v-for="message in groupMessages" 
+              :key="message.id" 
+              class="flex gap-2"
+              :data-message-id="message.id"
+            >
+              <!-- Avatar -->
+              <div class="h-7 w-7 rounded-full bg-indigo-100 flex-shrink-0 flex items-center justify-center">
+                <span class="text-xs font-medium text-rose-600">
+                  {{ getInitials(message.author?.name) }}
+                </span>
+              </div>
+              
+              <!-- Message Content -->
+              <div class="flex-1 min-w-0">
+                <!-- Message Header -->
+                <div class="flex items-baseline flex-wrap gap-x-2">
+                  <span class="text-sm font-medium text-gray-800">{{ message.author?.name }}</span>
+                  <span class="text-xs text-gray-500">{{ formatDateTime(message.date) }}</span>
+                </div>
+                
+                <!-- Message Text Content -->
+                <div class="mt-1 text-sm text-gray-700">
+                  <div v-if="message.content && message.content.length > 300" class="message-content">
+                    <div v-if="expandedMessages[message.id]">
+                      <div class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content)"></div>
+                      <button 
+                        @click="toggleMessageExpand(message.id)" 
+                        class="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1"
+                      >
+                        Show less
+                      </button>
+                    </div>
+                    <div v-else>
+                      <div class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content.substring(0, 300) + '...')"></div>
+                      <button 
+                        @click="toggleMessageExpand(message.id)" 
+                        class="text-xs text-rose-600 hover:text-rose-700 font-medium mt-1"
+                      >
+                        Read more
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="break-words whitespace-pre-wrap" v-html="formatMessageContent(message.content)"></div>
+                </div>
+                
+                <!-- Message Attachments -->
+                <div v-if="message.attachments && message.attachments.length" class="mt-2 space-y-1">
+                  <div 
+                    v-for="attachment in message.attachments" 
+                    :key="attachment.id"
+                    class="flex items-center p-2 bg-gray-50 rounded border border-gray-200 hover:bg-gray-100 transition"
+                  >
+                    <div 
+                      class="flex-shrink-0 mr-2 p-1 rounded"
+                      :class="getFileIconClass(attachment.mimetype)"
+                    >
+                      <FileText v-if="!attachment.is_image" class="h-3 w-3" :class="getFileIconColor(attachment.mimetype)" />
+                      <Image v-else class="h-3 w-3 text-blue-500" />
+                    </div>
+                    
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-medium text-gray-700 truncate">{{ attachment.name }}</p>
+                      <p class="text-xs text-gray-500">{{ formatFileSize(attachment.size) }}</p>
+                    </div>
+                    
+                    <div class="flex space-x-1">
+                      <button
+                        v-if="canPreviewFile(attachment)"
+                        @click.stop="openFilePreview(attachment)"
+                        class="p-1 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded transition"
+                        title="Preview"
+                      >
+                        <Eye class="h-3 w-3" />
+                      </button>
+                      <button
+                        @click.stop="downloadFile(attachment)"
+                        class="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition"
+                        title="Download"
+                      >
+                        <Download class="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- NEW: Read Status Footer -->
+                <div class="mt-2 flex items-center justify-between">
+                  <!-- Message timestamp (moved here from header) -->
+                  <div class="text-xs text-gray-400">
+                    <!-- {{ formatTime(message.date) }} -->
+                  </div>
+                  
+                  <!-- Read Status Indicators (only for own messages) -->
+                  <!-- Update bagian Read Status Indicators -->
+                  <div v-if="isMyMessage(message)" class="flex items-center space-x-2 mt-1">
+                    <!-- Status Icons -->
+                    <div class="flex items-center">
+                      <!-- Single checkmark for sent/delivered -->
+                      <Check 
+                        v-if="message.read_status?.receipt_status === 'sent' || message.read_status?.receipt_status === 'delivered'"
+                        class="w-3 h-3 text-gray-400" 
+                      />
+                      
+                      <!-- Double checkmarks for read -->
+                      <div 
+                        v-if="message.read_status?.receipt_status === 'read_partial' || message.read_status?.receipt_status === 'read_all'"
+                        class="flex items-center -space-x-0.5"
+                      >
+                        <Check 
+                          class="w-3 h-3"
+                          :class="message.read_status.receipt_status === 'read_all' ? 'text-blue-500' : 'text-gray-400'" 
+                        />
+                        <Check 
+                          class="w-3 h-3"
+                          :class="message.read_status.receipt_status === 'read_all' ? 'text-blue-500' : 'text-gray-400'" 
+                        />
+                      </div>
+                    </div>
+                    
+                    <!-- Clickable Read Count Button - LEBIH JELAS -->
+                    <button 
+                      v-if="message.read_status?.read_count >= 0"
+                      @click="showMessageReadStatus(message)"
+                      class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border transition-all duration-200"
+                      :class="[
+                        message.read_status.receipt_status === 'read_all' 
+                          ? 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100' 
+                          : 'text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      ]"
+                      :title="`${message.read_status.read_count} of ${message.read_status.total_recipients} read this message`"
+                    >
+                      <Eye class="w-3 h-3 mr-1" />
+                      {{ message.read_status.read_count }}/{{ message.read_status.total_recipients }}
+                    </button>
+                    
+                    <!-- Debug Button (hapus setelah testing) -->
+                    <button 
+                      @click="console.log('Message data:', message)"
+                      class="text-xs text-red-500 underline"
+                    >
+                      Debug
+                    </button>
+                  </div>
+                  
+                  <!-- Unread indicator for other's messages -->
+                  <div 
+                    v-else-if="!message.read_status?.is_read_by_me && !isMyMessage(message)"
+                    class="flex items-center"
+                  >
+                    <div class="w-2 h-2 bg-rose-500 rounded-full" title="Unread message"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Loading Messages Indicator -->
+            <div v-if="loadingMessages" class="flex justify-center my-3">
+              <div class="animate-spin rounded-full h-5 w-5 border-2 border-indigo-600 border-t-transparent"></div>
+            </div>
+            
+            <!-- Empty State for Messages -->
+            <div v-if="groupMessages.length === 0 && !loadingMessages" class="text-center py-12">
+              <MessageSquare class="mx-auto h-8 w-8 text-gray-300" />
+              <p class="mt-2 text-sm text-gray-500">No messages yet</p>
+              <p class="text-xs text-gray-400">Send a message to start the conversation</p>
+            </div>
+          </div>
+          
+          <!-- No Group Created State -->
+          <div v-else class="text-center py-16">
+            <MessageSquare class="mx-auto h-10 w-10 text-gray-300" />
+            <p class="mt-2 text-sm text-gray-700">No chat group available</p>
+            <p class="mt-1 text-xs text-gray-500">A group needs to be created for this project first</p>
+          </div>
+        </div>
+        
+        <!-- Message Input Area - Fixed height, optimized -->
+        <div v-if="project?.group_id" class="border-t bg-white flex-shrink-0">
+          <!-- File Preview Area -->
+          <div v-if="chatAttachment" class="px-3 py-2 bg-amber-50 border-b border-amber-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div 
+                  class="flex-shrink-0 mr-2 p-1.5 rounded bg-white border" 
+                  :class="getFileIconClass(chatAttachment.type)"
+                >
+                  <FileText v-if="!chatAttachment.isImage" class="h-4 w-4" :class="getFileIconColor(chatAttachment.type)" />
+                  <Image v-else class="h-4 w-4 text-blue-500" />
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-700 truncate max-w-[180px]">{{ chatAttachment.name }}</div>
+                  <div class="text-xs text-gray-500">{{ formatFileSize(chatAttachment.file.size) }}</div>
+                </div>
+              </div>
+              <button 
+                @click="removeChatAttachment" 
+                class="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-100 rounded-full transition"
+                title="Remove file"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          
+          <!-- Main Input Area -->
+          <div class="p-3">
+            <div class="flex items-end gap-2">
+              <!-- Text Input Area -->
+              <div class="flex-1 relative">
+                <TeamMentionInput 
+                  ref="mentionInputRef"
+                  v-model="newMessage" 
+                  :members="allProjectMembers"
+                  placeholder="Type a message... (use @ to mention)"
+                  @submit="sendMessage"
+                  class="w-full min-h-[40px] max-h-[300px] resize-none rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 px-3 py-2 text-sm"
+                  @keydown.enter.exact.prevent="sendMessage"
+                  @keydown.enter.shift.exact="newMessage += '\n'"
+                />
+              </div>
+              
+              <!-- Right Side Actions - Full Vertical Stack -->
+              <div class="flex flex-col gap-1 flex-shrink-0">
+                <!-- File Upload Button - Top -->
+                <button 
+                  @click="handleChatFileUpload" 
+                  class="p-2 rounded-lg text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors border border-gray-200 hover:border-rose-300"
+                  title="Attach file"
+                >
+                  <Paperclip class="h-4 w-4" />
+                </button>
+                
+                <!-- Emoji Button - Middle -->
+                <div class="relative">
+                  <button 
+                    @click.stop="toggleEmojiPicker" 
+                    class="emoji-button p-2 rounded-lg text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors border border-gray-200 hover:border-rose-300 w-full"
+                    :class="{ 'bg-rose-50 text-rose-600 border-rose-300': showEmojiPicker }"
+                    title="Add emoji"
+                  >
+                    <Smile class="h-4 w-4" />
+                  </button>
+                  
+                  <!-- Emoji Picker -->
+                  <div 
+                    v-if="showEmojiPicker" 
+                    class="emoji-picker absolute bottom-full right-0 mb-2 z-50 bg-white shadow-xl rounded-lg border border-gray-200"
+                    style="max-height: 300px; width: 280px;"
+                  >
+                    <EmojiPicker @select="addEmoji" />
+                  </div>
+                </div>
+                
+                <!-- Send Button - Bottom -->
+                <button 
+                  @click="sendMessage" 
+                  :disabled="!newMessage.trim() && !chatAttachment"
+                  class="p-2.5 rounded-lg text-white transition-all duration-200 w-full"
+                  :class="[
+                    newMessage.trim() || chatAttachment
+                      ? 'bg-rose-600 hover:bg-rose-700 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2' 
+                      : 'bg-gray-300 cursor-not-allowed'
+                  ]"
+                  title="Send message"
+                >
+                  <Send class="h-4 w-4 mx-auto" />
+                </button>
+              </div>
+            </div>
+            
+            <!-- Helper Text - Compact -->
+            <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+              <div class="flex items-center space-x-3">
+                <span>Enter to send, Shift+Enter for new line</span>
+              </div>
+              <div v-if="uploadingChatAttachment" class="flex items-center">
+                <div class="animate-spin rounded-full h-3 w-3 border border-rose-600 border-t-transparent mr-1"></div>
+                Uploading...
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hidden File Input -->
+          <input
+            ref="chatFileInputRef"
+            type="file"
+            @change="onChatFileChange"
+            class="hidden"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+      <!-- Read Status Detail Modal -->
+      <Teleport to="body">
+        <div 
+          v-if="showReadStatusModal && selectedMessageReadStatus" 
+          class="fixed inset-0 z-50 overflow-y-auto"
+          aria-labelledby="modal-title" 
+          role="dialog" 
+          aria-modal="true"
+        >
+          <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div 
+              class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" 
+              aria-hidden="true"
+              @click="showReadStatusModal = false"
+            ></div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full">
+              <!-- Header -->
+              <div class="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-medium text-gray-900">Message Status</h3>
+                  <button 
+                    @click="showReadStatusModal = false"
+                    class="text-gray-400 hover:text-gray-600 focus:outline-none transition"
+                  >
+                    <X class="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Content -->
+              <div class="bg-white px-4 py-4 space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
+                <!-- Summary -->
+                <div class="text-center py-2 bg-gray-50 rounded-lg">
+                  <div class="text-sm font-medium text-gray-700">
+                    {{ selectedMessageReadStatus.read_count }} of {{ selectedMessageReadStatus.total_recipients }} have read this message
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    {{ selectedMessageReadStatus.unread_count }} not read yet
+                  </div>
+                </div>
+                
+                <!-- Read by section -->
+                <div v-if="selectedMessageReadStatus.read && selectedMessageReadStatus.read.length > 0">
+                  <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <Check class="w-4 h-4 mr-2 text-blue-500" />
+                    Read by ({{ selectedMessageReadStatus.read_count }})
+                  </h4>
+                  <div class="space-y-2">
+                    <div 
+                      v-for="reader in selectedMessageReadStatus.read" 
+                      :key="reader.reader_id"
+                      class="flex items-center justify-between py-1"
+                    >
+                      <div class="flex items-center">
+                        <div class="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <img 
+                            v-if="reader.avatar" 
+                            :src="`data:image/png;base64,${reader.avatar}`"
+                            :alt="reader.reader_name"
+                            class="w-6 h-6 rounded-full object-cover"
+                          />
+                          <span v-else class="text-xs font-medium text-blue-600">
+                            {{ getInitials(reader.reader_name) }}
+                          </span>
+                        </div>
+                        <span class="ml-3 text-sm text-gray-700">{{ reader.reader_name }}</span>
+                      </div>
+                      <span class="text-xs text-gray-500">{{ formatTime(reader.read_at) }}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Not read by section -->
+                <div v-if="selectedMessageReadStatus.unread && selectedMessageReadStatus.unread.length > 0">
+                  <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <Clock class="w-4 h-4 mr-2 text-gray-400" />
+                    Not read yet ({{ selectedMessageReadStatus.unread_count }})
+                  </h4>
+                  <div class="space-y-2">
+                    <div 
+                      v-for="member in selectedMessageReadStatus.unread" 
+                      :key="member.member_id"
+                      class="flex items-center py-1"
+                    >
+                      <div class="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <img 
+                          v-if="member.avatar" 
+                          :src="`data:image/png;base64,${member.avatar}`"
+                          :alt="member.member_name"
+                          class="w-6 h-6 rounded-full object-cover"
+                        />
+                        <span v-else class="text-xs font-medium text-gray-600">
+                          {{ getInitials(member.member_name) }}
+                        </span>
+                      </div>
+                      <span class="ml-3 text-sm text-gray-700">{{ member.member_name }}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Empty state -->
+                <div v-if="selectedMessageReadStatus.total_recipients === 0" class="text-center py-4">
+                  <MessageSquare class="mx-auto h-8 w-8 text-gray-300" />
+                  <p class="mt-2 text-sm text-gray-500">No recipients for this message</p>
+                </div>
+              </div>
+              
+              <!-- Footer -->
+              <div class="bg-gray-50 px-4 py-3 border-t border-gray-100">
+                <div class="flex justify-between">
+                  <button
+                    v-if="project?.group_id"
+                    @click="markAllMessagesAsRead(); showReadStatusModal = false"
+                    class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                  >
+                    <Check class="w-4 h-4 mr-1.5" />
+                    Mark All Read
+                  </button>
+                  <button
+                    @click="showReadStatusModal = false"
+                    class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Teleport>
       <!-- Task Detail Modal -->
       <Teleport to="body">
         <div 
@@ -2289,8 +2972,15 @@ import {
   Hash,
   Archive,
   RefreshCw,
-  Check
+  Check,  // ← Tambahkan ini
+  X,
+  AlignLeft,
+  Activity,
+  Bookmark,
+  Calendar,
+  Info
 } from 'lucide-vue-next'
+
 import { CalendarIcon, UserIcon, 
   BuildingOfficeIcon, 
   PhoneIcon, 
@@ -2365,8 +3055,15 @@ const currentTaskFileToDelete = ref(null)
 const isMobile = ref(window.innerWidth < 768);
 const activeTab = ref('overview');
 const taskFilter = ref('all');
+// Desktop tab state - tambahkan di bagian ref declarations
+const activeDesktopTab = ref('tasks');
 
-
+// Tambahkan reactive variables untuk read status
+const showReadStatusModal = ref(false)
+const selectedMessageReadStatus = ref(null)
+const messageIntersectionObserver = ref(null)
+const updatingReadStatus = ref({}) // Track loading state per message
+const currentEmployeeId = ref(null)
 
 
 // const filteredTasks = computed(() => {
@@ -2838,6 +3535,202 @@ const fetchDepartments = async () => {
   }
 }
 
+// NEW: Methods untuk read status functionality
+const getCurrentEmployeeId = () => {
+  if (currentEmployeeId.value) {
+    return currentEmployeeId.value
+  }
+  
+  try {
+    // Ambil data user dari localStorage
+    const userData = JSON.parse(localStorage.getItem('user_data') || '{}')
+    console.log('Full user_data from localStorage:', userData)
+    
+    // Coba berbagai kemungkinan struktur data
+    let employeeId = null
+    
+    // Opsi 1: Langsung dari partner_id (biasanya employee terkait dengan partner)
+    if (userData.partner_id) {
+      employeeId = userData.partner_id
+    }
+    
+    // Opsi 2: Dari uid (user ID)
+    if (!employeeId && userData.uid) {
+      employeeId = userData.uid
+    }
+    
+    // Opsi 3: Coba cari di user_context
+    if (!employeeId && userData.user_context) {
+      employeeId = userData.user_context.employee_id || userData.user_context.uid
+    }
+    
+    console.log('Extracted employee ID:', employeeId)
+    currentEmployeeId.value = employeeId
+    return employeeId
+    
+  } catch (error) {
+    console.error('Error parsing user_data:', error)
+    return null
+  }
+}
+
+
+const isMyMessage = (message) => {
+  const employeeId = getCurrentEmployeeId()
+  return employeeId && message.author?.id === parseInt(employeeId)
+}
+
+const showMessageReadStatus = async (message) => {
+  try {
+    updatingReadStatus.value[message.id] = true
+    
+    const response = await apiClient.post('/web/v2/team/messages/read_status', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        message_id: message.id
+      }
+    })
+    
+    if (response.data.result?.status === 'success') {
+      selectedMessageReadStatus.value = response.data.result.data
+      showReadStatusModal.value = true
+    } else {
+      throw new Error(response.data.result?.message || 'Failed to load read status')
+    }
+  } catch (error) {
+    console.error('Error fetching read status:', error)
+    showToast({
+      message: 'Failed to load read status',
+      type: 'error'
+    })
+  } finally {
+    updatingReadStatus.value[message.id] = false
+  }
+}
+
+// Auto-mark messages as read when they come into view
+const setupMessageObserver = () => {
+  if (!('IntersectionObserver' in window)) {
+    console.warn('IntersectionObserver not supported')
+    return
+  }
+  
+  messageIntersectionObserver.value = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const messageId = entry.target.dataset.messageId
+          
+          if (messageId) {
+            const message = groupMessages.value.find(m => m.id === parseInt(messageId))
+            
+            // Only mark as read if:
+            // 1. Message exists
+            // 2. Not already read by current user
+            // 3. Not own message
+            // 4. Has read_status object
+            if (message && 
+                message.read_status && 
+                !message.read_status.is_read_by_me && 
+                !isMyMessage(message)) {
+              
+              // Debounce the mark as read call
+              setTimeout(() => {
+                markMessageAsRead(parseInt(messageId))
+              }, 500)
+            }
+          }
+        }
+      })
+    },
+    { 
+      threshold: 0.6, // 60% of message must be visible
+      rootMargin: '0px 0px -100px 0px' // Only trigger when message is well within viewport
+    }
+  )
+}
+
+const markMessageAsRead = debounce(async (messageId) => {
+  try {
+    // Double check the message still needs to be marked as read
+    const message = groupMessages.value.find(m => m.id === messageId)
+    if (!message || message.read_status?.is_read_by_me || isMyMessage(message)) {
+      return
+    }
+    
+    const response = await apiClient.post('/web/v2/team/messages/mark_read', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        message_id: messageId
+      }
+    })
+    
+    if (response.data.result?.status === 'success') {
+      // Update message in local state
+      const messageIndex = groupMessages.value.findIndex(m => m.id === messageId)
+      if (messageIndex !== -1) {
+        // Update read status
+        if (groupMessages.value[messageIndex].read_status) {
+          groupMessages.value[messageIndex].read_status.is_read_by_me = true
+        }
+        
+        // Update read counts for the sender's view if available in response
+        if (response.data.result.data?.read_status) {
+          groupMessages.value[messageIndex].read_status = {
+            ...groupMessages.value[messageIndex].read_status,
+            ...response.data.result.data.read_status
+          }
+        }
+      }
+      
+      // Remove observer for this message to avoid duplicate calls
+      const messageElement = document.querySelector(`[data-message-id="${messageId}"]`)
+      if (messageIntersectionObserver.value && messageElement) {
+        messageIntersectionObserver.value.unobserve(messageElement)
+      }
+    }
+  } catch (error) {
+    console.error('Error marking message as read:', error)
+  }
+}, 1000) // Debounce for 1 second
+
+// Bulk mark all messages as read
+const markAllMessagesAsRead = async () => {
+  if (!project.value?.group_id) return
+  
+  try {
+    const response = await apiClient.post('/web/v2/team/messages/mark_all_read', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        group_id: project.value.group_id
+      }
+    })
+    
+    if (response.data.result?.status === 'success') {
+      // Update all unread messages in local state
+      groupMessages.value.forEach(message => {
+        if (!isMyMessage(message) && message.read_status) {
+          message.read_status.is_read_by_me = true
+        }
+      })
+      
+      showToast({
+        message: `${response.data.result.data?.marked_count || 0} messages marked as read`,
+        type: 'success'
+      })
+    }
+  } catch (error) {
+    console.error('Error marking all messages as read:', error)
+    showToast({
+      message: 'Failed to mark messages as read',
+      type: 'error'
+    })
+  }
+}
+
 const fetchGroupMessages = async (groupId) => {
   try {
     loadingMessages.value = true
@@ -2846,12 +3739,23 @@ const fetchGroupMessages = async (groupId) => {
       id: new Date().getTime(),
       params: {
         group_id: groupId,
-        include_attachments: true // Tambahkan parameter ini untuk memuat attachment
+        include_attachments: true,
+        include_read_details: false // Set to true only when needed for performance
       }
     })
 
     if (response.data.result?.status === 'success') {
       groupMessages.value = response.data.result.data
+      
+      // Setup intersection observer for new messages after DOM update
+      nextTick(() => {
+        if (messageIntersectionObserver.value) {
+          // Observe all message elements
+          document.querySelectorAll('[data-message-id]').forEach(el => {
+            messageIntersectionObserver.value.observe(el)
+          })
+        }
+      })
     } else {
       throw new Error(response.data.result?.message || 'Failed to fetch messages')
     }
@@ -2865,6 +3769,8 @@ const fetchGroupMessages = async (groupId) => {
     loadingMessages.value = false
   }
 }
+
+// Method untuk mengelola attachment pada chat
 
 
 // Update fungsi sendMessage
@@ -3035,7 +3941,7 @@ const sendMessage = async () => {
         throw new Error(response.data.result?.message || 'Failed to send message')
       }
     } else {
-      // Send message without attachment - Fixed to use newMessage.value
+      // Send message without attachment
       const response = await apiClient.post('/web/v2/team/chat/send', {
         jsonrpc: '2.0',
         id: new Date().getTime(),
@@ -3049,8 +3955,21 @@ const sendMessage = async () => {
       })
 
       if (response.data.result?.status === 'success') {
-        // Add the new message to the list
-        groupMessages.value.unshift(response.data.result.data)
+        // Add the new message to the list with proper read status structure
+        const newMsg = response.data.result.data
+        
+        // Ensure read_status object exists for consistency
+        if (!newMsg.read_status) {
+          newMsg.read_status = {
+            read_count: 0,
+            unread_count: 0,
+            total_recipients: 0,
+            is_read_by_me: true, // Own message
+            receipt_status: 'sent'
+          }
+        }
+        
+        groupMessages.value.unshift(newMsg)
         newMessage.value = ''
         
         // Focus input again after sending
@@ -3071,6 +3990,7 @@ const sendMessage = async () => {
     uploadingChatAttachment.value = false
   }
 }
+
 
 const extractMentionsFromEditor = () => {
   // This is a placeholder - you'd need to implement logic to extract mentions
@@ -4332,11 +5252,24 @@ const saveActionItem = async () => {
 
 // Lifecycle
 onMounted(() => {
-  fetchDepartments();
-  fetchProjectDetail();
-  fetchProjectAttachments(); // Tambahkan ini
-  fetchTasks(); // Tambahkan ini
-});
+  fetchDepartments()
+  fetchProjectDetail()
+  fetchProjectAttachments()
+  fetchTasks()
+  
+  // Setup message observer
+  setupMessageObserver()
+  
+  // Get current employee ID
+  getCurrentEmployeeId()
+})
+
+onBeforeUnmount(() => {
+  // Cleanup intersection observer
+  if (messageIntersectionObserver.value) {
+    messageIntersectionObserver.value.disconnect()
+  }
+})
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -4355,6 +5288,80 @@ watch(() => projectId.value, (newId) => {
 </script>
 
 <style scoped>
+
+/* Read status indicators */
+.read-status-indicator {
+  transition: all 0.2s ease-in-out;
+}
+
+.read-status-indicator:hover {
+  transform: scale(1.1);
+}
+
+/* Unread message indicator */
+.unread-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Message container hover effect */
+[data-message-id]:hover .read-status-indicator {
+  opacity: 1;
+}
+
+/* Custom scrollbar untuk modal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #d1d1d1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #a0a0a0;
+}
+
+/* Loading dots animation */
+@keyframes loading-dots {
+  0%, 20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  80%, 100% {
+    opacity: 0;
+  }
+}
+
+.loading-dots span {
+  animation: loading-dots 1.5s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+  
 .chat-editor {
   height: 120px;
 }
