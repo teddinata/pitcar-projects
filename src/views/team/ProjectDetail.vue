@@ -1466,21 +1466,17 @@
                       {{ message.read_status.read_count }}/{{ message.read_status.total_recipients }}
                     </button>
                     
-                    <!-- Debug Button (hapus setelah testing) -->
-                    <button 
-                      @click="console.log('Message data:', message)"
-                      class="text-xs text-red-500 underline"
-                    >
-                      Debug
-                    </button>
                   </div>
                   
                   <!-- Unread indicator for other's messages -->
+                  <!-- Buat indicator lebih jelas -->
                   <div 
                     v-else-if="!message.read_status?.is_read_by_me && !isMyMessage(message)"
                     class="flex items-center"
+                    title="You haven't read this message"
                   >
-                    <div class="w-2 h-2 bg-rose-500 rounded-full" title="Unread message"></div>
+                    <div class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
+                    <span class="text-xs text-gray-500 ml-1">New</span>
                   </div>
                 </div>
               </div>
@@ -1545,7 +1541,6 @@
                   v-model="newMessage" 
                   :members="allProjectMembers"
                   placeholder="Type a message... (use @ to mention)"
-                  @submit="sendMessage"
                   class="w-full min-h-[40px] max-h-[300px] resize-none rounded-lg border border-gray-300 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 px-3 py-2 text-sm"
                   @keydown.enter.exact.prevent="sendMessage"
                   @keydown.enter.shift.exact="newMessage += '\n'"
@@ -3542,29 +3537,28 @@ const getCurrentEmployeeId = () => {
   }
   
   try {
-    // Ambil data user dari localStorage
     const userData = JSON.parse(localStorage.getItem('user_data') || '{}')
-    console.log('Full user_data from localStorage:', userData)
+    console.log('User data:', userData) // Debug log
     
-    // Coba berbagai kemungkinan struktur data
+    // Coba berbagai kemungkinan struktur
     let employeeId = null
     
-    // Opsi 1: Langsung dari partner_id (biasanya employee terkait dengan partner)
+    // Opsi 1: partner_id 
     if (userData.partner_id) {
-      employeeId = userData.partner_id
+      employeeId = parseInt(userData.partner_id)
     }
     
-    // Opsi 2: Dari uid (user ID)
+    // Opsi 2: uid
     if (!employeeId && userData.uid) {
-      employeeId = userData.uid
+      employeeId = parseInt(userData.uid)
     }
     
-    // Opsi 3: Coba cari di user_context
+    // Opsi 3: user_context
     if (!employeeId && userData.user_context) {
-      employeeId = userData.user_context.employee_id || userData.user_context.uid
+      employeeId = parseInt(userData.user_context.employee_id || userData.user_context.uid)
     }
     
-    console.log('Extracted employee ID:', employeeId)
+    console.log('Extracted employee ID:', employeeId) // Debug log
     currentEmployeeId.value = employeeId
     return employeeId
     
@@ -3574,11 +3568,36 @@ const getCurrentEmployeeId = () => {
   }
 }
 
-
-const isMyMessage = (message) => {
-  const employeeId = getCurrentEmployeeId()
-  return employeeId && message.author?.id === parseInt(employeeId)
+const fetchCurrentEmployeeId = async () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem('user_data') || '{}')
+    const userId = userData.uid
+    
+    if (!userId) return null
+    
+    const response = await apiClient.post('/web/v2/team/user/employee_id', {
+      jsonrpc: '2.0',
+      id: new Date().getTime(),
+      params: {
+        user_id: userId
+      }
+    })
+    
+    if (response.data.result?.status === 'success') {
+      currentEmployeeId.value = response.data.result.data.employee_id
+      return currentEmployeeId.value
+    }
+  } catch (error) {
+    console.error('Error fetching employee ID:', error)
+  }
+  return null
 }
+
+// Perbaiki isMyMessage
+const isMyMessage = (message) => {
+  return message.is_my_message === true
+}
+
 
 const showMessageReadStatus = async (message) => {
   try {
@@ -5255,6 +5274,7 @@ onMounted(() => {
   fetchDepartments()
   fetchProjectDetail()
   fetchProjectAttachments()
+  fetchCurrentEmployeeId()
   fetchTasks()
   
   // Setup message observer
