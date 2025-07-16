@@ -1692,7 +1692,10 @@
                         </div>
                         <span class="ml-3 text-sm text-gray-700">{{ reader.reader_name }}</span>
                       </div>
-                      <span class="text-xs text-gray-500">{{ formatTime(reader.read_at) }}</span>
+                      <!-- PERBAIKAN: Ganti formatTime dengan formatDateTime -->
+                       <span class="text-xs text-gray-500" :title="formatDateTime(reader.read_at)">
+  {{ formatReadTimestamp(reader.read_at) }}
+</span>
                     </div>
                   </div>
                 </div>
@@ -4728,6 +4731,66 @@ const formatBAUState = (state) => {
     not_done: 'Not Done'
   }
   return states[state] || state
+}
+
+// Tambahkan function ini di script setup
+const formatReadTime = (dateTimeString) => {
+  if (!dateTimeString) return '-'
+  
+  const date = new Date(dateTimeString)
+  const now = new Date()
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24))
+  
+  // Jika hari yang sama, tampilkan jam saja
+  if (diffDays === 0) {
+    return format(date, 'HH:mm')
+  }
+  // Jika kemarin, tampilkan "Yesterday HH:mm"
+  else if (diffDays === 1) {
+    return `Yesterday ${format(date, 'HH:mm')}`
+  }
+  // Jika tahun yang sama, tampilkan "dd MMM HH:mm"
+  else if (date.getFullYear() === now.getFullYear()) {
+    return format(date, 'dd MMM HH:mm')
+  }
+  // Jika tahun berbeda, tampilkan "dd MMM yyyy HH:mm"
+  else {
+    return format(date, 'dd MMM yyyy HH:mm')
+  }
+}
+const formatReadTimestamp = (dateTimeString) => {
+  if (!dateTimeString) return '-'
+  
+  try {
+    const date = new Date(dateTimeString)
+    const now = new Date()
+    const diffMs = now - date
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor(diffMs / (1000 * 60))
+    
+    // Jika kurang dari 1 jam yang lalu
+    if (diffHours < 1) {
+      if (diffMinutes < 1) return 'Just now'
+      return `${diffMinutes}m ago`
+    }
+    // Jika kurang dari 24 jam yang lalu
+    else if (diffHours < 24) {
+      return `${diffHours}h ago`
+    }
+    // Jika kemarin
+    else if (diffDays === 1) {
+      return `Yesterday • ${format(date, 'HH:mm')}`
+    }
+    // Jika lebih dari 7 hari, tampilkan tanggal lengkap
+    else {
+      // return format(date, 'dd MMM yyyy HH:mm')
+      return `${format(date, 'dd MMM yyyy')} • ${format(date, 'HH:mm')}`
+    }
+  } catch (error) {
+    console.error('Error formatting timestamp:', error)
+    return dateTimeString
+  }
 }
 
 const formatDate = (date) => {
