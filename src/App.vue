@@ -6,6 +6,7 @@ import { useNotificationStore } from './stores/notification'
 import Sidebar from './components/Sidebar.vue'
 import NotificationBell from './components/NotificationBell.vue'
 import { Bell, X } from 'lucide-vue-next'
+import { useOneSignal } from './composables/useOneSignal'
 
 // Hanya import PWAUpdatePopUp jika memang ada
 // import PWAUpdatePopUp from './components/PWAUpdatePopUp.vue'
@@ -13,6 +14,7 @@ import { Bell, X } from 'lucide-vue-next'
 const router = useRouter()
 const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
+const { init: initOneSignal } = useOneSignal()
 
 // State untuk toast notification
 const showToast = ref(false)
@@ -67,6 +69,9 @@ const closeToast = () => {
 let pollingInterval = null
 
 onMounted(() => {
+  // Initialize OneSignal Push Notifications
+  initOneSignal("98c0521b-7e77-414d-aed1-c03b8fdb4be2")
+
   authStore.checkAuth()
   
   // Initialize notifications if authenticated

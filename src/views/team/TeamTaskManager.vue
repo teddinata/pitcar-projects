@@ -99,6 +99,17 @@
               </div>
             </div>
 
+            <!-- Subscribe Notifications button (For Testing Desktop) -->
+            <button
+              @click="promptNotification"
+              class="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors mr-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Enable Notifications
+            </button>
+
             <!-- Create task button - more prominence -->
             <button
               @click="
@@ -3107,6 +3118,7 @@
 // ============================================================================
 import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useToast } from "@/composables/useToast";
+import { useOneSignal } from "@/composables/useOneSignal";
 import {
   format,
   parseISO,
@@ -3213,6 +3225,10 @@ const projects = ref([]);
 const loading = ref(false);
 const selectedTaskId = ref(null);
 const showTaskModal = ref(false);
+
+// Function to trigger OneSignal prompt manually
+const { subscribe: promptNotification } = useOneSignal();
+
 const showDeleteConfirm = ref(false);
 const isEditingTask = ref(false);
 const taskToDelete = ref(null);

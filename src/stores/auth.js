@@ -1,10 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import apiClient from '../config/api'
+import { useOneSignal } from '../composables/useOneSignal'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
+  
+  const { setExternalId, unsubscribe } = useOneSignal()
 
   // Listen for storage changes
   window.addEventListener('storage', (e) => {
@@ -57,14 +60,10 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('isAdmin', userData.is_admin)
 
       // Initialize OneSignal user integration
-      if (window.OneSignalDeferred) {
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          try {
-            await OneSignal.login(String(userData.uid));
-          } catch (err) {
-            console.error('OneSignal login error:', err);
-          }
-        });
+      try {
+        setExternalId(String(userData.uid))
+      } catch (err) {
+        console.error('OneSignal mapping error:', err)
       }
 
       return userData
@@ -81,13 +80,9 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Logout error:', error)
     } finally {
       // Logout from OneSignal
-      if (window.OneSignalDeferred) {
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          try {
-            await OneSignal.logout();
-          } catch (err) {}
-        });
-      }
+      try {
+        unsubscribe()
+      } catch (err) {}
 
       user.value = null
       isAuthenticated.value = false
@@ -112,13 +107,9 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       // Ensure OneSignal stays synced
-      if (window.OneSignalDeferred) {
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          try {
-            await OneSignal.login(String(uid));
-          } catch (err) {}
-        });
-      }
+      try {
+        setExternalId(String(uid))
+      } catch (err) {}
     } else {
       user.value = null
       isAuthenticated.value = false
