@@ -23,6 +23,20 @@
       }
     </script>
     <title>Project Management PITCAR</title>
+    <!-- OneSignal Push Notifications -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "98c0521b-7e77-414d-aed1-c03b8fdb4be2",
+          safari_web_id: "web.onesignal.auto.4d1813bb-fb28-4cd6-9039-144582b81585",
+          notifyButton: {
+            enable: true,
+          },
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="app"></div>

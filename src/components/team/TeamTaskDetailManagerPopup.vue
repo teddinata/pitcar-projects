@@ -53,7 +53,8 @@
                   'bg-green-100 text-green-800': task.state === 'done',
                   'bg-gray-100 text-gray-800': task.state === 'draft',
                   'bg-purple-100 text-purple-800': task.state === 'planned',
-                  'bg-blue-100 text-blue-800': task.state === 'review'
+                  'bg-blue-100 text-blue-800': task.state === 'review',
+                  'bg-indigo-100 text-indigo-800': task.state === 'delegated'
                 }"
               >
                 <div class="w-2 h-2 rounded-full mr-2"
@@ -62,7 +63,8 @@
                     'bg-green-500': task.state === 'done',
                     'bg-gray-500': task.state === 'draft',
                     'bg-purple-500': task.state === 'planned',
-                    'bg-blue-500': task.state === 'review'
+                    'bg-blue-500': task.state === 'review',
+                    'bg-indigo-500': task.state === 'delegated'
                   }"
                 ></div>
                 {{ formatStatus(task.state) }}
@@ -248,6 +250,41 @@
                   </div>
                 </div>
                 
+                <!-- Delegation Info Tab (Only shown if task is delegated or has delegation data) -->
+                <div v-if="task.state === 'delegated' || task.delegated_by?.id" class="bg-indigo-50 rounded-lg p-5 border border-indigo-100">
+                  <h4 class="text-sm font-medium text-indigo-800 mb-4 flex items-center">
+                    <ArrowRightLeft class="w-4 h-4 mr-1.5 text-indigo-600" />
+                    Delegation Details
+                  </h4>
+                  <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div class="text-xs text-indigo-600/80 mb-1 font-medium select-none uppercase tracking-wider">Delegated By</div>
+                      <div class="text-sm font-medium text-gray-900 flex items-center">
+                        <div class="h-6 w-6 rounded-full bg-indigo-200 flex items-center justify-center mr-2 flex-shrink-0" v-if="task.delegated_by?.name">
+                          <span class="text-xs font-bold text-indigo-700">{{ getInitials(task.delegated_by.name) }}</span>
+                        </div>
+                        {{ task.delegated_by?.name || 'Unknown' }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="text-xs text-indigo-600/80 mb-1 font-medium select-none uppercase tracking-wider">Delegated To</div>
+                      <div class="text-sm font-medium text-gray-900 flex items-center">
+                        <div class="h-6 w-6 rounded-full bg-indigo-200 flex items-center justify-center mr-2 flex-shrink-0" v-if="task.delegated_to?.name">
+                          <span class="text-xs font-bold text-indigo-700">{{ getInitials(task.delegated_to.name) }}</span>
+                        </div>
+                        {{ task.delegated_to?.name || 'Unknown' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-indigo-600/80 mb-1 font-medium select-none uppercase tracking-wider">Delegation Reason</div>
+                    <div class="text-sm text-gray-800 p-3 bg-white rounded border border-indigo-100 italic shadow-sm relative pl-4">
+                      <div class="absolute inset-y-0 left-0 w-1 bg-indigo-400 rounded-l"></div>
+                      {{ task.delegation_reason || 'No specific reason provided' }}
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Project Info -->
                 <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
                   <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -621,7 +658,8 @@ import {
   Eye,
   X,
   Trash2,
-  Bookmark
+  Bookmark,
+  ArrowRightLeft
 } from 'lucide-vue-next';
 import TeamTaskChecklistManager from '@/components/team/TeamTaskChecklistManager.vue';
 import TeamTaskTimesheetManager from '@/components/team/TeamTaskTimesheetManager.vue';
@@ -696,7 +734,8 @@ const formatStatus = (status) => {
     'review': 'In Review',
     'revision': 'Revision',
     'done': 'Completed',
-    'cancelled': 'Cancelled'
+    'cancelled': 'Cancelled',
+    'delegated': 'Delegated'
   };
   return statusMap[status] || status;
 };

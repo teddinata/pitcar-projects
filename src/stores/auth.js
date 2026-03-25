@@ -1,17 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import apiClient from '../config/api'
-import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAuthenticated = ref(false)
-  const router = useRouter()
 
   // Listen for storage changes
   window.addEventListener('storage', (e) => {
     if (e.key === 'uid' && !e.newValue) {
-      handleLogout()
+      logout()
     }
   })
 
@@ -58,6 +56,17 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('database', database)
       localStorage.setItem('isAdmin', userData.is_admin)
 
+      // Initialize OneSignal user integration
+      if (window.OneSignalDeferred) {
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          try {
+            await OneSignal.login(String(userData.uid));
+          } catch (err) {
+            console.error('OneSignal login error:', err);
+          }
+        });
+      }
+
       return userData
     } catch (error) {
       console.error('❌ Login failed:', error)
@@ -71,10 +80,19 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
+      // Logout from OneSignal
+      if (window.OneSignalDeferred) {
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          try {
+            await OneSignal.logout();
+          } catch (err) {}
+        });
+      }
+
       user.value = null
       isAuthenticated.value = false
       localStorage.clear()
-      router.push('/login')
+      window.location.href = '/login'
     }
   }
 
@@ -92,8 +110,19 @@ export const useAuthStore = defineStore('auth', () => {
         partner_id: localStorage.getItem('partner_id'),
         is_admin: localStorage.getItem('isAdmin') === 'true'
       }
+
+      // Ensure OneSignal stays synced
+      if (window.OneSignalDeferred) {
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          try {
+            await OneSignal.login(String(uid));
+          } catch (err) {}
+        });
+      }
     } else {
-      logout()
+      user.value = null
+      isAuthenticated.value = false
+      localStorage.clear()
     }
   }
 

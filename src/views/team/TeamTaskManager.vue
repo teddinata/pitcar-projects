@@ -495,8 +495,35 @@
         </div>
       </div>
 
-      <!-- Loading state -->
-      <div v-if="loading" class="flex justify-center py-8">
+      <!-- Views Container with Blur Overlay -->
+      <div class="relative min-h-[400px] mt-4">
+        <!-- Blur Overlay when no filters are active -->
+        <div 
+          v-if="activeFilterCount === 0 && !loading" 
+          class="absolute inset-0 z-20 backdrop-blur-md bg-white/60 rounded-lg ring-1 ring-gray-900/5 transition-all duration-300"
+        >
+          <div class="sticky top-[30vh] w-full flex flex-col items-center justify-center px-4">
+            <div class="bg-white p-6 rounded-2xl shadow-2xl border border-gray-100 flex flex-col items-center max-w-sm text-center transform transition-all duration-300">
+              <div class="h-16 w-16 rounded-full bg-gradient-to-br from-red-50 to-red-100 border border-red-200 flex items-center justify-center mb-4 text-red-600 shadow-sm">
+                <LockClosedIcon class="h-8 w-8" />
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">Daftar Tugas Terkunci</h3>
+              <p class="text-sm text-gray-500 mb-5 leading-relaxed">
+                Untuk memudahkan pencarian tugas, silahkan gunakan filter. Kami menyarankan Anda memfilter berdasarkan <span class="font-semibold text-gray-700">Project</span> terlebih dahulu.
+              </p>
+              <button 
+                @click="showFilterModal = true" 
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
+              >
+                <FunnelIcon class="h-4 w-4 mr-2" />
+                Buka Filter
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading state -->
+        <div v-if="loading" class="flex justify-center py-8">
         <svg
           class="animate-spin h-8 w-8 text-red-600"
           xmlns="http://www.w3.org/2000/svg"
@@ -655,7 +682,7 @@
                       'bg-gray-100 text-gray-800': !task.priority,
                     }"
                   >
-                    <Flag class="w-2.5 h-2.5" />
+                    <FlagIcon class="w-2.5 h-2.5" />
                     {{
                       task.priority
                         ? formatPriority(task.priority)
@@ -763,6 +790,17 @@
                       {{ task.project?.name || "No project" }}
                     </div>
 
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
+
                     <div class="flex justify-between items-center">
                       <span
                         class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
@@ -775,7 +813,7 @@
                           'bg-gray-100 text-gray-800': !task.priority,
                         }"
                       >
-                        <Flag class="w-3 h-3" />
+                        <FlagIcon class="w-3 h-3" />
                         {{
                           task.priority
                             ? formatPriority(task.priority)
@@ -856,6 +894,17 @@
                     <div class="text-xs text-gray-500 mb-2">
                       {{ task.project?.name || "No project" }}
                     </div>
+
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
                     <div class="flex justify-between items-center">
                       <span
                         class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
@@ -868,7 +917,110 @@
                           'bg-gray-100 text-gray-800': !task.priority,
                         }"
                       >
-                        <Flag class="w-3 h-3" />
+                        <FlagIcon class="w-3 h-3" />
+                        {{
+                          task.priority
+                            ? formatPriority(task.priority)
+                            : "Tidak ada"
+                        }}
+                      </span>
+                      <div class="flex items-center">
+                        <div class="w-16 bg-gray-200 rounded-full h-1 mr-1">
+                          <div
+                            class="bg-red-600 h-1 rounded-full"
+                            :style="{ width: `${task.progress || 0}%` }"
+                          ></div>
+                        </div>
+                        <span class="text-xs text-gray-500"
+                          >{{ task.progress || 0 }}%</span
+                        >
+                      </div>
+                    </div>
+
+                    <div class="mt-2 flex justify-between items-center">
+                      <div class="flex flex-wrap gap-1">
+                        <div
+                          v-for="person in task.assigned_to.slice(0, 2)"
+                          :key="person.id"
+                          class="h-6 w-6 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-medium uppercase text-xs"
+                          :title="person.name"
+                        >
+                          {{ getInitials(person.name) }}
+                        </div>
+                        <div
+                          v-if="task.assigned_to.length > 2"
+                          class="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-medium text-xs"
+                        >
+                          +{{ task.assigned_to.length - 2 }}
+                        </div>
+                      </div>
+                      <div
+                        v-if="task.dates?.planned_end"
+                        class="text-xs text-gray-500"
+                      >
+                        {{ formatDate(task.dates.planned_end) }}
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </Draggable>
+            </div>
+          </div>
+
+          <!-- Delegated Column -->
+          <div class="flex-shrink-0 w-80">
+            <div class="bg-indigo-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-medium text-gray-900">Delegated</h3>
+                <span
+                  class="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded-full"
+                >
+                  {{ delegateTasks.length }}
+                </span>
+              </div>
+              <Draggable
+                v-model="delegateTasks"
+                :group="{ name: 'tasks' }"
+                item-key="id"
+                class="space-y-3 min-h-[200px]"
+                @end="handleDragEnd"
+                data-state="delegated"
+              >
+                <template #item="{ element: task }">
+                  <div
+                    class="bg-white p-3 rounded-md shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+                    @click="selectTask(task)"
+                  >
+                    <div class="text-sm font-medium text-gray-900 mb-1">
+                      {{ task.name }}
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">
+                      {{ task.project?.name || "No project" }}
+                    </div>
+
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span
+                        class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
+                        :class="{
+                          'bg-blue-100 text-blue-800': task.priority === '0',
+                          'bg-emerald-100 text-emerald-800':
+                            task.priority === '1',
+                          'bg-amber-100 text-amber-800': task.priority === '2',
+                          'bg-red-100 text-red-800': task.priority === '3',
+                          'bg-gray-100 text-gray-800': !task.priority,
+                        }"
+                      >
+                        <FlagIcon class="w-3 h-3" />
                         {{
                           task.priority
                             ? formatPriority(task.priority)
@@ -950,6 +1102,17 @@
                       {{ task.project?.name || "No project" }}
                     </div>
 
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
+
                     <div class="flex justify-between items-center">
                       <span
                         class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
@@ -962,7 +1125,7 @@
                           'bg-gray-100 text-gray-800': !task.priority,
                         }"
                       >
-                        <Flag class="w-3 h-3" />
+                        <FlagIcon class="w-3 h-3" />
                         {{
                           task.priority ? formatPriority(task.priority) : "No"
                         }}
@@ -1042,6 +1205,17 @@
                       {{ task.project?.name || "No project" }}
                     </div>
 
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
+
                     <div class="flex justify-between items-center">
                       <span
                         class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
@@ -1054,7 +1228,7 @@
                           'bg-gray-100 text-gray-800': !task.priority,
                         }"
                       >
-                        <Flag class="w-3 h-3" />
+                        <FlagIcon class="w-3 h-3" />
                         {{
                           task.priority ? formatPriority(task.priority) : "No"
                         }}
@@ -1134,6 +1308,17 @@
                       {{ task.project?.name || "No project" }}
                     </div>
 
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
+
                     <div class="flex justify-between items-center">
                       <span
                         class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
@@ -1146,7 +1331,7 @@
                           'bg-gray-100 text-gray-800': !task.priority,
                         }"
                       >
-                        <Flag class="w-3 h-3" />
+                        <FlagIcon class="w-3 h-3" />
                         {{
                           task.priority ? formatPriority(task.priority) : "No"
                         }}
@@ -1224,6 +1409,17 @@
                     <div class="text-xs text-gray-500 mb-2">
                       {{ task.project?.name || "No project" }}
                     </div>
+
+                    <!-- Delegation Info for Card -->
+                    <div v-if="task.state === 'delegated' && (task.delegated_to?.name || task.delegated_by?.name)" class="mb-3 px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-xs flex flex-col gap-1">
+                      <div class="flex items-center text-indigo-700 font-medium font-sans">
+                        <ArrowRightLeft class="w-3.5 h-3.5 mr-1" />
+                        <span class="truncate">To: {{ task.delegated_to?.name || 'Unknown' }}</span>
+                      </div>
+                      <div class="text-indigo-600 truncate opacity-90 pl-4.5" v-if="task.delegated_by?.name">
+                        From: {{ getInitials(task.delegated_by.name) }} ({{ task.delegated_by.name }})
+                      </div>
+                    </div>
                     <div class="flex justify-between items-center">
                       <span
                         class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full gap-1"
@@ -1236,7 +1432,7 @@
                           'bg-gray-100 text-gray-800': !task.priority,
                         }"
                       >
-                        <Flag class="w-3 h-3" />
+                        <FlagIcon class="w-3 h-3" />
                         {{
                           task.priority ? formatPriority(task.priority) : "No"
                         }}
@@ -1486,6 +1682,8 @@
           @resetFilters="clearAllFilters"
         />
       </div>
+      </div>
+
       <!-- Task Detail Section (when a task is selected) -->
       <TeamTaskDetailManagerPopup
         v-if="showTaskDetail"
@@ -1667,6 +1865,7 @@
                         <option value="">All Statuses</option>
                         <option value="draft">Draft</option>
                         <option value="planned">Planned</option>
+                        <option value="delegated">Delegated</option>
                         <option value="in_progress">In Progress</option>
                         <option value="review">In Review</option>
                         <option value="done">Completed</option>
@@ -2105,7 +2304,7 @@
                               <div
                                 class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                               >
-                                <Flag class="h-4 w-4 text-gray-400" />
+                                <FlagIcon class="h-4 w-4 text-gray-400" />
                               </div>
                               <select
                                 id="task-priority"
@@ -2587,6 +2786,7 @@
                               >
                                 <option value="draft">Draft</option>
                                 <option value="planned">Planned</option>
+                                <option value="delegated">Delegated</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="review">In Review</option>
                                 <option value="done">Completed</option>
@@ -2596,6 +2796,83 @@
                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                               >
                                 <!-- <ChevronDown class="h-4 w-4 text-gray-400" /> -->
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Delegation Fields (Visible only when status is Delegate) -->
+                          <div v-if="currentTask.state === 'delegated'" class="space-y-4 pt-3 border-t border-gray-200 mt-4">
+                            <div>
+                              <label
+                                for="task-delegated-by"
+                                class="block text-sm font-medium text-gray-700 mb-1.5"
+                              >
+                                Delegated By <span class="text-red-500">*</span>
+                              </label>
+                              <div class="relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <UserIcon class="h-4 w-4 text-gray-400" />
+                                </div>
+                                <select
+                                  id="task-delegated-by"
+                                  v-model="currentTask.delegated_by_id"
+                                  class="block w-full pl-10 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-lg"
+                                >
+                                  <option value="" disabled>Select User</option>
+                                  <option
+                                    v-for="member in (getProjectTeamMembers(currentTask.project_id).length > 0 ? getProjectTeamMembers(currentTask.project_id) : employees)"
+                                    :key="member.id"
+                                    :value="member.id"
+                                  >
+                                    {{ member.name }}
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label
+                                for="task-delegated-to"
+                                class="block text-sm font-medium text-gray-700 mb-1.5"
+                              >
+                                Delegated To <span class="text-red-500">*</span>
+                              </label>
+                              <div class="relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <UserIcon class="h-4 w-4 text-gray-400" />
+                                </div>
+                                <select
+                                  id="task-delegated-to"
+                                  v-model="currentTask.delegated_to_id"
+                                  class="block w-full pl-10 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-lg"
+                                >
+                                  <option value="" disabled>Select User</option>
+                                  <option
+                                    v-for="member in (getProjectTeamMembers(currentTask.project_id).length > 0 ? getProjectTeamMembers(currentTask.project_id) : employees)"
+                                    :key="member.id"
+                                    :value="member.id"
+                                  >
+                                    {{ member.name }}
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label
+                                for="task-delegation-reason"
+                                class="block text-sm font-medium text-gray-700 mb-1.5"
+                              >
+                                Delegation Reason <span class="text-red-500">*</span>
+                              </label>
+                              <div class="mt-1 relative rounded-md shadow-sm">
+                                <textarea
+                                  id="task-delegation-reason"
+                                  v-model="currentTask.delegation_reason"
+                                  rows="3"
+                                  class="block w-full text-sm border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:ring-red-500 focus:border-red-500"
+                                  placeholder="Please provide a reason for delegation..."
+                                ></textarea>
                               </div>
                             </div>
                           </div>
@@ -2871,7 +3148,40 @@ import {
   UserIcon,
   FolderIcon,
   ChevronDownIcon,
+  LockClosedIcon,
+  FlagIcon,
 } from "@heroicons/vue/24/outline";
+
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  ArrowUp,
+  Bold,
+  Calculator,
+  Calendar,
+  CalendarDays,
+  CheckCircle,
+  CheckSquare,
+  ChevronDown,
+  Clock,
+  Edit,
+  FileText,
+  FolderOpen,
+  GitBranch,
+  Italic,
+  Link,
+  List,
+  Loader,
+  Save,
+  Tag,
+  User,
+  UserX,
+  Users,
+  X,
+  XOctagon,
+  ArrowRightLeft
+} from 'lucide-vue-next';
 
 // KEEP EXISTING IMPORTS
 import TeamTaskDetailManagerPopup from "@/components/team/TeamTaskDetailManagerPopup.vue";
@@ -3005,6 +3315,9 @@ const currentTask = ref({
   reviewer_id: "",
   depends_on_ids: [],
   blocked_by_id: "",
+  delegated_by_id: "",
+  delegated_to_id: "",
+  delegation_reason: "",
 });
 
 const formErrors = ref([]);
@@ -3373,6 +3686,10 @@ const plannedTasks = computed(() => {
   return filteredTasks.value.filter((task) => task.state === "planned");
 });
 
+const delegateTasks = computed(() => {
+  return filteredTasks.value.filter((task) => task.state === "delegated");
+});
+
 const inProgressTasks = computed(() => {
   return filteredTasks.value.filter((task) => task.state === "in_progress");
 });
@@ -3551,12 +3868,7 @@ const removeFilter = (key) => {
       priorityFilter.value = "";
       break;
     case "dateRange":
-      // Reset ke current month jika custom date range
-      const today = new Date();
-      dueDateFilter.value = {
-        from: format(startOfMonth(today), "yyyy-MM-dd"),
-        to: format(endOfMonth(today), "yyyy-MM-dd"),
-      };
+      dueDateFilter.value = { from: "", to: "" };
       break;
     case "progress":
       progressFilter.value = { min: "", max: "" };
@@ -3702,6 +4014,9 @@ const resetTaskForm = () => {
     reviewer_id: "",
     depends_on_ids: [],
     blocked_by_id: "",
+    delegated_by_id: "",
+    delegated_to_id: "",
+    delegation_reason: "",
   };
 };
 
@@ -3787,6 +4102,9 @@ const editTask = (task) => {
     reviewer_id: task.reviewer?.id || "",
     depends_on_ids: task.depends_on?.map((t) => t.id) || [],
     blocked_by_id: task.blocked_by?.id || "",
+    delegated_by_id: task.delegated_by?.id || task.delegated_by_id || "",
+    delegated_to_id: task.delegated_to?.id || task.delegated_to_id || "",
+    delegation_reason: task.delegation_reason || "",
   };
 
   showTaskModal.value = true;
@@ -3834,6 +4152,18 @@ const validateForm = () => {
     (!currentTask.value.planned_date_end || !currentTask.value.planned_time_end)
   ) {
     formErrors.value.push("Both end date and time must be filled");
+  }
+
+  if (currentTask.value.state === "delegated") {
+    if (!currentTask.value.delegated_by_id) {
+      formErrors.value.push("Please select who delegated this task");
+    }
+    if (!currentTask.value.delegated_to_id) {
+      formErrors.value.push("Please select who this task is delegated to");
+    }
+    if (!currentTask.value.delegation_reason || !currentTask.value.delegation_reason.trim()) {
+      formErrors.value.push("Delegation reason is required");
+    }
   }
 
   if (
@@ -3915,6 +4245,17 @@ const submitTask = async () => {
           : null,
       },
     };
+
+    if (currentTask.value.state === "delegated") {
+      payload.params.delegated_by_id = currentTask.value.delegated_by_id
+        ? parseInt(currentTask.value.delegated_by_id)
+        : null;
+      payload.params.delegated_to_id = currentTask.value.delegated_to_id
+        ? parseInt(currentTask.value.delegated_to_id)
+        : null;
+      payload.params.delegation_reason =
+        currentTask.value.delegation_reason?.trim() || "";
+    }
 
     if (plannedDateStart) {
       payload.params.planned_date_start = plannedDateStart;
@@ -4042,6 +4383,20 @@ const handleDragEnd = async (event) => {
     const newState = event.to.getAttribute("data-state");
     if (!newState || task.state === newState) return;
 
+    if (newState === "delegated" && (!task.delegated_by_id && !task.delegated_by?.id || !task.delegated_to_id && !task.delegated_to?.id || !task.delegation_reason)) {
+      // Revert the local drag visually by refetching
+      fetchTasks();
+      
+      // Open the edit form with the status pre-selected to enforce required fields
+      editTask(task);
+      currentTask.value.state = "delegated";
+      showToast({
+        message: "Please fill in the delegation details to delegated this task.",
+        type: "info",
+      });
+      return;
+    }
+
     loading.value = true;
     const response = await apiClient.post("/web/v2/team/tasks", {
       jsonrpc: "2.0",
@@ -4100,6 +4455,7 @@ const formatStatus = (status) => {
   const statusMap = {
     draft: "Draft",
     planned: "Planned",
+    delegated: "Delegated",
     in_progress: "In Progress",
     review: "In Review",
     done: "Completed",
@@ -4113,6 +4469,7 @@ const getStatusClass = (status) => {
   const classMap = {
     draft: "bg-gray-100 text-gray-800",
     planned: "bg-blue-100 text-blue-800",
+    delegated: "bg-indigo-100 text-indigo-800",
     in_progress: "bg-yellow-100 text-yellow-800",
     review: "bg-purple-100 text-purple-800",
     done: "bg-green-100 text-green-800",
@@ -4147,6 +4504,7 @@ function getStatusColor(status) {
   const colorMap = {
     draft: "gray",
     planned: "blue",
+    delegated: "indigo",
     in_progress: "yellow",
     review: "purple",
     done: "green",
@@ -4544,12 +4902,8 @@ watch([() => tasks.value.length, () => viewMode.value], ([taskCount, mode]) => {
 onMounted(async () => {
   await Promise.all([fetchProjects(), fetchDepartments()]);
 
-  // Set default date range (from 7 days ago to 14 days ahead)
-  const today = new Date();
-  dueDateFilter.value = {
-    from: format(subDays(today, 14), "yyyy-MM-dd"),
-    end: format(addDays(today, 14), "yyyy-MM-dd"),
-  };
+  // No default date filter
+  dueDateFilter.value = { from: "", to: "" };
 
   // Initial fetch
   await fetchTasks(true);
