@@ -37,16 +37,20 @@ export function useOneSignal() {
   }
 
   const subscribe = async () => {
-    window.OneSignalDeferred.push(async (OneSignal) => {
-      await OneSignal.Notifications.requestPermission()
-      const permission = await OneSignal.Notifications.permission
-      isSubscribed.value = permission
+    if (window.OneSignalDeferred) {
+      window.OneSignalDeferred.push(async (OneSignal) => {
+        // Gunakan Slidedown prompt agar browser memahami konteks klik User
+        await OneSignal.Slidedown.promptPush({ force: true })
+        
+        const permission = await OneSignal.Notifications.permission
+        isSubscribed.value = permission
 
-      if (permission) {
-        const id = await OneSignal.User.PushSubscription.id
-        userId.value = id
-      }
-    })
+        if (permission) {
+          const id = await OneSignal.User.PushSubscription.id
+          userId.value = id
+        }
+      })
+    }
   }
 
   const unsubscribe = async () => {

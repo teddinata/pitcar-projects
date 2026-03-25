@@ -101,6 +101,7 @@
 
             <!-- Subscribe Notifications button (For Testing Desktop) -->
             <button
+              v-if="!isSubscribed"
               @click="promptNotification"
               class="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors mr-2"
             >
@@ -3227,7 +3228,7 @@ const selectedTaskId = ref(null);
 const showTaskModal = ref(false);
 
 // Function to trigger OneSignal prompt manually
-const { subscribe: promptNotification } = useOneSignal();
+const { subscribe: promptNotification, isSubscribed } = useOneSignal();
 
 const showDeleteConfirm = ref(false);
 const isEditingTask = ref(false);
