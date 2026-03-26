@@ -24,19 +24,16 @@
           </div>
 
           <!-- Action buttons with better labeling -->
-          <div class="mt-4 sm:mt-0 flex items-center space-x-3">
+          <div class="mt-4 sm:mt-0 flex flex-wrap items-center justify-start sm:justify-end gap-2 sm:gap-3">
             <!-- View toggle with descriptive text -->
-            <div class="hidden md:flex items-center mr-2">
+            <div class="hidden md:flex items-center">
               <span class="text-sm text-gray-500 mr-2">View as:</span>
               <div class="inline-flex rounded-md shadow-sm">
+                <!-- ... view toggles ... kept intact, omitting full replace if possible -->
                 <button
                   @click="viewMode = 'table'"
                   class="px-3 py-2 text-sm font-medium border border-gray-300 focus:outline-none focus:ring-1 focus:ring-red-500 rounded-l-md flex items-center"
-                  :class="
-                    viewMode === 'table'
-                      ? 'bg-red-50 text-red-700 border-red-500'
-                      : 'bg-white text-gray-700'
-                  "
+                  :class="viewMode === 'table' ? 'bg-red-50 text-red-700 border-red-500' : 'bg-white text-gray-700'"
                   title="Table View"
                 >
                   <TableIcon class="h-4 w-4 mr-1" />
@@ -45,52 +42,27 @@
                 <button
                   @click="viewMode = 'kanban'"
                   class="px-3 py-2 text-sm font-medium border border-gray-300 focus:outline-none focus:ring-1 focus:ring-red-500 -ml-px flex items-center"
-                  :class="
-                    viewMode === 'kanban'
-                      ? 'bg-red-50 text-red-700 border-red-500'
-                      : 'bg-white text-gray-700'
-                  "
+                  :class="viewMode === 'kanban' ? 'bg-red-50 text-red-700 border-red-500' : 'bg-white text-gray-700'"
                   title="Kanban Board View"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                    />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                   <span class="hidden lg:inline">Kanban</span>
                 </button>
-                <!-- Calendar View Button -->
                 <button
                   @click="viewMode = 'calendar'"
                   class="px-3 py-2 text-sm font-medium border border-gray-300 focus:outline-none focus:ring-1 focus:ring-red-500 -ml-px flex items-center"
-                  :class="
-                    viewMode === 'calendar'
-                      ? 'bg-red-50 text-red-700 border-red-500'
-                      : 'bg-white text-gray-700'
-                  "
+                  :class="viewMode === 'calendar' ? 'bg-red-50 text-red-700 border-red-500' : 'bg-white text-gray-700'"
                   title="Calendar View"
                 >
                   <CalendarIcon class="h-4 w-4 mr-1" />
                   <span class="hidden lg:inline">Calendar</span>
                 </button>
-                <!-- Gantt Chart Button -->
                 <button
                   @click="viewMode = 'gantt'"
                   class="px-3 py-2 text-sm font-medium border border-gray-300 focus:outline-none focus:ring-1 focus:ring-red-500 -ml-px rounded-r-md flex items-center"
-                  :class="
-                    viewMode === 'gantt'
-                      ? 'bg-red-50 text-red-700 border-red-500'
-                      : 'bg-white text-gray-700'
-                  "
+                  :class="viewMode === 'gantt' ? 'bg-red-50 text-red-700 border-red-500' : 'bg-white text-gray-700'"
                   title="Gantt Chart View"
                 >
                   <ChartBarIcon class="h-4 w-4 mr-1" />
@@ -99,29 +71,31 @@
               </div>
             </div>
 
-            <!-- Subscribe Notifications button (For Testing Desktop) -->
+            <!-- Subscribe Notifications button -->
             <button
               v-if="!isSubscribed"
               @click="promptNotification"
-              class="hidden md:inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors mr-2"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              Enable Notifications
+              <span class="hidden sm:inline">Enable Notifications</span>
+              <span class="sm:hidden">Get Notified</span>
             </button>
 
-            <!-- Create task button - more prominence -->
+            <!-- Create task button -->
             <button
               @click="
                 showTaskModal = true;
                 isEditingTask = false;
                 resetTaskForm();
               "
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+              class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
             >
-              <PlusIcon class="h-4 w-4 mr-1.5" />
-              Create New Task
+              <PlusIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+              <span class="hidden sm:inline">Create New Task</span>
+              <span class="sm:hidden">New Task</span>
             </button>
           </div>
         </div>
