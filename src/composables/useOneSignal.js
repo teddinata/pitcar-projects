@@ -17,7 +17,7 @@ export function useOneSignal() {
           appId: appId,
           safari_web_id: 'web.onesignal.auto.4d1813bb-fb28-4cd6-9039-144582b81585', // opsional, hapus kalau gak perlu
           notifyButton: {
-            enable: false, // kita handle sendiri UI-nya
+            enable: true, // kita handle sendiri UI-nya
           },
           allowLocalhostAsSecureOrigin: true, // untuk development
         })
@@ -37,19 +37,32 @@ export function useOneSignal() {
   }
 
   const subscribe = async () => {
+    // Cek HTTP vs HTTPS (Web Push API membutuhkan HTTPS atau localhost)
+    if (window.isSecureContext === false) {
+      alert('⚠️ Gagal: Fitur Notifikasi membutuhkan koneksi aman (HTTPS). Jika Anda mengakses lewat IP Lokal (misal 192.168.x.x), browser HP Anda akan memblokir fitur notifikasi secara otomatis demi keamanan.');
+      return;
+    }
+
     if (window.OneSignalDeferred) {
       window.OneSignalDeferred.push(async (OneSignal) => {
-        // Gunakan Slidedown prompt agar browser memahami konteks klik User
-        await OneSignal.Slidedown.promptPush({ force: true })
-        
-        const permission = await OneSignal.Notifications.permission
-        isSubscribed.value = permission
+        try {
+          // Gunakan Slidedown prompt agar browser memahami konteks klik User
+          await OneSignal.Slidedown.promptPush({ force: true })
+          
+          const permission = await OneSignal.Notifications.permission
+          isSubscribed.value = permission
 
-        if (permission) {
-          const id = await OneSignal.User.PushSubscription.id
-          userId.value = id
+          if (permission) {
+            const id = await OneSignal.User.PushSubscription.id
+            userId.value = id
+          }
+        } catch (error) {
+          console.error('OneSignal Subscribe Error:', error);
+          alert('Terjadi kesalahan saat mengaktifkan notifikasi: ' + error.message);
         }
       })
+    } else {
+      alert('OneSignal belum termuat sempurna. Tunggu beberapa detik dan coba lagi.');
     }
   }
 
