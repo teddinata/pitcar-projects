@@ -17,7 +17,16 @@ export function useOneSignal() {
           appId: appId,
           safari_web_id: 'web.onesignal.auto.4d1813bb-fb28-4cd6-9039-144582b81585', // opsional, hapus kalau gak perlu
           notifyButton: {
-            enable: true, // kita handle sendiri UI-nya
+            enable: true, 
+            size: 'medium',
+            theme: 'default',
+            position: 'bottom-right',
+            showCredit: false,
+            offset: {
+                bottom: '80px', // Prevent overlap with mobile bottom bar
+                left: '15px',
+                right: '15px'
+            }
           },
           allowLocalhostAsSecureOrigin: true, // untuk development
         })
