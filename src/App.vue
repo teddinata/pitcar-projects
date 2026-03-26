@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import { useNotificationStore } from './stores/notification'
 import Sidebar from './components/Sidebar.vue'
+import MobileBottomNav from './components/MobileBottomNav.vue'
+import MobileDrawer from './components/MobileDrawer.vue'
 import NotificationBell from './components/NotificationBell.vue'
 import { Bell, X } from 'lucide-vue-next'
 import { useOneSignal } from './composables/useOneSignal'
@@ -20,6 +22,9 @@ const { init: initOneSignal } = useOneSignal()
 const showToast = ref(false)
 const newNotificationCount = ref(0)
 const toastTimeout = ref(null)
+
+// State untuk Mobile Drawer Menu
+const isMobileMenuOpen = ref(false)
 
 // Fungsi untuk memeriksa notifikasi baru
 const checkForNewNotifications = async () => {
@@ -110,9 +115,15 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
 
 <template>
   <!-- Autentikasi Layout -->
-  <div v-if="authStore.isAuthenticated" class="flex h-screen bg-gray-50">
+  <div v-if="authStore.isAuthenticated" class="flex h-screen bg-gray-50 overflow-hidden">
     <Sidebar />
-    <div class="flex-1 overflow-auto">
+    
+    <!-- Mobile Bottom Navigation -->
+    <MobileBottomNav @open-menu="isMobileMenuOpen = true" />
+    <MobileDrawer :is-open="isMobileMenuOpen" @close="isMobileMenuOpen = false" />
+    
+    <!-- flex-1 container: mb-16 on mobile ensures content doesn't get hidden behind bottom bar -->
+    <div class="flex-1 overflow-auto w-full md:pb-0 pb-16 relative">
       <!-- Add top header with notification bell -->
       <header class="sticky top-0 z-10 bg-white shadow-sm">
         <div class="px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">

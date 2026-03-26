@@ -15,13 +15,13 @@
           <!-- Title -->
           <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">All Teams Projects</h1>
           
-          <!-- Controls Container - Simplified for efficiency -->
-          <div class="flex items-center space-x-3">
+          <!-- Controls Container - Made fully responsive for mobile -->
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
             <!-- View toggle buttons -->
-            <div class="inline-flex rounded-md shadow-sm">
+            <div class="inline-flex rounded-md shadow-sm sm:mr-1">
               <button
                 @click="viewMode = 'grid'"
-                class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center"
+                class="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center transition-colors"
                 :class="viewMode === 'grid' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
               >
                 <ViewColumnsIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
@@ -29,7 +29,7 @@
               </button>
               <button
                 @click="viewMode = 'gantt'"
-                class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-r-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center"
+                class="px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-r-md focus:outline-none focus:ring-1 focus:ring-red-500 flex items-center transition-colors"
                 :class="viewMode === 'gantt' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
               >
                 <ChartBarIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
@@ -43,21 +43,22 @@
               <div class="relative inline-block">
                 <button 
                   @click="sortDropdownOpen = !sortDropdownOpen" 
-                  class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none"
+                  class="inline-flex items-center px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none transition-colors"
                 >
-                  <ArrowsUpDownIcon class="w-4 h-4 mr-2" />
-                  Sort: {{ getSortLabel() }}
+                  <ArrowsUpDownIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
+                  <span class="hidden sm:inline">Sort: {{ getSortLabel() }}</span>
+                  <span class="sm:hidden">{{ getSortLabel().substring(0, 8) }}</span>
                   <span class="ml-1">
-                    <ArrowUpIcon v-if="sortOptions.order === 'asc'" class="w-4 h-4" />
-                    <ArrowDownIcon v-else class="w-4 h-4" />
+                    <ArrowUpIcon v-if="sortOptions.order === 'asc'" class="w-3 h-3 sm:w-4 sm:h-4" />
+                    <ArrowDownIcon v-else class="w-3 h-3 sm:w-4 sm:h-4" />
                   </span>
-                  <ChevronDownIcon class="w-4 h-4 ml-1" />
+                  <ChevronDownIcon class="w-3 h-3 sm:w-4 sm:h-4 ml-0.5" />
                 </button>
                 
                 <!-- Sort Menu -->
                 <div 
                   v-if="sortDropdownOpen" 
-                  class="absolute right-0 z-10 mt-1 bg-white rounded-md shadow-lg w-48"
+                  class="absolute left-0 sm:right-0 sm:left-auto z-10 mt-1 bg-white rounded-md shadow-lg w-48"
                 >
                   <div class="py-1">
                     <button
@@ -65,12 +66,12 @@
                       :key="option.value"
                       @click="changeSort(option.value); sortDropdownOpen = false"
                       class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 flex items-center justify-between"
-                      :class="sortOptions.field === option.value ? 'font-medium bg-gray-50' : ''"
+                      :class="sortOptions.field === option.value ? 'font-medium bg-gray-50 text-red-600' : 'text-gray-700'"
                     >
                       {{ option.label }}
                       <span v-if="sortOptions.field === option.value">
-                        <ArrowUpIcon v-if="sortOptions.order === 'asc'" class="w-4 h-4 text-gray-600" />
-                        <ArrowDownIcon v-else class="w-4 h-4 text-gray-600" />
+                        <ArrowUpIcon v-if="sortOptions.order === 'asc'" class="w-4 h-4" />
+                        <ArrowDownIcon v-else class="w-4 h-4" />
                       </span>
                     </button>
                   </div>
@@ -80,11 +81,12 @@
               <!-- Toggle Archived -->
               <button
                 @click="toggleArchived"
-                class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none"
+                class="inline-flex items-center px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none transition-colors"
                 :class="{'bg-gray-100': showArchived}"
               >
-                <ArchiveBoxIcon class="w-4 h-4 mr-2" />
-                {{ showArchived ? 'Hide Archived' : 'Show Archived' }}
+                <ArchiveBoxIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
+                <span class="hidden sm:inline">{{ showArchived ? 'Hide Archived' : 'Show Archived' }}</span>
+                <span class="sm:hidden">{{ showArchived ? 'Active' : 'Archived' }}</span>
               </button>
             </div>
               
@@ -92,15 +94,15 @@
             <!-- Filter Button with Badge Indicators -->
             <button
               @click="showFilterModal = true"
-              class="relative inline-flex items-center justify-center px-3.5 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              class="relative inline-flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
             >
-              <FunnelIcon class="h-4 w-4 mr-1.5" />
+              <FunnelIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
               <span>Filters</span>
               
               <!-- Badge indicator for active filters -->
               <span 
                 v-if="activeFilterCount > 0" 
-                class="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold shadow-sm"
+                class="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] sm:text-xs font-bold shadow-sm"
               >
                 {{ activeFilterCount }}
               </span>
@@ -148,9 +150,9 @@
             <!-- New Project Button -->
             <button
               @click="showCreateModal = true"
-              class="inline-flex justify-center items-center px-3.5 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              class="inline-flex justify-center items-center px-3 py-1.5 sm:px-3.5 sm:py-2 border border-transparent rounded-md shadow-sm text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ml-auto sm:ml-0 transition-colors"
             >
-              <PlusIcon class="h-4 w-4 mr-1.5" />
+              <PlusIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
               <span class="hidden xs:inline">New Project</span>
               <span class="xs:hidden">New</span>
             </button>

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-screen bg-white border-r border-gray-100 shadow-sm transition-all duration-300 ease-in-out relative flex flex-col"
+    class="hidden md:flex flex-col h-screen bg-white border-r border-gray-100 shadow-sm transition-all duration-300 ease-in-out relative"
     :class="[
       isExpanded ? 'w-64' : 'w-20',
       !isPinned && 'hover-expand'
