@@ -6,6 +6,7 @@ import { useNotificationStore } from './stores/notification'
 import Sidebar from './components/Sidebar.vue'
 import MobileBottomNav from './components/MobileBottomNav.vue'
 import MobileDrawer from './components/MobileDrawer.vue'
+import NotificationGuideModal from './components/NotificationGuideModal.vue'
 import NotificationBell from './components/NotificationBell.vue'
 import { Bell, X } from 'lucide-vue-next'
 import { useOneSignal } from './composables/useOneSignal'
@@ -25,6 +26,14 @@ const toastTimeout = ref(null)
 
 // State untuk Mobile Drawer Menu
 const isMobileMenuOpen = ref(false)
+
+// State untuk Global Notification Guide Modal
+const guideModal = ref({
+  show: false,
+  type: 'ios-safari',
+  title: '',
+  message: ''
+});
 
 // Fungsi untuk memeriksa notifikasi baru
 const checkForNewNotifications = async () => {
@@ -86,12 +95,25 @@ onMounted(() => {
     // Mulai polling untuk notifikasi baru setiap 30 detik
     pollingInterval = setInterval(checkForNewNotifications, 30000)
   }
+
+  // Global listener untuk menampilkan guide modal OneSignal
+  window.addEventListener('show-notification-guide', (event) => {
+    if (event.detail) {
+      guideModal.value = {
+        show: true,
+        type: event.detail.type || 'error',
+        title: event.detail.title || 'Peringatan',
+        message: event.detail.message || ''
+      }
+    }
+  })
 })
 
 onUnmounted(() => {
   // Bersihkan interval saat komponen unmount
   if (pollingInterval) clearInterval(pollingInterval)
   if (toastTimeout.value) clearTimeout(toastTimeout.value)
+  window.removeEventListener('show-notification-guide', () => {})
 })
 
 // Watch authentication state changes
@@ -121,6 +143,13 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
     <!-- Mobile Bottom Navigation -->
     <MobileBottomNav @open-menu="isMobileMenuOpen = true" />
     <MobileDrawer :is-open="isMobileMenuOpen" @close="isMobileMenuOpen = false" />
+    <NotificationGuideModal 
+      :show="guideModal.show" 
+      :type="guideModal.type"
+      :title="guideModal.title"
+      :message="guideModal.message"
+      @close="guideModal.show = false" 
+    />
     
     <!-- flex-1 container: mb-16 on mobile ensures content doesn't get hidden behind bottom bar -->
     <div class="flex-1 overflow-auto w-full md:pb-0 pb-16 relative">

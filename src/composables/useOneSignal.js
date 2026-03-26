@@ -48,7 +48,13 @@ export function useOneSignal() {
   const subscribe = async () => {
     // Cek HTTP vs HTTPS (Web Push API membutuhkan HTTPS atau localhost)
     if (window.isSecureContext === false) {
-      alert('⚠️ Gagal: Fitur Notifikasi membutuhkan koneksi aman (HTTPS). Jika Anda mengakses lewat IP Lokal (misal 192.168.x.x), browser HP Anda akan memblokir fitur notifikasi secara otomatis demi keamanan.');
+      window.dispatchEvent(new CustomEvent('show-notification-guide', { detail: { type: 'insecure' } }));
+      return;
+    }
+
+    // Pengecekan krusial untuk perangkat Apple / iOS Safari
+    if (!('Notification' in window)) {
+      window.dispatchEvent(new CustomEvent('show-notification-guide', { detail: { type: 'ios-safari' } }));
       return;
     }
 
@@ -67,11 +73,15 @@ export function useOneSignal() {
           }
         } catch (error) {
           console.error('OneSignal Subscribe Error:', error);
-          alert('Terjadi kesalahan saat mengaktifkan notifikasi: ' + error.message);
+          window.dispatchEvent(new CustomEvent('show-notification-guide', { 
+            detail: { type: 'error', title: 'Terjadi Kesalahan', message: error.message }
+          }));
         }
       })
     } else {
-      alert('OneSignal belum termuat sempurna. Tunggu beberapa detik dan coba lagi.');
+      window.dispatchEvent(new CustomEvent('show-notification-guide', { 
+        detail: { type: 'error', title: 'Belum Termuat', message: 'Script OneSignal belum termuat sempurna. Tunggu beberapa detik dan coba lagi.' }
+      }));
     }
   }
 
