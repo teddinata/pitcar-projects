@@ -26,7 +26,7 @@
           <!-- Action buttons with better labeling -->
           <div class="mt-4 sm:mt-0 flex flex-wrap items-center justify-start sm:justify-end gap-2 sm:gap-3">
             <!-- View toggle with descriptive text -->
-            <div class="hidden md:flex items-center">
+            <div v-if="!showProjectPicker" class="hidden md:flex items-center">
               <span class="text-sm text-gray-500 mr-2">View as:</span>
               <div class="inline-flex rounded-md shadow-sm">
                 <!-- ... view toggles ... kept intact, omitting full replace if possible -->
@@ -102,6 +102,7 @@
 
         <!-- Mobile view toggle (only shown on small screens) -->
         <div
+          v-if="!showProjectPicker"
           class="flex md:hidden items-center justify-center mt-4 overflow-x-auto"
         >
           <span class="text-sm text-gray-500 mr-2">View as:</span>
@@ -173,7 +174,320 @@
     </div>
 
     <main class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Task filters & search (applicable to all views) -->
+      <!-- ==================================================================== -->
+      <!-- PROJECT PICKER - Pilih project dulu sebelum melihat daftar tugas     -->
+      <!-- ==================================================================== -->
+      <div v-if="showProjectPicker">
+        <!-- Heading -->
+        <div class="max-w-2xl mx-auto text-center mb-6">
+          <div
+            class="mx-auto h-12 w-12 rounded-xl bg-gradient-to-br from-rose-50 to-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 mb-3"
+          >
+            <FolderOpen class="h-6 w-6" />
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900">
+            Pilih Project
+          </h2>
+          <p class="mt-1 text-sm text-gray-500">
+            Pilih salah satu project di bawah untuk melihat dan mengelola
+            tugasnya.
+          </p>
+        </div>
+
+        <!-- Search + status pills -->
+        <div
+          class="bg-white shadow-sm rounded-xl border border-gray-200 p-4 mb-5"
+        >
+          <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+            <!-- Search -->
+            <div class="relative w-full lg:w-80 flex-none">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <SearchIcon class="h-4 w-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                v-model="projectPickerSearch"
+                class="block w-full pl-10 pr-3 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500"
+                placeholder="Cari nama project atau kode..."
+              />
+            </div>
+
+            <!-- Status pills -->
+            <div class="flex-1 flex flex-wrap items-center gap-2">
+              <button
+                v-for="option in projectStateOptions"
+                :key="option.value"
+                type="button"
+                @click="projectPickerState = option.value"
+                class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
+                :class="
+                  projectPickerState === option.value
+                    ? 'bg-rose-600 text-white border-rose-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                "
+              >
+                {{ option.label }}
+                <span
+                  class="ml-1.5 px-1.5 rounded-full text-[11px]"
+                  :class="
+                    projectPickerState === option.value
+                      ? 'bg-white/25 text-white'
+                      : 'bg-gray-100 text-gray-600'
+                  "
+                >
+                  {{ option.count }}
+                </span>
+              </button>
+            </div>
+
+            <!-- Escape hatch -->
+            <button
+              type="button"
+              @click="showAllTasks"
+              class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-200 transition-colors flex-none"
+            >
+              <TableIcon class="h-4 w-4 mr-1.5" />
+              Lihat semua tugas
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div
+          v-if="projectsLoading"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4"
+        >
+          <div
+            v-for="n in 8"
+            :key="`skeleton-${n}`"
+            class="bg-white rounded-xl border border-gray-200 p-4 animate-pulse"
+          >
+            <div class="h-3 w-20 bg-gray-200 rounded mb-4"></div>
+            <div class="h-4 w-3/4 bg-gray-200 rounded mb-2"></div>
+            <div class="h-4 w-1/2 bg-gray-200 rounded mb-4"></div>
+            <div class="h-1.5 w-full bg-gray-200 rounded-full mb-4"></div>
+            <div class="h-6 w-24 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div
+          v-else-if="pickerProjects.length === 0"
+          class="bg-white border border-gray-200 rounded-xl py-12 text-center"
+        >
+          <FolderIcon class="mx-auto h-12 w-12 text-gray-300" />
+          <h3 class="mt-2 text-sm font-medium text-gray-900">
+            Project tidak ditemukan
+          </h3>
+          <p class="mt-1 text-sm text-gray-500">
+            {{
+              projectPickerSearch || projectPickerState !== "all"
+                ? "Coba ubah kata kunci atau filter status project."
+                : "Belum ada project yang tersedia."
+            }}
+          </p>
+          <button
+            v-if="projectPickerSearch || projectPickerState !== 'all'"
+            type="button"
+            @click="
+              projectPickerSearch = '';
+              projectPickerState = 'all';
+            "
+            class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Reset pencarian
+          </button>
+        </div>
+
+        <!-- Project cards -->
+        <div
+          v-else
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4"
+        >
+          <button
+            v-for="project in pickerProjects"
+            :key="project.id"
+            type="button"
+            @click="choosePickerProject(project)"
+            class="group text-left bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col hover:shadow-lg hover:border-rose-300 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-all duration-200"
+            :class="{ 'opacity-70': project.active === false }"
+          >
+            <!-- Accent bar by status -->
+            <span
+              class="block h-1.5 w-full"
+              :class="getProjectAccentClass(project.state)"
+            ></span>
+
+            <div class="p-4 flex-1 flex flex-col">
+              <!-- Code + status -->
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-xs font-mono text-gray-400 truncate">
+                  {{ project.code || "—" }}
+                </span>
+                <span
+                  class="px-2 py-0.5 rounded-md text-[11px] font-medium flex-none"
+                  :class="getProjectStateClass(project.state)"
+                >
+                  {{ formatProjectState(project.state) }}
+                </span>
+              </div>
+
+              <!-- Name -->
+              <h3
+                class="text-base font-semibold text-gray-900 leading-snug line-clamp-2 group-hover:text-rose-700 transition-colors"
+              >
+                {{ project.name }}
+              </h3>
+
+              <!-- Departments -->
+              <div
+                v-if="projectDepartmentsOf(project).length"
+                class="flex flex-wrap gap-1.5 mt-2.5"
+              >
+                <span
+                  v-for="dept in projectDepartmentsOf(project).slice(0, 2)"
+                  :key="dept.id"
+                  class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-medium"
+                  :class="getProjectDepartmentClass(dept.id)"
+                >
+                  {{ dept.name }}
+                </span>
+                <span
+                  v-if="projectDepartmentsOf(project).length > 2"
+                  class="inline-flex items-center py-0.5 px-2 rounded-md text-[11px] font-medium bg-gray-100 text-gray-600"
+                >
+                  +{{ projectDepartmentsOf(project).length - 2 }}
+                </span>
+              </div>
+
+              <!-- Progress -->
+              <div class="mt-4">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                  <span class="text-gray-500">Progress</span>
+                  <span class="font-semibold text-gray-700"
+                    >{{ project.progress || 0 }}%</span
+                  >
+                </div>
+                <div
+                  class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"
+                >
+                  <div
+                    class="h-1.5 rounded-full transition-all duration-500"
+                    :class="getProjectProgressClass(project.progress)"
+                    :style="{ width: `${project.progress || 0}%` }"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Meta: deadline + team -->
+              <div class="mt-4 flex items-center justify-between gap-2">
+                <div class="flex items-center text-xs text-gray-500 min-w-0">
+                  <CalendarIcon class="h-3.5 w-3.5 mr-1 flex-none" />
+                  <span
+                    class="truncate"
+                    :class="{
+                      'text-red-600 font-medium': isProjectOverdue(project),
+                    }"
+                  >
+                    {{ formatProjectDate(project.dates?.end) }}
+                  </span>
+                </div>
+                <div class="flex -space-x-2 flex-none">
+                  <span
+                    v-for="(member, index) in projectMembers(project).slice(
+                      0,
+                      3
+                    )"
+                    :key="`${project.id}-member-${index}`"
+                    class="h-6 w-6 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700"
+                    :title="member.name"
+                  >
+                    {{ getInitials(member.name) }}
+                  </span>
+                  <span
+                    v-if="projectMembers(project).length > 3"
+                    class="h-6 w-6 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-[10px] font-semibold text-gray-700"
+                  >
+                    +{{ projectMembers(project).length - 3 }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+              class="px-4 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between"
+            >
+              <span class="inline-flex items-center text-xs text-gray-600">
+                <DocumentIcon class="h-4 w-4 mr-1.5 text-gray-400" />
+                {{ project.task_count || 0 }} tugas
+              </span>
+              <span
+                class="inline-flex items-center text-xs font-medium text-gray-400 group-hover:text-rose-600 transition-colors"
+              >
+                Lihat tugas
+                <ChevronRightIcon class="h-3.5 w-3.5 ml-0.5" />
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================================================================== -->
+      <!-- TASK WORKSPACE - tampil setelah project dipilih                      -->
+      <!-- ==================================================================== -->
+      <template v-else>
+        <!-- Active project bar -->
+        <div
+          class="mb-4 bg-white shadow-sm rounded-xl border border-gray-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        >
+          <div class="flex items-center min-w-0">
+            <div
+              class="h-10 w-10 rounded-lg bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center mr-3 flex-none"
+            >
+              <FolderIcon class="h-5 w-5" />
+            </div>
+            <div class="min-w-0">
+              <div class="text-xs text-gray-500">Project aktif</div>
+              <div class="flex items-center gap-2 min-w-0">
+                <span
+                  class="text-sm sm:text-base font-semibold text-gray-900 truncate"
+                >
+                  {{ activeProject ? activeProject.name : "Semua Project" }}
+                </span>
+                <span
+                  v-if="activeProject"
+                  class="hidden sm:inline-flex px-2 py-0.5 rounded-md text-[11px] font-medium flex-none"
+                  :class="getProjectStateClass(activeProject.state)"
+                >
+                  {{ formatProjectState(activeProject.state) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 flex-none">
+            <span
+              v-if="activeProject"
+              class="hidden md:inline text-xs text-gray-500"
+            >
+              {{ activeProject.task_count || 0 }} tugas •
+              {{ activeProject.progress || 0 }}% progress
+            </span>
+            <button
+              type="button"
+              @click="openProjectPicker"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <ArrowRightLeft class="h-4 w-4 mr-1.5" />
+              Ganti Project
+            </button>
+          </div>
+        </div>
+
+        <!-- Task filters & search (applicable to all views) -->
       <!-- Improved Task filters & search section -->
       <div
         class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 mb-4 bg-white shadow rounded-md border border-gray-200"
@@ -397,18 +711,6 @@
         <!-- Active filters display -->
         <!-- Active filters display -->
         <div v-if="activeFilterCount > 0" class="mt-3">
-          <!-- Debug info (hapus di production) -->
-          <div class="text-xs text-gray-400 mb-2">
-            Active filters: {{ activeFilterCount }} | Displayed:
-            {{ displayedFilters.length }}
-            <button
-              @click="debugFilters"
-              class="ml-2 text-blue-500 hover:text-blue-700"
-            >
-              🐛 Debug
-            </button>
-          </div>
-
           <!-- Filters display -->
           <div class="flex flex-wrap gap-2">
             <div
@@ -481,33 +783,8 @@
         </div>
       </div>
 
-      <!-- Views Container with Blur Overlay -->
+      <!-- Views Container -->
       <div class="relative min-h-[400px] mt-4">
-        <!-- Blur Overlay when no filters are active -->
-        <div 
-          v-if="activeFilterCount === 0 && !loading" 
-          class="absolute inset-0 z-20 backdrop-blur-md bg-white/60 rounded-lg ring-1 ring-gray-900/5 transition-all duration-300"
-        >
-          <div class="sticky top-[30vh] w-full flex flex-col items-center justify-center px-4">
-            <div class="bg-white p-6 rounded-2xl shadow-2xl border border-gray-100 flex flex-col items-center max-w-sm text-center transform transition-all duration-300">
-              <div class="h-16 w-16 rounded-full bg-gradient-to-br from-red-50 to-red-100 border border-red-200 flex items-center justify-center mb-4 text-red-600 shadow-sm">
-                <LockClosedIcon class="h-8 w-8" />
-              </div>
-              <h3 class="text-xl font-bold text-gray-900 mb-2">Daftar Tugas Terkunci</h3>
-              <p class="text-sm text-gray-500 mb-5 leading-relaxed">
-                Untuk memudahkan pencarian tugas, silahkan gunakan filter. Kami menyarankan Anda memfilter berdasarkan <span class="font-semibold text-gray-700">Project</span> terlebih dahulu.
-              </p>
-              <button 
-                @click="showFilterModal = true" 
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
-              >
-                <FunnelIcon class="h-4 w-4 mr-2" />
-                Buka Filter
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- Loading state -->
         <div v-if="loading" class="flex justify-center py-8">
         <svg
@@ -541,13 +818,23 @@
         <h3 class="mt-2 text-sm font-medium text-gray-900">No tasks found</h3>
         <p class="mt-1 text-sm text-gray-500">
           {{
-            searchQuery || statusFilter || projectFilter
+            activeProject
+              ? `Belum ada tugas di project "${activeProject.name}".`
+              : searchQuery || statusFilter || projectFilter
               ? "No tasks match your filters."
               : "Get started by creating a new task."
           }}
         </p>
-        <div v-if="searchQuery || statusFilter || projectFilter" class="mt-6">
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
           <button
+            @click="openProjectPicker"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            <ArrowRightLeft class="h-4 w-4 mr-1.5" />
+            Ganti Project
+          </button>
+          <button
+            v-if="searchQuery || statusFilter || projectFilter"
             @click="clearFilters"
             class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
@@ -837,11 +1124,63 @@
                         </div>
                       </div>
 
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -940,11 +1279,63 @@
                           +{{ task.assigned_to.length - 2 }}
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1043,11 +1434,63 @@
                           +{{ task.assigned_to.length - 2 }}
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1147,11 +1590,63 @@
                         </div>
                       </div>
 
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1250,11 +1745,63 @@
                         </div>
                       </div>
 
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1353,11 +1900,63 @@
                         </div>
                       </div>
 
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1452,11 +2051,63 @@
                           +{{ task.assigned_to.length - 2 }}
                         </div>
                       </div>
+                    </div>
+
+                    <!-- Jadwal pengerjaan: start & end -->
+                    <div
+                      class="mt-2 pt-2 border-t border-gray-100"
+                      :title="taskRangeTooltip(task)"
+                    >
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Mulai
+                          </div>
+                          <div
+                            class="text-xs font-medium text-gray-700 truncate"
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_start) }}
+                          </div>
+                        </div>
+                        <div class="min-w-0">
+                          <div
+                            class="text-[10px] uppercase tracking-wide text-gray-400"
+                          >
+                            Selesai
+                          </div>
+                          <div
+                            class="text-xs font-medium truncate"
+                            :class="
+                              isTaskOverdue(task)
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            "
+                          >
+                            {{ formatTaskDateTime(task.dates?.planned_end) }}
+                          </div>
+                        </div>
+                      </div>
+
                       <div
-                        v-if="task.dates?.planned_end"
-                        class="text-xs text-gray-500"
+                        v-if="taskDurationLabel(task) || isTaskOverdue(task)"
+                        class="mt-1.5 flex items-center justify-between text-[11px]"
                       >
-                        {{ formatDate(task.dates.planned_end) }}
+                        <span
+                          v-if="taskDurationLabel(task)"
+                          class="inline-flex items-center text-gray-500"
+                        >
+                          <Clock class="w-3 h-3 mr-1" />
+                          {{ taskDurationLabel(task) }}
+                        </span>
+                        <span
+                          v-if="isTaskOverdue(task)"
+                          class="inline-flex items-center font-medium text-red-600 ml-auto"
+                        >
+                          <AlertTriangle class="w-3 h-3 mr-1" />
+                          Terlambat
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1539,7 +2190,7 @@
             <div
               v-for="(day, index) in calendarDays"
               :key="index"
-              class="min-h-32 p-1 border-t border-l"
+              class="min-h-36 p-1 border-t border-l"
               :class="[
                 day.isCurrentMonth ? 'bg-white' : 'bg-gray-50',
                 day.isToday ? 'border-red-500 border-2' : 'border-gray-200',
@@ -1559,15 +2210,25 @@
               </div>
 
               <!-- Task items for this day -->
-              <div class="space-y-1 overflow-y-auto max-h-28">
+              <div class="space-y-1 overflow-y-auto max-h-32 custom-scrollbar">
                 <div
                   v-for="task in getTasksForDay(day.date)"
                   :key="task.id"
                   @click.stop="selectTask(task)"
-                  class="p-1 text-xs rounded cursor-pointer truncate"
-                  :class="getStatusClass(task.state)"
+                  :title="taskRangeTooltip(task)"
+                  class="px-1 py-0.5 text-xs rounded cursor-pointer border-l-2"
+                  :class="[
+                    getStatusClass(task.state),
+                    isTaskOverdue(task) ? 'border-l-red-500' : 'border-l-transparent',
+                  ]"
                 >
-                  {{ task.name }}
+                  <div class="truncate font-medium">{{ task.name }}</div>
+                  <div
+                    class="flex items-center text-[10px] opacity-75 truncate"
+                  >
+                    <Clock class="w-2.5 h-2.5 mr-0.5 flex-none" />
+                    <span class="truncate">{{ taskRangeLabel(task) }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -1618,6 +2279,7 @@
                   v-for="task in getTasksForDay(day.date)"
                   :key="task.id"
                   @click.stop="selectTask(task)"
+                  :title="taskRangeTooltip(task)"
                   class="m-1 p-2 text-xs rounded cursor-pointer border-l-4"
                   :class="[
                     getStatusClass(task.state),
@@ -1625,8 +2287,34 @@
                   ]"
                 >
                   <div class="font-semibold">{{ task.name }}</div>
-                  <div class="text-xs text-gray-500">
+                  <div class="text-xs text-gray-500 truncate">
                     {{ task.project?.name || "No project" }}
+                  </div>
+
+                  <!-- Jadwal pengerjaan -->
+                  <div class="mt-1.5 pt-1.5 border-t border-black/10 space-y-0.5">
+                    <div class="flex items-start text-[11px] leading-tight">
+                      <span class="text-gray-500 mr-1 flex-none">Mulai:</span>
+                      <span class="font-medium">
+                        {{ formatTaskDateTime(task.dates?.planned_start, "-") }}
+                      </span>
+                    </div>
+                    <div class="flex items-start text-[11px] leading-tight">
+                      <span class="text-gray-500 mr-1 flex-none">Selesai:</span>
+                      <span
+                        class="font-medium"
+                        :class="{ 'text-red-600': isTaskOverdue(task) }"
+                      >
+                        {{ formatTaskDateTime(task.dates?.planned_end, "-") }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="taskDurationLabel(task)"
+                      class="flex items-center text-[11px] text-gray-500"
+                    >
+                      <Clock class="w-3 h-3 mr-1 flex-none" />
+                      {{ taskDurationLabel(task) }}
+                    </div>
                   </div>
                 </div>
 
@@ -1669,6 +2357,7 @@
         />
       </div>
       </div>
+      </template>
 
       <!-- Task Detail Section (when a task is selected) -->
       <TeamTaskDetailManagerPopup
@@ -3135,7 +3824,6 @@ import {
   UserIcon,
   FolderIcon,
   ChevronDownIcon,
-  LockClosedIcon,
   FlagIcon,
 } from "@heroicons/vue/24/outline";
 
@@ -3214,6 +3902,12 @@ const showTaskDetail = ref(false);
 // ============================================================================
 const viewMode = ref("table"); // 'table', 'kanban', 'calendar', 'gantt'
 const showFilterModal = ref(false);
+
+// NEW: Project picker (menggantikan blur overlay "pilih filter dulu")
+const projectsLoading = ref(false);
+const showProjectPicker = ref(true);
+const projectPickerSearch = ref("");
+const projectPickerState = ref("all");
 const showAssigneeDropdown = ref(false);
 const showProjectDropdown = ref(false);
 const assigneeSearchText = ref("");
@@ -3508,13 +4202,18 @@ const applyFilters = () => {
 };
 
 // UPDATED: Clear all filters with state sync
+// NOTE: project terpilih dipertahankan, karena pemilihan project sekarang
+// jadi langkah navigasi tersendiri (pakai "Ganti Project" untuk menggantinya).
 const clearAllFilters = () => {
+  const keepProjectId = projectFilter.value;
+  const keepProjectName = projectSearchText.value;
+
   // Reset all filter values
   searchQuery.value = "";
   assignedToFilter.value = "";
   assigneeSearchText.value = "";
-  projectFilter.value = "";
-  projectSearchText.value = "";
+  projectFilter.value = keepProjectId;
+  projectSearchText.value = keepProjectName;
   departmentFilter.value = "";
   statusFilter.value = "";
   typeFilter.value = "";
@@ -3668,6 +4367,203 @@ const filteredProjects = computed(() => {
   );
 });
 
+// ============================================================================
+// NEW: PROJECT PICKER - state, computed & helpers
+// ============================================================================
+const PROJECT_STATE_LABELS = {
+  draft: "Draft",
+  planning: "Perencanaan",
+  in_progress: "Berjalan",
+  on_hold: "Ditunda",
+  completed: "Selesai",
+  cancelled: "Dibatalkan",
+};
+
+const PROJECT_STATE_ORDER = [
+  "in_progress",
+  "planning",
+  "draft",
+  "on_hold",
+  "completed",
+  "cancelled",
+];
+
+// Project yang sedang dipilih (null = semua project)
+const activeProject = computed(
+  () =>
+    projects.value.find(
+      (project) => String(project.id) === String(projectFilter.value)
+    ) || null
+);
+
+// Pill status beserta jumlah project-nya
+const projectStateOptions = computed(() => {
+  const counts = projects.value.reduce((acc, project) => {
+    acc[project.state] = (acc[project.state] || 0) + 1;
+    return acc;
+  }, {});
+
+  const options = [
+    { value: "all", label: "Semua", count: projects.value.length },
+  ];
+
+  PROJECT_STATE_ORDER.forEach((state) => {
+    if (counts[state]) {
+      options.push({
+        value: state,
+        label: PROJECT_STATE_LABELS[state] || state,
+        count: counts[state],
+      });
+    }
+  });
+
+  return options;
+});
+
+// Daftar project pada picker: search + filter status + urutan yang masuk akal
+const pickerProjects = computed(() => {
+  const query = projectPickerSearch.value.trim().toLowerCase();
+
+  const filtered = projects.value.filter((project) => {
+    if (
+      projectPickerState.value !== "all" &&
+      project.state !== projectPickerState.value
+    ) {
+      return false;
+    }
+
+    if (!query) return true;
+
+    return (
+      (project.name || "").toLowerCase().includes(query) ||
+      (project.code || "").toLowerCase().includes(query) ||
+      projectDepartmentsOf(project).some((dept) =>
+        (dept.name || "").toLowerCase().includes(query)
+      )
+    );
+  });
+
+  return [...filtered].sort((a, b) => {
+    // Project aktif selalu di depan
+    const aActive = a.active !== false;
+    const bActive = b.active !== false;
+    if (aActive !== bActive) return aActive ? -1 : 1;
+
+    // Lalu urut berdasarkan status (berjalan dulu, selesai belakangan)
+    const aOrder = PROJECT_STATE_ORDER.indexOf(a.state);
+    const bOrder = PROJECT_STATE_ORDER.indexOf(b.state);
+    if (aOrder !== bOrder) {
+      return (
+        (aOrder === -1 ? PROJECT_STATE_ORDER.length : aOrder) -
+        (bOrder === -1 ? PROJECT_STATE_ORDER.length : bOrder)
+      );
+    }
+
+    return (a.name || "").localeCompare(b.name || "");
+  });
+});
+
+// Mendukung format API lama (department) & baru (departments)
+function projectDepartmentsOf(project) {
+  if (Array.isArray(project?.departments)) return project.departments;
+  if (project?.department) return [project.department];
+  return [];
+}
+
+const projectMembers = (project) => {
+  const members = [];
+  if (project?.team?.manager) members.push(project.team.manager);
+  if (Array.isArray(project?.team?.members))
+    members.push(...project.team.members);
+  return members;
+};
+
+const formatProjectState = (state) =>
+  PROJECT_STATE_LABELS[state] || state || "-";
+
+const getProjectStateClass = (state) => {
+  const classes = {
+    draft: "bg-gray-100 text-gray-700",
+    planning: "bg-indigo-50 text-indigo-700",
+    in_progress: "bg-yellow-50 text-yellow-700",
+    on_hold: "bg-amber-50 text-amber-700",
+    completed: "bg-green-50 text-green-700",
+    cancelled: "bg-red-50 text-red-700",
+  };
+  return classes[state] || "bg-gray-100 text-gray-700";
+};
+
+const getProjectAccentClass = (state) => {
+  const classes = {
+    draft: "bg-gray-300",
+    planning: "bg-indigo-400",
+    in_progress: "bg-yellow-400",
+    on_hold: "bg-amber-400",
+    completed: "bg-green-500",
+    cancelled: "bg-red-400",
+  };
+  return classes[state] || "bg-gray-300";
+};
+
+const getProjectProgressClass = (progress) => {
+  const value = progress || 0;
+  if (value >= 75) return "bg-green-500";
+  if (value >= 25) return "bg-yellow-500";
+  return "bg-rose-500";
+};
+
+const getProjectDepartmentClass = (departmentId) => {
+  const classes = [
+    "bg-blue-50 text-blue-700",
+    "bg-purple-50 text-purple-700",
+    "bg-green-50 text-green-700",
+    "bg-pink-50 text-pink-700",
+    "bg-indigo-50 text-indigo-700",
+    "bg-teal-50 text-teal-700",
+    "bg-amber-50 text-amber-700",
+    "bg-cyan-50 text-cyan-700",
+  ];
+  return classes[(departmentId || 0) % classes.length];
+};
+
+const formatProjectDate = (date) => {
+  if (!date) return "Tanpa deadline";
+  try {
+    return format(new Date(date), "d MMM yyyy");
+  } catch (e) {
+    return date;
+  }
+};
+
+const isProjectOverdue = (project) => {
+  if (!project?.dates?.end || project.state === "completed") return false;
+  try {
+    return new Date(project.dates.end) < new Date();
+  } catch (e) {
+    return false;
+  }
+};
+
+// Aksi picker
+const choosePickerProject = (project) => {
+  projectFilter.value = project.id;
+  projectSearchText.value = project.name;
+  showProjectPicker.value = false;
+  fetchTasks(false, true);
+};
+
+const showAllTasks = () => {
+  projectFilter.value = "";
+  projectSearchText.value = "";
+  showProjectPicker.value = false;
+  fetchTasks(false, true);
+};
+
+const openProjectPicker = () => {
+  projectPickerSearch.value = "";
+  showProjectPicker.value = true;
+};
+
 // KEEP EXISTING: Kanban columns
 const draftTasks = computed(() => {
   return filteredTasks.value.filter((task) => task.state === "draft");
@@ -3757,6 +4653,7 @@ const taskCountDisplay = computed(() => {
 // KEEP EXISTING: Fetch projects
 const fetchProjects = async () => {
   try {
+    projectsLoading.value = true;
     const response = await apiClient.post("/web/v2/team/projects/list", {
       jsonrpc: "2.0",
       method: "call",
@@ -3781,6 +4678,8 @@ const fetchProjects = async () => {
       message: "Failed to load projects. Please try again.",
       type: "error",
     });
+  } finally {
+    projectsLoading.value = false;
   }
 };
 
@@ -3845,6 +4744,8 @@ const removeFilter = (key) => {
     case "project":
       projectFilter.value = "";
       projectSearchText.value = "";
+      // Tanpa project terpilih, kembalikan user ke pemilihan project
+      showProjectPicker.value = true;
       break;
     case "department":
       departmentFilter.value = "";
@@ -4479,6 +5380,98 @@ const formatDate = (dateString) => {
   }
 };
 
+// ============================================================================
+// NEW: TASK SCHEDULE HELPERS (dipakai kanban & calendar)
+// ============================================================================
+
+// Parse aman untuk nilai tanggal dari API
+const parseTaskDate = (value) => {
+  if (!value) return null;
+  try {
+    const parsed = parseISO(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Sebagian task hanya punya tanggal (tanpa jam) - jangan tampilkan "00:00"
+const hasTimePart = (value) => {
+  if (!value || typeof value !== "string") return false;
+  const timePart = value.includes("T") ? value.split("T")[1] : value.split(" ")[1];
+  if (!timePart) return false;
+  return !timePart.startsWith("00:00");
+};
+
+// "12 Feb 2026 • 09:00" atau "12 Feb 2026"
+const formatTaskDateTime = (value, fallback = "Belum diatur") => {
+  const date = parseTaskDate(value);
+  if (!date) return fallback;
+  return format(date, hasTimePart(value) ? "d MMM yyyy • HH:mm" : "d MMM yyyy");
+};
+
+// Versi pendek untuk ruang sempit: "12 Feb 09:00"
+const formatTaskDateShort = (value) => {
+  const date = parseTaskDate(value);
+  if (!date) return "";
+  return format(date, hasTimePart(value) ? "d MMM HH:mm" : "d MMM");
+};
+
+// Ringkasan rentang pengerjaan dalam satu baris
+const taskRangeLabel = (task) => {
+  const start = task?.dates?.planned_start;
+  const end = task?.dates?.planned_end;
+  const startDate = parseTaskDate(start);
+  const endDate = parseTaskDate(end);
+
+  if (!startDate && !endDate) return "Jadwal belum diatur";
+  if (startDate && !endDate) return `Mulai ${formatTaskDateShort(start)}`;
+  if (!startDate && endDate) return `Deadline ${formatTaskDateShort(end)}`;
+
+  if (isSameDay(startDate, endDate)) {
+    if (hasTimePart(start) || hasTimePart(end)) {
+      return `${format(startDate, "d MMM")} • ${format(
+        startDate,
+        "HH:mm"
+      )} - ${format(endDate, "HH:mm")}`;
+    }
+    return format(startDate, "d MMM yyyy");
+  }
+
+  return `${formatTaskDateShort(start)} → ${formatTaskDateShort(end)}`;
+};
+
+// Tooltip lengkap saat hover
+const taskRangeTooltip = (task) =>
+  `Mulai: ${formatTaskDateTime(task?.dates?.planned_start)}\nSelesai: ${formatTaskDateTime(
+    task?.dates?.planned_end
+  )}`;
+
+// Durasi pengerjaan (start -> end)
+const taskDurationLabel = (task) => {
+  const startDate = parseTaskDate(task?.dates?.planned_start);
+  const endDate = parseTaskDate(task?.dates?.planned_end);
+  if (!startDate || !endDate) return "";
+
+  const diffMs = endDate.getTime() - startDate.getTime();
+  if (diffMs < 0) return "";
+
+  const hours = Math.round(diffMs / 3600000);
+  if (hours < 1) return "< 1 jam";
+  if (hours < 24) return `${hours} jam`;
+
+  const days = Math.round(hours / 24);
+  return `${days} hari`;
+};
+
+// Task lewat deadline (status selesai/batal tidak dihitung)
+const isTaskOverdue = (task) => {
+  const endDate = parseTaskDate(task?.dates?.planned_end);
+  if (!endDate) return false;
+  if (task?.state === "done" || task?.state === "cancelled") return false;
+  return endDate < new Date();
+};
+
 // KEEP EXISTING: Format priority
 const formatPriority = (priority) => {
   const priorityMap = {
@@ -4896,14 +5889,27 @@ onMounted(async () => {
   // No default date filter
   dueDateFilter.value = { from: "", to: "" };
 
-  // Initial fetch
-  await fetchTasks(true);
+  // Project sudah ditentukan dari luar (mis. dibuka dari halaman project):
+  // langsung lewati picker dan muat tugasnya.
+  if (props.projectId) {
+    const presetProject = projects.value.find(
+      (project) => String(project.id) === String(props.projectId)
+    );
 
-  // Set the project default in the task form
-  if (props.projectId && projects.value.length > 0) {
-    resetTaskForm();
-    currentTask.value.project_id = props.projectId;
+    projectFilter.value = props.projectId;
+    projectSearchText.value = presetProject?.name || "";
+    showProjectPicker.value = false;
+
+    await fetchTasks(true);
+
+    // Set the project default in the task form
+    if (projects.value.length > 0) {
+      resetTaskForm();
+      currentTask.value.project_id = props.projectId;
+    }
   }
+  // Kalau belum ada project terpilih, tugas baru dimuat setelah user memilih
+  // project pada picker (menghindari load semua tugas tanpa filter).
 
   // Set current dates for calendar
   currentDate.value = new Date();
