@@ -4959,22 +4959,14 @@ const editTask = (task) => {
 
   const assignedToIds = task.assigned_to.map((person) => person.id);
 
-  let plannedTimeStart = "";
-  let plannedTimeEnd = "";
-  let plannedDateStart = "";
-  let plannedDateEnd = "";
+  // Tanggal & jam rencana harus terbawa ke form (dukung format "T" maupun spasi)
+  const plannedStart = splitDateTimeValue(task.dates?.planned_start);
+  const plannedEnd = splitDateTimeValue(task.dates?.planned_end);
 
-  if (task.dates?.planned_start) {
-    const startParts = task.dates.planned_start.split("T");
-    plannedDateStart = startParts[0];
-    plannedTimeStart = startParts[1]?.substring(0, 5) || "";
-  }
-
-  if (task.dates?.planned_end) {
-    const endParts = task.dates.planned_end.split("T");
-    plannedDateEnd = endParts[0];
-    plannedTimeEnd = endParts[1]?.substring(0, 5) || "";
-  }
+  const plannedDateStart = plannedStart.date;
+  const plannedTimeStart = plannedStart.time;
+  const plannedDateEnd = plannedEnd.date;
+  const plannedTimeEnd = plannedEnd.time;
 
   currentTask.value = {
     id: task.id,
@@ -5393,6 +5385,20 @@ const parseTaskDate = (value) => {
   } catch (e) {
     return null;
   }
+};
+
+// Pecah nilai datetime API jadi tanggal + jam untuk input form.
+// Format bisa "2026-02-12T09:00:00" atau "2026-02-12 09:00:00"; kalau tidak
+// dipecah, <input type="date"> menolak nilainya dan field jadi kosong saat edit.
+const splitDateTimeValue = (value) => {
+  if (!value || typeof value !== "string") return { date: "", time: "" };
+
+  const [datePart = "", timePart = ""] = value.trim().split(/[T\s]/);
+
+  return {
+    date: /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : "",
+    time: timePart ? timePart.substring(0, 5) : "",
+  };
 };
 
 // Sebagian task hanya punya tanggal (tanpa jam) - jangan tampilkan "00:00"

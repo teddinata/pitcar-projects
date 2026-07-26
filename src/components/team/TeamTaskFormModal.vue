@@ -812,21 +812,34 @@ watch(() => formData.value.project_id, (newProjectId) => {
 // Watch for taskData changes (for edit mode)
 watch(() => props.taskData, (newTaskData) => {
   if (newTaskData) {
-    // Format date and time from datetime string
+    // Format date and time from datetime string.
+    // Nilai dibaca apa adanya (tanpa konversi timezone) supaya sama persis dengan
+    // format yang dikirim balik saat submit: `${date}T${time}:00`.
     const formatDateTimeFields = (datetimeStr) => {
       if (!datetimeStr) return { date: '', time: '' }
-      
-      try {
-        const datetime = new Date(datetimeStr)
-        const date = datetime.toISOString().split('T')[0]
-        const hours = String(datetime.getHours()).padStart(2, '0')
-        const minutes = String(datetime.getMinutes()).padStart(2, '0')
-        const time = `${hours}:${minutes}`
-        
-        return { date, time }
-      } catch (e) {
-        console.error('Error parsing datetime:', e)
+
+      if (typeof datetimeStr === 'string') {
+        // "2026-02-12T09:00:00" atau "2026-02-12 09:00:00"
+        const match = datetimeStr
+          .trim()
+          .match(/^(\d{4}-\d{2}-\d{2})(?:[T\s](\d{2}:\d{2}))?/)
+        if (match) {
+          return { date: match[1], time: match[2] || '' }
+        }
+      }
+
+      const datetime = new Date(datetimeStr)
+      if (isNaN(datetime.getTime())) {
+        console.warn('Error parsing datetime:', datetimeStr)
         return { date: '', time: '' }
+      }
+
+      const pad = (num) => String(num).padStart(2, '0')
+      return {
+        date: `${datetime.getFullYear()}-${pad(datetime.getMonth() + 1)}-${pad(
+          datetime.getDate()
+        )}`,
+        time: `${pad(datetime.getHours())}:${pad(datetime.getMinutes())}`
       }
     }
     

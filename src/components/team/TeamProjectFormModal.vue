@@ -341,6 +341,13 @@ watch(() => props.project, (newProject) => {
   }
 }, { deep: true })
 
+// Modal dibuka ulang: isi ulang form dari data terbaru (termasuk start & end date)
+watch(() => props.show, (isVisible) => {
+  if (isVisible) {
+    initForm()
+  }
+})
+
 // Watch for department changes to reset team selections
 watch(() => formData.value.department_id, (newDeptId) => {
   if (newDeptId) {
@@ -384,6 +391,52 @@ const fetchDepartments = async () => {
   }
 }
 
+// Normalisasi nilai tanggal dari API ke format <input type="date"> (yyyy-MM-dd).
+// API bisa mengirim "2026-02-12", "2026-02-12T09:00:00", atau "2026-02-12 09:00:00" -
+// selain yyyy-MM-dd, input date akan tampil kosong sehingga user harus isi ulang.
+const toDateInputValue = (value) => {
+  if (!value) return ''
+
+  if (typeof value === 'string') {
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})/)
+    if (match) return match[1]
+  }
+
+  const parsed = new Date(value)
+  if (isNaN(parsed.getTime())) return ''
+
+  const pad = (num) => String(num).padStart(2, '0')
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`
+}
+
+// Ambil nilai pertama yang terisi dari beberapa kemungkinan struktur field tanggal
+const pickProjectDate = (project, paths) => {
+  for (const path of paths) {
+    const value = path
+      .split('.')
+      .reduce((obj, key) => (obj === null || obj === undefined ? obj : obj[key]), project)
+    if (value) return value
+  }
+  return ''
+}
+
+const PROJECT_START_DATE_PATHS = [
+  'dates.start',
+  'dates.date_start',
+  'dates.planned_start',
+  'date_start',
+  'start_date'
+]
+
+const PROJECT_END_DATE_PATHS = [
+  'dates.end',
+  'dates.date_end',
+  'dates.planned_end',
+  'dates.deadline',
+  'date_end',
+  'end_date'
+]
+
 // Initialize form with project data if editing
 // Initialize form with project data if editing
 const initForm = () => {
@@ -394,11 +447,25 @@ const initForm = () => {
       ? props.project.departments.map(d => d.id) 
       : (props.project.department?.id ? [props.project.department.id] : []);
       
+    const startDate = toDateInputValue(
+      pickProjectDate(props.project, PROJECT_START_DATE_PATHS)
+    )
+    const endDate = toDateInputValue(
+      pickProjectDate(props.project, PROJECT_END_DATE_PATHS)
+    )
+
+    if (!startDate || !endDate) {
+      console.warn(
+        '[TeamProjectFormModal] Tanggal project tidak ditemukan pada data:',
+        props.project
+      )
+    }
+
     formData.value = {
       name: props.project.name || '',
       department_ids: departmentIds,
-      date_start: props.project.dates?.start || '',
-      date_end: props.project.dates?.end || '',
+      date_start: startDate,
+      date_end: endDate,
       project_manager_id: props.project.team?.manager?.id || '',
       team_ids: props.project.team?.members?.map(m => m.id) || [],
       description: props.project.description || '',
