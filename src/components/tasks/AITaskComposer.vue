@@ -16,6 +16,13 @@
   proyek, nama yang sudah dipakai tugas lain) ditampilkan apa adanya di kartu
   masing-masing, tidak diringkas jadi satu angka — yang perlu diperbaiki
   pengguna adalah tugas tertentu, bukan "draft ini" secara keseluruhan.
+
+  Panduan dan contoh prompt di langkah 1 mengikuti pekerjaan tim System
+  Development bengkel: menyusun SOP, membakukan form kerja antar cabang,
+  menyiapkan materi training, mengaudit kepatuhan di stall, dan perbaikan
+  kaizen — bukan pekerjaan pemrograman. Satu-satunya yang dikirim ke model
+  adalah teks prompt pengguna, jadi panduan di layar inilah yang menentukan
+  kualitas tugas yang dihasilkan.
 -->
 <template>
   <Transition
@@ -150,11 +157,11 @@
                   rows="5"
                   :maxlength="maxPromptChars"
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
-                  placeholder="Contoh: siapkan tugas untuk revamp form sale order minggu ini — backend API, komponen Vue, dan pengujian. Budi pegang backend."
+                  placeholder="Contoh: susun SOP serah terima kendaraan untuk cabang Sidoarjo — draft alur, buat form checklist final inspection, uji coba di satu stall, lalu sosialisasi ke service advisor. Budi pegang draft SOP, target selesai akhir bulan."
                 ></textarea>
                 <div class="flex items-center justify-between mt-1">
                   <p class="text-xs text-gray-500">
-                    Sebutkan nama orang, tenggat, dan batasan kalau sudah tahu. Yang tidak
+                    Tulis pekerjaannya seperti menjelaskan ke rekan tim. Yang tidak
                     disebutkan akan diasumsikan, dan asumsinya ditulis di hasil.
                   </p>
                   <span class="text-xs text-gray-400 shrink-0 ml-2">
@@ -163,16 +170,44 @@
                 </div>
               </div>
 
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="ex in EXAMPLES"
-                  :key="ex"
-                  type="button"
-                  @click="prompt = ex"
-                  class="text-xs px-2.5 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50"
-                >
-                  {{ ex }}
-                </button>
+              <!-- Panduan: dipasang di layar prompt, bukan di dokumentasi terpisah,
+                   karena kualitas tugas yang dihasilkan hampir seluruhnya ditentukan
+                   di sini. Butirnya sengaja spesifik ke pekerjaan tim System
+                   Development bengkel — proses, keluaran, dan siapa yang
+                   menjalankan di lapangan. -->
+              <div class="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <p class="text-xs font-medium text-blue-900 flex items-center mb-1.5">
+                  <Lightbulb class="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                  Supaya tugasnya terpecah dengan tepat, sebutkan sebisanya:
+                </p>
+                <ul class="space-y-1">
+                  <li
+                    v-for="(g, i) in PROMPT_GUIDE"
+                    :key="i"
+                    class="flex items-start text-xs text-blue-900/90 leading-snug"
+                  >
+                    <span class="mt-1.5 mr-1.5 h-1 w-1 rounded-full bg-blue-400 shrink-0"></span>
+                    <span>
+                      <span class="font-medium">{{ g.label }}</span> — {{ g.hint }}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <p class="text-xs text-gray-500 mb-1.5">Mulai dari contoh:</p>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="ex in EXAMPLES"
+                    :key="ex.label"
+                    type="button"
+                    :title="ex.prompt"
+                    @click="prompt = ex.prompt"
+                    class="text-xs px-2.5 py-1.5 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-rose-300 hover:text-rose-700 transition-colors"
+                  >
+                    {{ ex.label }}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -300,8 +335,11 @@
                         </select>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1">
-                          Story points
+                        <label
+                          class="block text-xs font-medium text-gray-600 mb-1"
+                          title="Perkiraan bobot pekerjaan secara relatif — makin besar angkanya, makin berat tugasnya dibanding tugas lain"
+                        >
+                          Bobot
                         </label>
                         <select
                           v-model="item.story_points"
@@ -488,6 +526,7 @@ import {
   AlertTriangle,
   Check,
   ChevronLeft,
+  Lightbulb,
   Loader,
   Save,
 } from 'lucide-vue-next'
@@ -505,10 +544,65 @@ const emit = defineEmits(['close', 'created', 'notify'])
 
 const STEP_LABELS = { prompt: '1. Prompt', review: '2. Tinjau', done: '3. Selesai' }
 
+// Panduan menulis prompt untuk pekerjaan tim System Development bengkel:
+// membakukan cara kerja operasional, bukan membangun perangkat lunak.
+// Urutannya mengikuti yang paling sering hilang dari prompt: orang biasanya
+// menulis keluaran yang diinginkan tapi lupa proses mana yang disasar dan
+// siapa yang nanti menjalankan di lapangan.
+const PROMPT_GUIDE = [
+  {
+    label: 'Proses yang disasar',
+    hint: 'penerimaan unit, PKB, final inspection, alur sparepart, booking servis, atau serah terima',
+  },
+  {
+    label: 'Keluaran yang diharapkan',
+    hint: 'SOP, form/checklist, materi training, lembar audit, atau laporan perbaikan',
+  },
+  {
+    label: 'Cabang & pelaksana',
+    hint: 'cabang atau stall yang terdampak, dan siapa yang menjalankan — mekanik, service advisor, atau admin part',
+  },
+  {
+    label: 'Uji coba & sosialisasi',
+    hint: 'sebutkan kalau perubahannya menyentuh orang di lapangan, supaya tahapannya ikut dibuatkan tugas',
+  },
+  {
+    label: 'Penanggung jawab & tenggat',
+    hint: 'nama orang dan target tanggal kalau sudah ditentukan',
+  },
+]
+
+// Contoh prompt sengaja memakai pekerjaan nyata tim System Development bengkel:
+// menyusun SOP, membakukan form kerja, menyiapkan materi training, dan
+// mengaudit kepatuhan di stall — bukan pekerjaan pemrograman. Prompt yang
+// bagus menyebut proses yang disasar, keluarannya, dan siapa yang menjalankan
+// di lapangan, karena tiga hal itu yang menentukan tugasnya pecah jadi apa.
 const EXAMPLES = [
-  'Siapkan tugas revamp form sale order minggu ini',
-  'Pecah pekerjaan migrasi data pelanggan jadi tugas-tugas',
-  'Buat tugas persiapan training mekanik bulan depan',
+  {
+    label: 'SOP proses baru',
+    prompt:
+      'Susun SOP serah terima kendaraan untuk cabang baru — petakan alur yang berjalan sekarang, buat draft SOP, siapkan form checklist serah terima, uji coba di satu stall selama seminggu, lalu sosialisasi ke service advisor dan mekanik.',
+  },
+  {
+    label: 'Bakukan form antar cabang',
+    prompt:
+      'Bakukan form PKB yang dipakai antar cabang — kumpulkan versi yang berjalan di tiap cabang, bandingkan isinya, satukan jadi satu format, minta persetujuan kepala bengkel, lalu uji coba dua minggu sebelum dipakai penuh.',
+  },
+  {
+    label: 'Materi training',
+    prompt:
+      'Siapkan materi training service advisor untuk alur booking servis yang baru — susun modul, buat skenario simulasi, siapkan lembar evaluasi, dan jadwalkan sesi untuk tiap cabang.',
+  },
+  {
+    label: 'Audit kepatuhan SOP',
+    prompt:
+      'Audit kepatuhan SOP final inspection bulan ini di semua stall — siapkan lembar audit, jalankan pengecekan per stall, rangkum temuan, lalu susun usulan perbaikan beserta penanggung jawabnya.',
+  },
+  {
+    label: 'Perbaikan kaizen',
+    prompt:
+      'Kurangi waktu tunggu pelanggan di area service — ukur waktu tunggu selama seminggu, cari titik penumpukan, usulkan perbaikan alur, dan uji coba perubahannya di satu cabang.',
+  },
 ]
 
 const step = ref('prompt')
