@@ -113,6 +113,17 @@
           </div>
         </div>
 
+        <!-- Ketik-cepat AI. Ditaruh di atas daftar, bukan di dalam modal:
+             gunanya justru supaya tugas kecil bisa masuk tanpa membuka apa pun. -->
+        <div v-if="!showProjectPicker" class="mt-4">
+          <AIQuickTaskBar
+            :project-id="filterState.project"
+            @created="handleQuickTaskCreated"
+            @open-task="selectedTaskId = $event"
+            @notify="showToast($event)"
+          />
+        </div>
+
         <!-- Mobile view toggle (only shown on small screens) -->
         <div
           v-if="!showProjectPicker"
@@ -3893,6 +3904,7 @@ import Draggable from "vuedraggable";
 import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
 import ProjectTeamSummary from "@/components/team/ProjectTeamSummary.vue";
 import AITaskComposer from "@/components/tasks/AITaskComposer.vue";
+import AIQuickTaskBar from "@/components/tasks/AIQuickTaskBar.vue";
 
 // ============================================================================
 // PROPS - KEEP EXISTING
@@ -4222,6 +4234,13 @@ const fetchTasks = async (isInitialLoad = false, forceRefresh = false) => {
 // Tugas hasil panel AI sudah tersimpan di server saat event ini sampai —
 // yang tersisa cuma menyegarkan daftar. Panel tetap terbuka menampilkan
 // hasilnya; pengguna yang menutupnya.
+// Tugas dari baris ketik-cepat sudah tersimpan saat event ini sampai.
+// Daftar disegarkan, tapi tugasnya TIDAK langsung dibuka — hasil tafsirannya
+// masih terpampang di baris itu, dan itu yang perlu dibaca dulu.
+const handleQuickTaskCreated = () => {
+  fetchTasks(false, true);
+};
+
 const handleAITasksCreated = (result) => {
   fetchTasks(false, true);
   if (result?.created?.length === 1) {

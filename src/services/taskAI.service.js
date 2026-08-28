@@ -57,6 +57,19 @@ export const taskAIService = {
       ...(maxTasks ? { max_tasks: maxTasks } : {}),
     }),
 
+  // Jalur cepat: satu kalimat -> satu tugas, langsung tersimpan. Tanpa
+  // langkah tinjauan, jadi backend menugaskan ke pemanggil kalau kalimatnya
+  // tidak menyebut nama siapa pun. Respons selalu membawa `interpretasi`
+  // supaya tanggal yang salah baca langsung kelihatan.
+  // projectId boleh kosong — backend memilih dari proyek aktif, dan menolak
+  // dengan code 'need_project' kalau tidak yakin.
+  quick: ({ prompt, projectId = null, dryRun = false }) =>
+    call('/web/v2/team/tasks/ai/quick', {
+      prompt,
+      ...(projectId ? { project_id: projectId } : {}),
+      ...(dryRun ? { dry_run: true } : {}),
+    }),
+
   // Simpan hasil tinjauan. Kirim prompt aslinya juga — dicatat di chatter
   // tugas dan proyek, satu-satunya cara menjawab "kenapa tugas ini ada"
   // beberapa bulan kemudian.
