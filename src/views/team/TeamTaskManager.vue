@@ -84,6 +84,19 @@
               <span class="sm:hidden">Get Notified</span>
             </button>
 
+            <!-- Buat tugas dengan AI: jalur alternatif ke aksi yang sama dengan
+                 tombol di sebelahnya, jadi ditaruh berdampingan. Sengaja bergaya
+                 sekunder — AI mengusulkan, form manual tetap jalur utamanya. -->
+            <button
+              @click="showAIComposer = true"
+              class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-rose-300 text-xs sm:text-sm font-medium rounded-md shadow-sm text-rose-700 bg-white hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+              title="Susun beberapa tugas sekaligus dari satu kalimat"
+            >
+              <Sparkles class="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+              <span class="hidden sm:inline">Buat dengan AI</span>
+              <span class="sm:hidden">AI</span>
+            </button>
+
             <!-- Create task button -->
             <button
               @click="
@@ -3773,6 +3786,17 @@
       confirmButtonText="Delete"
       cancelButtonText="Cancel"
     />
+
+    <!-- Panel AI. Tidak menyimpan apa pun sampai pengguna menekan simpan di
+         langkah tinjauan; @created hanya memicu refresh daftar. -->
+    <AITaskComposer
+      :show="showAIComposer"
+      :projects="projects"
+      :default-project-id="filterState.project"
+      @close="showAIComposer = false"
+      @notify="showToast($event)"
+      @created="handleAITasksCreated"
+    />
   </div>
 </template>
 
@@ -3855,7 +3879,8 @@ import {
   Users,
   X,
   XOctagon,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Sparkles
 } from 'lucide-vue-next';
 
 // KEEP EXISTING IMPORTS
@@ -3864,6 +3889,7 @@ import EnhancedGanttChart from "@/components/charts/EnhancedGanttChart.vue";
 import Toast from "@/components/Toast.vue";
 import Draggable from "vuedraggable";
 import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
+import AITaskComposer from "@/components/tasks/AITaskComposer.vue";
 
 // ============================================================================
 // PROPS - KEEP EXISTING
@@ -3888,6 +3914,7 @@ const projects = ref([]);
 const loading = ref(false);
 const selectedTaskId = ref(null);
 const showTaskModal = ref(false);
+const showAIComposer = ref(false);
 
 // Function to trigger OneSignal prompt manually
 const { subscribe: promptNotification, isSubscribed } = useOneSignal();
@@ -4186,6 +4213,16 @@ const fetchTasks = async (isInitialLoad = false, forceRefresh = false) => {
     });
   } finally {
     loading.value = false;
+  }
+};
+
+// Tugas hasil panel AI sudah tersimpan di server saat event ini sampai —
+// yang tersisa cuma menyegarkan daftar. Panel tetap terbuka menampilkan
+// hasilnya; pengguna yang menutupnya.
+const handleAITasksCreated = (result) => {
+  fetchTasks(false, true);
+  if (result?.created?.length === 1) {
+    selectedTaskId.value = result.created[0].id;
   }
 };
 
