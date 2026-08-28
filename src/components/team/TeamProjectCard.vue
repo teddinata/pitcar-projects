@@ -88,42 +88,28 @@
           </div>
         </div>
       </div>
+
+      <!-- Team Section - Project Leader & Anggota Tim -->
+      <ProjectTeamSummary :team="project.team" variant="block" :max-members="3" />
     </div>
 
     <!-- Card Footer -->
     <div class="px-4 py-3 flex-none border-t border-gray-100 bg-gray-50 rounded-b-lg">
       <div class="flex items-center justify-between">
-        <!-- Task Count -->
-        <div class="flex items-center text-xs">
-          <DocumentTextIcon class="h-4 w-4 text-gray-500 mr-1.5" />
-          <span>{{ project.task_count || 0 }} tasks</span>
+        <!-- Task Count & Team Size -->
+        <div class="flex items-center gap-3 text-xs text-gray-600 min-w-0">
+          <span class="flex items-center">
+            <DocumentTextIcon class="h-4 w-4 text-gray-500 mr-1.5" />
+            {{ project.task_count || 0 }} tasks
+          </span>
+          <span class="flex items-center">
+            <UserGroupIcon class="h-4 w-4 text-gray-500 mr-1.5" />
+            {{ totalTeamSize }} orang
+          </span>
         </div>
-        
+
         <!-- Team Members -->
         <div class="flex items-center">
-          <!-- Team Icons -->
-          <div class="flex -space-x-2 mr-3">
-            <div 
-              class="h-6 w-6 rounded-full ring-2 ring-white flex items-center justify-center text-xs font-medium"
-              :class="getDepartmentAvatarClass(mainDepartmentId)"
-            >
-              {{ getInitials(project.team?.manager?.name) }}
-            </div>
-            <div 
-              v-for="(member, index) in displayMembers" 
-              :key="index"
-              class="h-6 w-6 rounded-full bg-gray-100 ring-2 ring-white flex items-center justify-center text-xs font-medium text-gray-700"
-            >
-              {{ getInitials(member.name) }}
-            </div>
-            <div
-              v-if="extraMembersCount > 0"
-              class="h-6 w-6 rounded-full bg-gray-200 ring-2 ring-white flex items-center justify-center text-xs font-medium text-gray-700"
-            >
-              +{{ extraMembersCount }}
-            </div>
-          </div>
-          
           <!-- Actions Button -->
           <div class="relative" ref="actionsMenuRef">
             <button 
@@ -206,6 +192,7 @@ import {
   ArchiveBoxIcon,
   ArchiveBoxArrowDownIcon
 } from '@heroicons/vue/24/outline'
+import ProjectTeamSummary from '@/components/team/ProjectTeamSummary.vue'
 
 const props = defineProps({
   project: {
@@ -235,23 +222,16 @@ const projectDepartments = computed(() => {
   return [];
 })
 
-// Compute main department ID for styling
-const mainDepartmentId = computed(() => {
-  if (projectDepartments.value.length > 0) {
-    return projectDepartments.value[0].id;
-  }
-  return 1; // fallback
-})
-
-// Only show first 2 team members
-const displayMembers = computed(() => {
-  if (!props.project.team?.members) return []
-  return props.project.team.members.slice(0, 2)
-})
-
-const extraMembersCount = computed(() => {
-  if (!props.project.team?.members) return 0
-  return Math.max(0, props.project.team.members.length - 2)
+// Total anggota tim termasuk project leader (leader tidak dihitung dua kali)
+const totalTeamSize = computed(() => {
+  const manager = props.project.team?.manager
+  const members = Array.isArray(props.project.team?.members)
+    ? props.project.team.members
+    : []
+  const uniqueMembers = manager
+    ? members.filter(member => member.id !== manager.id)
+    : members
+  return uniqueMembers.length + (manager ? 1 : 0)
 })
 
 // Status formatting and classes
@@ -350,27 +330,6 @@ const getDepartmentProgressClass = (departmentId) => {
   return classes[index]
 }
 
-// Department avatar class
-const getDepartmentAvatarClass = (departmentId) => {
-  const classes = [
-    'bg-blue-100 text-blue-800',
-    'bg-purple-100 text-purple-800',
-    'bg-green-100 text-green-800',
-    'bg-pink-100 text-pink-800',
-    'bg-indigo-100 text-indigo-800',
-    'bg-teal-100 text-teal-800',
-    'bg-amber-100 text-amber-800',
-    'bg-rose-100 text-rose-800',
-    'bg-emerald-100 text-emerald-800',
-    'bg-cyan-100 text-cyan-800',
-    'bg-orange-100 text-orange-800',
-    'bg-lime-100 text-lime-800'
-  ]
-  
-  const index = (departmentId % classes.length)
-  return classes[index]
-}
-
 // Get department icon based on department name
 const getDepartmentIcon = (departmentName) => {
   if (!departmentName) return UserIcon
@@ -425,17 +384,6 @@ const getPriorityClass = (priority) => {
 const isOverdue = (date) => {
   if (!date) return false
   return isPast(new Date(date)) && props.project.state !== 'completed'
-}
-
-// Utils
-const getInitials = (name) => {
-  if (!name) return ''
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
 }
 
 // Menu handling

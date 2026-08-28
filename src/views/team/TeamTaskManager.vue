@@ -394,38 +394,26 @@
                 </div>
               </div>
 
-              <!-- Meta: deadline + team -->
-              <div class="mt-4 flex items-center justify-between gap-2">
-                <div class="flex items-center text-xs text-gray-500 min-w-0">
-                  <CalendarIcon class="h-3.5 w-3.5 mr-1 flex-none" />
-                  <span
-                    class="truncate"
-                    :class="{
-                      'text-red-600 font-medium': isProjectOverdue(project),
-                    }"
-                  >
-                    {{ formatProjectDate(project.dates?.end) }}
-                  </span>
-                </div>
-                <div class="flex -space-x-2 flex-none">
-                  <span
-                    v-for="(member, index) in projectMembers(project).slice(
-                      0,
-                      3
-                    )"
-                    :key="`${project.id}-member-${index}`"
-                    class="h-6 w-6 rounded-full ring-2 ring-white bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700"
-                    :title="member.name"
-                  >
-                    {{ getInitials(member.name) }}
-                  </span>
-                  <span
-                    v-if="projectMembers(project).length > 3"
-                    class="h-6 w-6 rounded-full ring-2 ring-white bg-gray-200 flex items-center justify-center text-[10px] font-semibold text-gray-700"
-                  >
-                    +{{ projectMembers(project).length - 3 }}
-                  </span>
-                </div>
+              <!-- Meta: deadline -->
+              <div class="mt-4 flex items-center text-xs text-gray-500 min-w-0">
+                <CalendarIcon class="h-3.5 w-3.5 mr-1 flex-none" />
+                <span
+                  class="truncate"
+                  :class="{
+                    'text-red-600 font-medium': isProjectOverdue(project),
+                  }"
+                >
+                  {{ formatProjectDate(project.dates?.end) }}
+                </span>
+              </div>
+
+              <!-- Tim project: leader + anggota -->
+              <div class="mt-3">
+                <ProjectTeamSummary
+                  :team="project.team"
+                  variant="block"
+                  :max-members="3"
+                />
               </div>
             </div>
 
@@ -454,7 +442,7 @@
       <template v-else>
         <!-- Active project bar -->
         <div
-          class="mb-4 bg-white shadow-sm rounded-xl border border-gray-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+          class="mb-4 bg-white shadow-sm rounded-xl border border-gray-200 px-4 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3"
         >
           <div class="flex items-center min-w-0">
             <div
@@ -479,6 +467,20 @@
                 </span>
               </div>
             </div>
+          </div>
+
+          <!-- Tim project aktif: leader + anggota -->
+          <div
+            v-if="activeProject"
+            class="min-w-0 pt-3 border-t border-gray-100 lg:pt-0 lg:border-t-0 lg:border-l lg:border-gray-200 lg:pl-4"
+          >
+            <ProjectTeamSummary
+              :team="activeProject.team"
+              variant="row"
+              :max-members="5"
+              size="md"
+              show-member-count
+            />
           </div>
 
           <div class="flex items-center gap-3 flex-none">
@@ -3889,6 +3891,7 @@ import EnhancedGanttChart from "@/components/charts/EnhancedGanttChart.vue";
 import Toast from "@/components/Toast.vue";
 import Draggable from "vuedraggable";
 import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
+import ProjectTeamSummary from "@/components/team/ProjectTeamSummary.vue";
 import AITaskComposer from "@/components/tasks/AITaskComposer.vue";
 
 // ============================================================================
@@ -4506,14 +4509,6 @@ function projectDepartmentsOf(project) {
   if (project?.department) return [project.department];
   return [];
 }
-
-const projectMembers = (project) => {
-  const members = [];
-  if (project?.team?.manager) members.push(project.team.manager);
-  if (Array.isArray(project?.team?.members))
-    members.push(...project.team.members);
-  return members;
-};
 
 const formatProjectState = (state) =>
   PROJECT_STATE_LABELS[state] || state || "-";

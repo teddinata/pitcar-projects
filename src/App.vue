@@ -10,9 +10,7 @@ import NotificationGuideModal from './components/NotificationGuideModal.vue'
 import NotificationBell from './components/NotificationBell.vue'
 import { Bell, X } from 'lucide-vue-next'
 import { useOneSignal } from './composables/useOneSignal'
-
-// Hanya import PWAUpdatePopUp jika memang ada
-// import PWAUpdatePopUp from './components/PWAUpdatePopUp.vue'
+import AppUpdatePrompt from './components/AppUpdatePrompt.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -211,15 +209,15 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
       </div>
     </div>
 
-    
-    <!-- Conditional rendering of PWAUpdatePopUp component -->
-    <!-- <PWAUpdatePopUp v-if="false" /> -->
   </div>
 
   <!-- Non-Autentikasi Layout -->
   <div v-else class="h-screen">
     <router-view></router-view>
   </div>
+
+  <!-- Popup pembaruan aplikasi - tampil di semua kondisi (login maupun tidak) -->
+  <AppUpdatePrompt />
 </template>
 
 <style>

@@ -3,15 +3,60 @@ import vue from '@vitejs/plugin-vue'
 import pkg from './package.json'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { LATEST_RELEASE } from './src/constants/changelog.js'
 
 const timestamp = new Date().getTime()
+const buildTime = new Date().toISOString()
 const safeVersion = pkg.version.replace(/\./g, '-')
+
+// Manifest versi yang di-serve di /version.json.
+// Aplikasi yang sedang berjalan mem-polling file ini untuk mendeteksi rilis baru,
+// sehingga popup pembaruan tetap muncul walau service worker belum sempat update.
+const versionManifest = {
+  version: pkg.version,
+  buildTime,
+  title: LATEST_RELEASE?.title || `Versi ${pkg.version}`,
+  mandatory: LATEST_RELEASE?.mandatory === true,
+  releasedAt: LATEST_RELEASE?.date || null,
+  highlights: LATEST_RELEASE?.highlights || []
+}
+
+if (LATEST_RELEASE?.version !== pkg.version) {
+  console.warn(
+    `\u26a0\ufe0f  Versi package.json (${pkg.version}) tidak sama dengan entri teratas ` +
+    `src/constants/changelog.js (${LATEST_RELEASE?.version}). ` +
+    'Popup pembaruan akan menampilkan catatan rilis yang salah.'
+  )
+}
+
+// Menulis /version.json saat build, dan menyajikannya saat dev agar bisa diuji lokal
+const versionManifestPlugin = () => ({
+  name: 'pitcar-version-manifest',
+  configureServer(server) {
+    server.middlewares.use('/version.json', (_req, res) => {
+      res.setHeader('Content-Type', 'application/json')
+      res.setHeader('Cache-Control', 'no-store')
+      res.end(JSON.stringify(versionManifest))
+    })
+  },
+  generateBundle() {
+    this.emitFile({
+      type: 'asset',
+      fileName: 'version.json',
+      source: JSON.stringify(versionManifest, null, 2)
+    })
+  }
+})
 
 export default defineConfig({
   plugins: [
     vue(),
+    versionManifestPlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' (bukan 'autoUpdate') agar service worker baru menunggu
+      // konfirmasi user -> kita bisa menampilkan popup "Pembaruan Tersedia"
+      registerType: 'prompt',
+      injectRegister: 'auto',
       includeAssets: ['pitcar.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'JARVIS - Smart Dashboard PITCAR',
@@ -45,7 +90,9 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
+        // Wajib false pada mode 'prompt': SW baru menunggu sampai user menekan
+        // "Perbarui Sekarang" (updateServiceWorker akan mengirim SKIP_WAITING)
+        skipWaiting: false,
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
@@ -102,8 +149,9 @@ export default defineConfig({
     })
   ],
   define: {
-    '__APP_VERSION__': JSON.stringify(safeVersion),
-    '__BUILD_TIME__': JSON.stringify(new Date().toISOString())
+    '__APP_VERSION__': JSON.stringify(pkg.version),
+    '__BUILD_TIME__': JSON.stringify(buildTime),
+    '__APP_RELEASE__': JSON.stringify(versionManifest)
   },
   server: {
     headers: {
