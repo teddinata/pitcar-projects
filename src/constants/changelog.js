@@ -16,6 +16,16 @@
 
 export const CHANGELOG = [
   {
+    version: '3.3.1',
+    date: '2026-08-29',
+    title: 'Perbaikan Bug',
+    mandatory: false,
+    highlights: [
+      'Perbaikan bug pada halaman Projects',
+      'Perbaikan bug pada halaman Tasks'
+    ]
+  },
+  {
     version: '3.3.0',
     date: '2026-08-28',
     title: 'Info tim project & notifikasi pembaruan',
