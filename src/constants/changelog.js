@@ -16,6 +16,16 @@
 
 export const CHANGELOG = [
   {
+    version: '3.3.2',
+    date: '2026-09-02',
+    title: 'Perbaikan popup pembaruan',
+    mandatory: false,
+    highlights: [
+      'Popup pembaruan tidak lagi muncul berulang saat versi aplikasi sudah sama',
+      'Pengingat hanya tampil bila memang ada versi yang lebih baru'
+    ]
+  },
+  {
     version: '3.3.1',
     date: '2026-08-29',
     title: 'Perbaikan Bug',

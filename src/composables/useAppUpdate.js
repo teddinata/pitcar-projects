@@ -19,7 +19,8 @@ const STORAGE_KEYS = {
   snoozeUntil: 'pitcar:update:snooze-until',
   snoozeCount: 'pitcar:update:snooze-count',
   snoozeVersion: 'pitcar:update:snooze-version',
-  applied: 'pitcar:update:applied-version'
+  applied: 'pitcar:update:applied-version',
+  applyAttempts: 'pitcar:update:apply-attempts'
 }
 
 // Jeda pengingat setelah user menekan "Nanti"
@@ -34,6 +35,8 @@ const CHECK_THROTTLE = 60 * 1000 // 1 menit
 const RELOAD_FALLBACK_DELAY = 3000
 // Batas tunggu service worker baru selesai ter-install saat user menekan "Perbarui"
 const WAITING_WORKER_TIMEOUT = 5000
+// Berapa kali sebuah versi boleh gagal terpasang sebelum popup-nya dimatikan
+const MAX_APPLY_ATTEMPTS = 2
 
 const currentVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 const currentBuildTime = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : null
@@ -55,6 +58,8 @@ let swRegistration = null
 let checkTimer = null
 let snoozeTimer = null
 let lastCheckAt = 0
+// Versi yang berkali-kali gagal terpasang - popup-nya tidak ditawarkan lagi
+let givenUpVersion = null
 
 // ---------------------------------------------------------------------------
 // Helper localStorage (aman dipakai di private mode / storage diblokir)
@@ -91,10 +96,13 @@ const getSnoozeUntil = () => {
   return Number.isFinite(raw) ? raw : 0
 }
 
-// Hitungan snooze hanya berlaku untuk versi yang sama; rilis baru mulai dari nol
+// Hitungan snooze hanya berlaku untuk versi yang sama; rilis baru mulai dari nol.
+// Hitungan tanpa versi juga dibuang: itu warisan popup yang dulu bisa muncul
+// tanpa tahu versi apa yang ditawarkan, dan kalau dipakai bisa langsung
+// mengunci rilis berikutnya ke mode wajib.
 const loadSnoozeState = (version) => {
   const storedVersion = readStorage(STORAGE_KEYS.snoozeVersion)
-  if (storedVersion && version && storedVersion !== version) {
+  if (!storedVersion || (version && storedVersion !== version)) {
     clearSnooze()
     return
   }
@@ -119,25 +127,30 @@ const scheduleReminder = (delay) => {
   if (snoozeTimer) clearTimeout(snoozeTimer)
   snoozeTimer = setTimeout(() => {
     snoozeTimer = null
-    if (updateAvailable.value) isVisible.value = true
+    if (updateAvailable.value && hasNewerVersion.value) isVisible.value = true
   }, Math.max(delay, 0))
 }
 
-const markUpdateAvailable = (release = null) => {
-  if (release) {
-    // Pertahankan catatan rilis terlengkap (version.json membawa highlights)
-    const known = latestRelease.value
-    if (!known || compareVersions(release.version, known.version) >= 0) {
-      latestRelease.value = release
-    }
-  }
+// Satu-satunya jalan popup bisa muncul. Pemanggil WAJIB membawa manifest dari
+// /version.json — sinyal service worker sendirian tidak pernah cukup, lihat
+// catatan panjang di registerServiceWorker().
+const markUpdateAvailable = (release) => {
+  const version = release?.version
+  if (!version) return
 
+  // Versi sama atau lebih tua: tidak ada yang perlu diperbarui.
+  if (compareVersions(version, currentVersion) <= 0) return
+
+  // Versi ini sudah berkali-kali dicoba tapi tidak pernah benar-benar
+  // terpasang (biasanya deploy tertahan cache CDN). Berhenti menawarkan
+  // daripada mengulang popup yang tidak menyelesaikan apa pun.
+  if (givenUpVersion === version) return
+
+  latestRelease.value = release
   updateAvailable.value = true
-  loadSnoozeState(latestRelease.value?.version)
+  loadSnoozeState(version)
 
-  const snoozeUntil = getSnoozeUntil()
-  const remaining = snoozeUntil - Date.now()
-
+  const remaining = getSnoozeUntil() - Date.now()
   if (remaining > 0 && !isMandatory.value) {
     scheduleReminder(remaining)
     return
@@ -197,7 +210,11 @@ const hardReload = async ({ clearCaches = false } = {}) => {
   if (clearCaches && 'caches' in window) {
     try {
       const keys = await caches.keys()
-      await Promise.all(keys.map((key) => caches.delete(key)))
+      // Hanya precache aset aplikasi. Cache API dan font tidak ada
+      // hubungannya dengan versi, dan mahal untuk dibangun ulang.
+      await Promise.all(
+        keys.filter((key) => key.includes('precache')).map((key) => caches.delete(key))
+      )
     } catch {
       /* diabaikan */
     }
@@ -219,12 +236,28 @@ const waitForWaitingWorker = async (timeout = WAITING_WORKER_TIMEOUT) => {
   return hasWaitingWorker()
 }
 
+// Catat bahwa versi target ini pernah dicoba dipasang. Kalau setelah reload
+// aplikasi masih di versi lama, hitungannya bertambah — dipakai init() untuk
+// berhenti menawarkan pembaruan yang tidak pernah berhasil.
+const recordApplyAttempt = (version) => {
+  if (!version) return
+  let count = 0
+  try {
+    const previous = JSON.parse(readStorage(STORAGE_KEYS.applyAttempts) || '{}')
+    if (previous.version === version) count = Number(previous.count) || 0
+  } catch {
+    /* isi rusak - mulai dari nol */
+  }
+  writeStorage(STORAGE_KEYS.applyAttempts, JSON.stringify({ version, count: count + 1 }))
+}
+
 const applyUpdate = async () => {
   if (isUpdating.value) return
   isUpdating.value = true
 
   clearSnooze()
   writeStorage(STORAGE_KEYS.applied, currentVersion)
+  recordApplyAttempt(latestRelease.value?.version)
 
   try {
     // Versi baru bisa terdeteksi dari /version.json lebih dulu daripada service worker.
@@ -268,6 +301,13 @@ const remindLater = () => {
 // ---------------------------------------------------------------------------
 // Computed
 // ---------------------------------------------------------------------------
+// Invarian keras: tidak ada satu pun kondisi yang boleh menampilkan popup
+// tanpa versi yang benar-benar lebih baru dari yang sedang berjalan.
+const hasNewerVersion = computed(() => {
+  const version = latestRelease.value?.version
+  return Boolean(version) && compareVersions(version, currentVersion) > 0
+})
+
 // Update jadi wajib bila rilis ditandai mandatory atau sudah terlalu sering ditunda
 const isMandatory = computed(
   () => latestRelease.value?.mandatory === true || snoozeCount.value >= MAX_SNOOZE
@@ -290,9 +330,16 @@ const registerServiceWorker = () => {
     const { updateServiceWorker, needRefresh } = useRegisterSW({
       immediate: true,
       onNeedRefresh() {
-        // Bundle baru sudah ter-download & menunggu; versi persisnya
-        // dilengkapi oleh checkRemoteVersion()
-        markUpdateAvailable()
+        // JANGAN tampilkan popup dari sini.
+        //
+        // Event ini menyala setiap kali byte sw.js berbeda dari yang
+        // terpasang. Nama aset memuat timestamp build (lihat entryFileNames
+        // di vite.config.js), jadi sw.js berubah di SETIAP build — termasuk
+        // redeploy tanpa kenaikan versi. Karena skipWaiting false, worker itu
+        // lalu menunggu selamanya dan Workbox menyalakan 'waiting' lagi di
+        // tiap page load, sehingga popup muncul terus untuk versi yang sama.
+        //
+        // Yang menentukan ada tidaknya versi baru hanya /version.json.
         checkRemoteVersion({ force: true })
       },
       onRegisteredSW(_url, registration) {
@@ -328,6 +375,37 @@ const init = () => {
     }
   }
 
+  // Buang sisa hitungan tunda yang tidak lagi relevan:
+  //  - tanpa versi  -> warisan popup lama yang muncul tanpa tahu versinya
+  //  - versi <= yang berjalan sekarang -> pembaruannya sudah terpasang
+  // Keduanya berbahaya kalau dibiarkan: hitungan yang sudah mentok membuat
+  // popup berikutnya langsung tampil dalam mode wajib yang tidak bisa ditutup.
+  const snoozedVersion = readStorage(STORAGE_KEYS.snoozeVersion)
+  if (!snoozedVersion || compareVersions(snoozedVersion, currentVersion) <= 0) {
+    clearSnooze()
+  }
+
+  // Pembaruan yang tidak pernah berhasil: versi target sudah dicoba beberapa
+  // kali tapi aplikasi masih di versi lama (biasanya deploy tertahan cache di
+  // sisi server/CDN). Berhenti menawarkannya daripada mengulang popup terus.
+  try {
+    const attempts = JSON.parse(readStorage(STORAGE_KEYS.applyAttempts) || '{}')
+    if (attempts.version) {
+      if (compareVersions(currentVersion, attempts.version) >= 0) {
+        removeStorage(STORAGE_KEYS.applyAttempts)
+      } else if ((Number(attempts.count) || 0) >= MAX_APPLY_ATTEMPTS) {
+        givenUpVersion = attempts.version
+        console.warn(
+          `[update] Versi ${attempts.version} tidak terpasang setelah ` +
+            `${attempts.count} percobaan. Popup dimatikan untuk versi ini — ` +
+            'periksa cache index.html / version.json di server.'
+        )
+      }
+    }
+  } catch {
+    removeStorage(STORAGE_KEYS.applyAttempts)
+  }
+
   registerServiceWorker()
   checkRemoteVersion({ force: true })
 
@@ -352,6 +430,7 @@ export function useAppUpdate() {
     isVisible,
     isUpdating,
     isMandatory,
+    hasNewerVersion,
     snoozeCount,
     remainingSnooze,
     latestRelease,

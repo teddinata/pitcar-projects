@@ -19,7 +19,7 @@
       leave-to-class="opacity-0"
     >
       <div
-        v-if="isVisible && isMandatory"
+        v-if="showPrompt && isMandatory"
         class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
         role="alertdialog"
         aria-modal="true"
@@ -78,7 +78,7 @@
       leave-to-class="opacity-0 translate-y-6 sm:translate-y-4"
     >
       <div
-        v-if="isVisible && !isMandatory"
+        v-if="showPrompt && !isMandatory"
         class="fixed z-[9998] inset-x-3 bottom-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-96 max-w-[calc(100vw-1.5rem)]"
         role="dialog"
         aria-labelledby="app-update-card-title"
@@ -219,6 +219,7 @@ const {
   isVisible,
   isUpdating,
   isMandatory,
+  hasNewerVersion,
   snoozeCount,
   remainingSnooze,
   latestRelease,
@@ -231,6 +232,11 @@ const {
   remindLater,
   dismissJustUpdated
 } = useAppUpdate()
+
+// Lapis terakhir: popup hanya boleh tampil kalau memang ada versi lebih baru.
+// Composable sudah menjaganya, tapi mode wajib tidak bisa ditutup user — jadi
+// kondisi ini sengaja diulang di sini supaya tidak ada jalan tembus.
+const showPrompt = computed(() => isVisible.value && hasNewerVersion.value)
 
 const releaseTitle = computed(() => latestRelease.value?.title || '')
 
